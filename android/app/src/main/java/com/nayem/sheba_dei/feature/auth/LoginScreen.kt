@@ -42,7 +42,8 @@ import com.nayem.sheba_dei.core.language.LocalAppLanguage
 fun LoginScreen(
     onNavigateToHome: () -> Unit,
     onNavigateToRegister: () -> Unit,
-    onNavigateToOtp: () -> Unit
+    onNavigateToOtp: () -> Unit,
+    onNavigateToVendorDashboard: () -> Unit
 ) {
     var emailOrPhone by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -299,6 +300,20 @@ fun LoginScreen(
                             color = primaryBlue,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.clickable { onNavigateToRegister() }
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Text(
+                            text = if (isBengali) "ভেন্ডর প্যানেলে যান" else "Login as Vendor",
+                            color = primaryBlue,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.clickable { onNavigateToVendorDashboard() }
                         )
                     }
                 }
