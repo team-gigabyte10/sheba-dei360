@@ -15,37 +15,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountBalanceWallet
-import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material.icons.filled.ExitToApp
-import androidx.compose.material.icons.filled.HelpOutline
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Language
-import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.Message
-import androidx.compose.material.icons.filled.MenuBook
-import androidx.compose.material.icons.filled.Mic
-import androidx.compose.material.icons.filled.Restaurant
-import androidx.compose.material.icons.filled.School
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.ShoppingCart
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.filled.Build
-import androidx.compose.material.icons.filled.Call
-import androidx.compose.material.icons.filled.CleaningServices
-import androidx.compose.material.icons.filled.DirectionsCar
-import androidx.compose.material.icons.filled.FitnessCenter
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.MedicalServices
-import androidx.compose.material.icons.filled.Assignment
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Plumbing
-import androidx.compose.material.icons.filled.Tune
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -70,7 +40,8 @@ import kotlinx.coroutines.launch
 fun HomeScreen(
     onNavigateToProviderDetails: (String) -> Unit = {},
     onNavigateToBookings: () -> Unit = {},
-    onNavigateToSettings: () -> Unit = {}
+    onNavigateToSettings: () -> Unit = {},
+    onNavigateToDoctor: () -> Unit = {}
 ) {
     var searchQuery by remember { mutableStateOf("") }
     
@@ -123,23 +94,61 @@ fun HomeScreen(
     }
 
     val categories = if (isBengali) listOf(
-        Category("রিড", Icons.Default.MenuBook),
-        Category("খাবার", Icons.Default.Restaurant),
         Category("ডাক্তার", Icons.Default.MedicalServices),
-        Category("হোম সার্ভিস", Icons.Default.Home),
-        Category("শিক্ষা", Icons.Default.School),
-        Category("পরিবহন", Icons.Default.DirectionsCar),
-        Category("সুপার শপ", Icons.Default.ShoppingCart),
-        Category("ফিটনেস", Icons.Default.FitnessCenter)
+        Category("হাসপাতাল", Icons.Default.LocalHospital),
+        Category("বাস", Icons.Default.DirectionsBus),
+        Category("ট্রেন", Icons.Default.Train),
+        Category("লঞ্চ", Icons.Default.DirectionsBoat),
+        Category("ঐতিহাসিক স্থান", Icons.Default.AccountBalance),
+        Category("বাসা ভাড়া", Icons.Default.House),
+        Category("শপিং", Icons.Default.ShoppingCart),
+        Category("ফায়ার সার্ভিস", Icons.Default.LocalFireDepartment),
+        Category("রক্তদাতা", Icons.Default.Bloodtype),
+        Category("ডায়াগনস্টিক", Icons.Default.Biotech),
+        Category("ইভেন্ট সার্ভিস", Icons.Default.Event),
+        Category("রাইড", Icons.Default.TwoWheeler),
+        Category("কুরিয়ার", Icons.Default.LocalShipping),
+        Category("থানা-পুলিশ", Icons.Default.LocalPolice),
+        Category("পৌর সেবা", Icons.Default.LocationCity),
+        Category("বিদ্যুৎ সেবা", Icons.Default.ElectricBolt),
+        Category("মিস্ত্রি", Icons.Default.Construction),
+        Category("জরুরী সেবা", Icons.Default.Emergency),
+        Category("চাকরি", Icons.Default.Work),
+        Category("উদ্যোক্তা", Icons.Default.BusinessCenter),
+        Category("টিউটর", Icons.Default.School),
+        Category("হোটেল", Icons.Default.Hotel),
+        Category("রেস্টুরেন্ট", Icons.Default.Restaurant),
+        Category("ফ্ল্যাট ও জমি", Icons.Default.Landscape),
+        Category("শিক্ষা প্রতিষ্ঠান", Icons.Default.CastForEducation),
+        Category("নার্সারি", Icons.Default.Nature)
     ) else listOf(
-        Category("Read", Icons.Default.MenuBook),
-        Category("Food", Icons.Default.Restaurant),
         Category("Doctor", Icons.Default.MedicalServices),
-        Category("Home Service", Icons.Default.Home),
-        Category("Education", Icons.Default.School),
-        Category("Transport", Icons.Default.DirectionsCar),
-        Category("Super Shop", Icons.Default.ShoppingCart),
-        Category("Fitness", Icons.Default.FitnessCenter)
+        Category("Hospital", Icons.Default.LocalHospital),
+        Category("Bus", Icons.Default.DirectionsBus),
+        Category("Train", Icons.Default.Train),
+        Category("Launch", Icons.Default.DirectionsBoat),
+        Category("Historical Place", Icons.Default.AccountBalance),
+        Category("House Rent", Icons.Default.House),
+        Category("Shopping", Icons.Default.ShoppingCart),
+        Category("Fire Service", Icons.Default.LocalFireDepartment),
+        Category("Blood Donor", Icons.Default.Bloodtype),
+        Category("Diagnostic", Icons.Default.Biotech),
+        Category("Event Service", Icons.Default.Event),
+        Category("Ride", Icons.Default.TwoWheeler),
+        Category("Courier", Icons.Default.LocalShipping),
+        Category("Thana-Police", Icons.Default.LocalPolice),
+        Category("Municipality Service", Icons.Default.LocationCity),
+        Category("Electricity Service", Icons.Default.ElectricBolt),
+        Category("Mistri", Icons.Default.Construction),
+        Category("Emergency Service", Icons.Default.Emergency),
+        Category("Job", Icons.Default.Work),
+        Category("Entrepreneur", Icons.Default.BusinessCenter),
+        Category("Tutor", Icons.Default.School),
+        Category("Hotel", Icons.Default.Hotel),
+        Category("Restaurant", Icons.Default.Restaurant),
+        Category("Flat and Land", Icons.Default.Landscape),
+        Category("Educational Institution", Icons.Default.CastForEducation),
+        Category("Nursery", Icons.Default.Nature)
     )
 
     val providers = listOf(
@@ -426,46 +435,90 @@ fun HomeScreen(
                 
                 item {
                     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                            categories.take(4).forEach { category ->
-                                CategoryItem(category, Modifier.weight(1f))
-                            }
-                        }
-                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                            categories.drop(4).take(4).forEach { category ->
-                                CategoryItem(category, Modifier.weight(1f))
+                        categories.chunked(4).forEach { rowCategories ->
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                rowCategories.forEach { category ->
+                                    CategoryItem(
+                                        category = category,
+                                        modifier = Modifier.weight(1f),
+                                        onClick = {
+                                            if (category.name == "ডাক্তার" || category.name == "Doctor") {
+                                                onNavigateToDoctor()
+                                            }
+                                        }
+                                    )
+                                }
+                                repeat(4 - rowCategories.size) {
+                                    Spacer(modifier = Modifier.weight(1f))
+                                }
                             }
                         }
                     }
                 }
                 
-                // 4. Banner Placeholder
+                // 4. Offers and Ads Carousel
                 item {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(130.dp)
-                            .clip(RoundedCornerShape(16.dp))
-                            .background(Color(0xFF2563EB)) // Blue Banner
-                            .padding(16.dp)
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                        modifier = Modifier.fillMaxWidth()
                     ) {
-                        // Decorative circles to simulate the image background
-                        Box(modifier = Modifier.size(80.dp).offset(x = 180.dp, y = (-20).dp).clip(CircleShape).background(Color(0xFFFFC107)))
-                        Box(modifier = Modifier.size(100.dp).offset(x = 240.dp, y = 40.dp).clip(CircleShape).background(Color(0xFFEF4444)))
-                        Box(modifier = Modifier.size(60.dp).offset(x = 160.dp, y = 80.dp).clip(CircleShape).background(Color(0xFF10B981)))
-
-                        Column(verticalArrangement = Arrangement.Center, modifier = Modifier.fillMaxHeight()) {
-                            Text(if (isBengali) "ঈদ স্পেশাল অফার!" else "Eid Special Offer!", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
-                            Text(if (isBengali) "৳৫০০ পর্যন্ত ছাড়!" else "Up to ৳500 off!", color = Color(0xFFFFC107), fontSize = 16.sp, fontWeight = FontWeight.Medium)
-                            Spacer(modifier = Modifier.height(12.dp))
+                        item {
                             Box(
                                 modifier = Modifier
-                                    .clip(RoundedCornerShape(20.dp))
-                                    .background(Color.White)
-                                    .clickable { }
-                                    .padding(horizontal = 16.dp, vertical = 6.dp)
+                                    .fillParentMaxWidth(0.9f)
+                                    .height(130.dp)
+                                    .clip(RoundedCornerShape(16.dp))
+                                    .background(Color(0xFF2563EB)) // Blue Banner
+                                    .padding(16.dp)
                             ) {
-                                Text(if (isBengali) "বুকিং করুন" else "Book Now", color = Color(0xFF2563EB), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                // Decorative circles to simulate the image background
+                                Box(modifier = Modifier.size(80.dp).offset(x = 180.dp, y = (-20).dp).clip(CircleShape).background(Color(0xFFFFC107)))
+                                Box(modifier = Modifier.size(100.dp).offset(x = 240.dp, y = 40.dp).clip(CircleShape).background(Color(0xFFEF4444)))
+                                Box(modifier = Modifier.size(60.dp).offset(x = 160.dp, y = 80.dp).clip(CircleShape).background(Color(0xFF10B981)))
+
+                                Column(verticalArrangement = Arrangement.Center, modifier = Modifier.fillMaxHeight()) {
+                                    Text(if (isBengali) "ঈদ স্পেশাল অফার!" else "Eid Special Offer!", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                                    Text(if (isBengali) "৳৫০০ পর্যন্ত ছাড়!" else "Up to ৳500 off!", color = Color(0xFFFFC107), fontSize = 16.sp, fontWeight = FontWeight.Medium)
+                                    Spacer(modifier = Modifier.height(12.dp))
+                                    Box(
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(20.dp))
+                                            .background(Color.White)
+                                            .clickable { }
+                                            .padding(horizontal = 16.dp, vertical = 6.dp)
+                                    ) {
+                                        Text(if (isBengali) "বুকিং করুন" else "Book Now", color = Color(0xFF2563EB), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                    }
+                                }
+                            }
+                        }
+                        
+                        item {
+                            Box(
+                                modifier = Modifier
+                                    .fillParentMaxWidth(0.9f)
+                                    .height(130.dp)
+                                    .clip(RoundedCornerShape(16.dp))
+                                    .background(Color(0xFF0F766E)) // Teal/Green Banner
+                                    .padding(16.dp)
+                            ) {
+                                // Background decoration
+                                Box(modifier = Modifier.size(120.dp).offset(x = 200.dp, y = 20.dp).clip(CircleShape).background(Color.White.copy(alpha = 0.2f)))
+                                
+                                Column(verticalArrangement = Arrangement.Center, modifier = Modifier.fillMaxHeight()) {
+                                    Text(if (isBengali) "নতুন এসি ইন্সটলেশন" else "New AC Installation", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                                    Text(if (isBengali) "২০% ছাড় উপভোগ করুন" else "Enjoy 20% Discount", color = Color(0xFFFFC107), fontSize = 16.sp, fontWeight = FontWeight.Medium)
+                                    Spacer(modifier = Modifier.height(12.dp))
+                                    Box(
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(20.dp))
+                                            .background(Color.White)
+                                            .clickable { }
+                                            .padding(horizontal = 16.dp, vertical = 6.dp)
+                                    ) {
+                                        Text(if (isBengali) "বিস্তারিত দেখুন" else "View Details", color = Color(0xFF0F766E), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                    }
+                                }
                             }
                         }
                     }
@@ -492,36 +545,37 @@ fun HomeScreen(
 }
 
 @Composable
-fun CategoryItem(category: Category, modifier: Modifier = Modifier) {
-    Column(
+fun CategoryItem(category: Category, modifier: Modifier = Modifier, onClick: () -> Unit = {}) {
+    Card(
         modifier = modifier
-            .padding(horizontal = 4.dp)
-            .clickable { },
-        horizontalAlignment = Alignment.CenterHorizontally
+            .aspectRatio(0.9f)
+            .clickable { onClick() },
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
-        Box(
-            modifier = Modifier
-                .size(64.dp)
-                .clip(RoundedCornerShape(16.dp))
-                .background(Color(0xFFEFF6FF)), // Very light blue
-            contentAlignment = Alignment.Center
+        Column(
+            modifier = Modifier.fillMaxSize().padding(4.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
             Icon(
                 imageVector = category.icon,
                 contentDescription = category.name,
-                tint = Color(0xFF2563EB), // Primary blue
-                modifier = Modifier.size(32.dp)
+                tint = Color(0xFF1E3A8A), // Using Navy blue since original was Navy
+                modifier = Modifier.size(40.dp)
+            )
+            Spacer(modifier = Modifier.height(6.dp))
+            Text(
+                text = category.name, 
+                fontSize = 13.sp, 
+                color = Color.Black,
+                fontWeight = FontWeight.Medium,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                maxLines = 2,
+                lineHeight = 16.sp
             )
         }
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            text = category.name, 
-            fontSize = 12.sp, 
-            color = Color(0xFF0F172A), // Dark slate
-            fontWeight = FontWeight.Medium,
-            maxLines = 1,
-            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
-        )
     }
 }
 

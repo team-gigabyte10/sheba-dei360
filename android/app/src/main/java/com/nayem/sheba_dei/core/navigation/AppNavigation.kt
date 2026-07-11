@@ -42,6 +42,11 @@ fun AppNavigation() {
                 },
                 onNavigateToOtp = {
                     navController.navigate("otp")
+                },
+                onNavigateToVendorDashboard = {
+                    navController.navigate("vendor_dashboard") {
+                        popUpTo("login") { inclusive = true }
+                    }
                 }
             )
         }
@@ -79,7 +84,15 @@ fun AppNavigation() {
                 },
                 onNavigateToSettings = {
                     navController.navigate("settings")
+                },
+                onNavigateToDoctor = {
+                    navController.navigate("doctor_category")
                 }
+            )
+        }
+        composable("doctor_category") {
+            com.nayem.sheba_dei.feature.home.DoctorCategoryScreen(
+                onBack = { navController.popBackStack() }
             )
         }
         composable("booking/{providerId}") { backStackEntry ->
@@ -153,6 +166,46 @@ fun AppNavigation() {
         composable("change_password") {
             com.nayem.sheba_dei.feature.profile.ChangePasswordScreen(
                 onBack = { navController.popBackStack() }
+            )
+        }
+        // Vendor Panel Routes
+        composable("vendor_dashboard") {
+            com.nayem.sheba_dei.feature.vendor.dashboard.VendorDashboardScreen(
+                onNavigateToProducts = { navController.navigate("vendor_products") },
+                onNavigateToOrders = { navController.navigate("vendor_orders") },
+                onNavigateToReports = { navController.navigate("vendor_reports") }
+            )
+        }
+        composable("vendor_products") {
+            com.nayem.sheba_dei.feature.vendor.products.ProductListScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onAddProduct = { navController.navigate("vendor_product_add_edit") },
+                onEditProduct = { productId -> navController.navigate("vendor_product_add_edit?productId=$productId") }
+            )
+        }
+        composable("vendor_product_add_edit?productId={productId}") { backStackEntry ->
+            val productId = backStackEntry.arguments?.getString("productId")
+            com.nayem.sheba_dei.feature.vendor.products.AddEditProductScreen(
+                productId = productId,
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+        composable("vendor_orders") {
+            com.nayem.sheba_dei.feature.vendor.orders.OrderListScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onOrderClick = { orderId -> navController.navigate("vendor_order_detail/$orderId") }
+            )
+        }
+        composable("vendor_order_detail/{orderId}") { backStackEntry ->
+            val orderId = backStackEntry.arguments?.getString("orderId") ?: ""
+            com.nayem.sheba_dei.feature.vendor.orders.OrderDetailScreen(
+                orderId = orderId,
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+        composable("vendor_reports") {
+            com.nayem.sheba_dei.feature.vendor.reports.VendorReportsScreen(
+                onNavigateBack = { navController.popBackStack() }
             )
         }
     }
