@@ -7,6 +7,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.nayem.sheba_dei.ui.components.GlobalAppBar
+import com.nayem.sheba_dei.ui.components.SetStatusBarColor
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -14,10 +16,12 @@ fun OrderListScreen(
     onNavigateBack: () -> Unit,
     onOrderClick: (String) -> Unit
 ) {
+    SetStatusBarColor()
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Customer Orders") }
+            GlobalAppBar(
+                title = "Customer Orders",
+                onBackClick = onNavigateBack
             )
         }
     ) { paddingValues ->

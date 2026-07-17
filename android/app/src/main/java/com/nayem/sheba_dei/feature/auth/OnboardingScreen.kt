@@ -171,6 +171,7 @@ fun OnboardingScreen(
                     .fillMaxWidth()
                     .padding(horizontal = 24.dp)
             ) {
+                val context = androidx.compose.ui.platform.LocalContext.current
                 Button(
                     onClick = {
                         if (pagerState.currentPage < pages.size - 1) {
@@ -178,6 +179,8 @@ fun OnboardingScreen(
                                 pagerState.animateScrollToPage(pagerState.currentPage + 1)
                             }
                         } else {
+                            val sharedPreferences = context.getSharedPreferences("app_prefs", android.content.Context.MODE_PRIVATE)
+                            sharedPreferences.edit().putBoolean("onboarding_completed", true).apply()
                             onFinishOnboarding()
                         }
                     },

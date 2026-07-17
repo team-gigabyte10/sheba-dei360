@@ -5,16 +5,20 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.nayem.sheba_dei.ui.components.GlobalAppBar
+import com.nayem.sheba_dei.ui.components.SetStatusBarColor
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun VendorReportsScreen(
     onNavigateBack: () -> Unit
 ) {
+    SetStatusBarColor()
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Reports & Analytics") }
+            GlobalAppBar(
+                title = "Reports & Analytics",
+                onBackClick = onNavigateBack
             )
         }
     ) { paddingValues ->

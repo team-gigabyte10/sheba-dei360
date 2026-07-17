@@ -27,6 +27,8 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.nayem.sheba_dei.core.language.LocalAppLanguage
+import com.nayem.sheba_dei.ui.components.GlobalAppBar
+import com.nayem.sheba_dei.ui.components.SetStatusBarColor
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -45,16 +47,12 @@ fun ChangePasswordScreen(
     var newPasswordVisible by remember { mutableStateOf(false) }
     var confirmPasswordVisible by remember { mutableStateOf(false) }
 
+    SetStatusBarColor()
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text(if (isBengali) "পাসওয়ার্ড পরিবর্তন করুন" else "Change Password", color = Color.White, fontWeight = FontWeight.Bold) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.White)
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFF1E3A8A))
+            GlobalAppBar(
+                title = if (isBengali) "পাসওয়ার্ড পরিবর্তন করুন" else "Change Password",
+                onBackClick = onBack
             )
         },
         containerColor = Color(0xFFF8FAFC)

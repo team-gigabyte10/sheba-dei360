@@ -5,6 +5,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.nayem.sheba_dei.ui.components.GlobalAppBar
+import com.nayem.sheba_dei.ui.components.SetStatusBarColor
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -18,10 +20,12 @@ fun AddEditProductScreen(
 
     val isEditing = productId != null
 
+    SetStatusBarColor()
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text(if (isEditing) "Edit Product" else "Add Product") }
+            GlobalAppBar(
+                title = if (isEditing) "Edit Product" else "Add Product",
+                onBackClick = onNavigateBack
             )
         }
     ) { paddingValues ->
