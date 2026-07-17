@@ -21,7 +21,7 @@ export function ReportsPage() {
     setDownloading(true);
     
     // Construct CSV string content
-    const headers = ['Date', 'Orders Completed', 'Gross Revenue ($)', 'Platform Commission ($)', 'Status'];
+    const headers = ['Date', 'Orders Completed', 'Gross Revenue (৳)', 'Platform Commission (৳)', 'Status'];
     const rows = mockReportData.map(item => [
       item.date,
       item.orders,
@@ -68,8 +68,8 @@ export function ReportsPage() {
       {/* Analytics Summaries Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
         {[
-          { label: 'Weekly Gross Sales', value: '$2,164.00', desc: '+12% from last week', icon: TrendingUp, color: 'text-success' },
-          { label: 'Platform Commission Share (15%)', value: '$324.61', desc: 'Net platform fee shares', icon: BarChart2, color: 'text-primary' },
+          { label: 'Weekly Gross Sales', value: '৳2,164.00', desc: '+12% from last week', icon: TrendingUp, color: 'text-success' },
+          { label: 'Platform Commission Share (15%)', value: '৳324.61', desc: 'Net platform fee shares', icon: BarChart2, color: 'text-primary' },
           { label: 'Weekly Orders Count', value: '132 Orders', desc: '100% fulfillment rate', icon: FileText, color: 'text-rose-500' }
         ].map((stat) => {
           const Icon = stat.icon;
@@ -165,8 +165,8 @@ export function ReportsPage() {
                   <tr key={row.date} className="border-b last:border-0 border-border bg-background hover:bg-muted/10 transition-colors">
                     <td className="px-6 py-4 font-medium text-foreground">{row.date}</td>
                     <td className="px-6 py-4">{row.orders} orders</td>
-                    <td className="px-6 py-4 text-right font-semibold text-foreground">${row.revenue.toFixed(2)}</td>
-                    <td className="px-6 py-4 text-right font-semibold text-primary">${row.commission.toFixed(2)}</td>
+                    <td className="px-6 py-4 text-right font-semibold text-foreground">৳{row.revenue.toFixed(2)}</td>
+                    <td className="px-6 py-4 text-right font-semibold text-primary">৳{row.commission.toFixed(2)}</td>
                     <td className="px-6 py-4 text-center">
                       <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full border ${
                         row.status === 'Settled'

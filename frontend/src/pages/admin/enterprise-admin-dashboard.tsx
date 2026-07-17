@@ -280,7 +280,7 @@ export function EnterpriseAdminDashboard() {
   const getTabTitle = (tabKey: string) => {
     if (tabKey === 'overview') return 'Analytics & Trends Dashboard';
     if (tabKey === 'audit') return 'System Administrative Audit Logs';
-    return tabKey.charAt(0).toUpperCase() + tabKey.slice(1).replace(/([A-Z])/g, ' $1');
+    return tabKey.charAt(0).toUpperCase() + tabKey.slice(1).replace(/([A-Z])/g, ' ৳1');
   };
 
   // --- BULK OPERATIONS ACTIONS ---
@@ -563,7 +563,7 @@ export function EnterpriseAdminDashboard() {
               </th>
               {columns.map((col) => (
                 <th key={col} className="px-6 py-4 font-bold tracking-wider capitalize">
-                  {col.replace(/([A-Z])/g, ' $1')}
+                  {col.replace(/([A-Z])/g, ' ৳1')}
                 </th>
               ))}
               <th className="px-6 py-4 text-center">Actions</th>
@@ -637,27 +637,25 @@ export function EnterpriseAdminDashboard() {
   };
 
   return (
-    <div className="space-y-6 animate-fade-in text-foreground" dir={platformConfig.rtlLanguage ? 'rtl' : 'ltr'}>
-      {/* Main Core Columns */}
-      <div className="grid gap-6 lg:grid-cols-4">
-        {/* Navigation Sidebar Switchers */}
-        <Card className="lg:col-span-1 rounded-xl border border-slate-800 bg-[#0f172a] text-slate-100 overflow-hidden shadow-xl">
-          <CardHeader className="bg-[#1e293b]/20 py-4 border-b border-slate-800/80">
-            <CardTitle className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
-              <Layers className="h-4 w-4 text-primary" /> Management Modules
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-3 bg-[#0f172a]">
-            <div className="space-y-1 max-h-[580px] overflow-y-auto pr-1">
+    <div className="flex h-screen bg-[#F4F7F9] dark:bg-[#0f172a] animate-fade-in text-foreground" dir={platformConfig.rtlLanguage ? 'rtl' : 'ltr'}>
+      {/* Navigation Sidebar Switchers */}
+      <aside className="w-64 lg:w-[260px] flex-shrink-0 border-r border-slate-800 bg-[#0B1121] text-slate-300 flex flex-col transition-all shadow-2xl z-10 hidden md:flex">
+        <div className="p-5 border-b border-slate-800/80 bg-[#0B1121] flex items-center">
+          <h2 className="text-xl font-bold tracking-tight text-white flex items-center gap-2">
+            <Layers className="h-5 w-5 text-primary" /> Admin Panel
+          </h2>
+        </div>
+        <div className="flex-1 overflow-y-auto p-3 custom-scrollbar">
+          <div className="space-y-1 pr-1">
               <button
                 onClick={() => { setActiveTab('overview'); setSearchQuery(''); }}
-                className={`w-full text-left rounded-lg px-3 py-2 text-xs font-semibold transition-all flex items-center gap-2 ${activeTab === 'overview' ? 'bg-primary text-white shadow-md' : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-100'
+                className={`w-full text-left rounded-lg px-4 py-2.5 text-sm font-semibold transition-all flex items-center gap-2 ${activeTab === 'overview' ? 'bg-primary/15 text-white font-semibold shadow-sm' : 'text-slate-400 hover:bg-slate-800/60 hover:text-slate-100 font-medium'
                   }`}
               >
                 <Activity className="h-4 w-4" /> Overview & Charts
               </button>
 
-              <div className="pt-2.5 pb-1 px-3 text-[10px] font-bold uppercase text-slate-500 tracking-wider border-t border-slate-850 mt-2">
+              <div className="pt-6 pb-2 px-4 text-[10px] font-bold uppercase tracking-wider text-slate-500 mt-1">
                 Core Directories
               </div>
               {[
@@ -672,14 +670,14 @@ export function EnterpriseAdminDashboard() {
                 <button
                   key={m.key}
                   onClick={() => { setActiveTab(m.key); setSearchQuery(''); setSelectedIds([]); }}
-                  className={`w-full text-left rounded-lg px-3 py-2 text-xs font-semibold transition-all flex items-center gap-2 ${activeTab === m.key ? 'bg-primary text-white shadow-md' : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-100'
+                  className={`w-full text-left rounded-lg px-4 py-2.5 text-sm font-semibold transition-all flex items-center gap-2 ${activeTab === m.key ? 'bg-primary/15 text-white font-semibold shadow-sm' : 'text-slate-400 hover:bg-slate-800/60 hover:text-slate-100 font-medium'
                     }`}
                 >
                   <m.icon className="h-4 w-4" /> {m.label}
                 </button>
               ))}
 
-              <div className="pt-2.5 pb-1 px-3 text-[10px] font-bold uppercase text-slate-500 tracking-wider border-t border-slate-850 mt-2">
+              <div className="pt-6 pb-2 px-4 text-[10px] font-bold uppercase tracking-wider text-slate-500 mt-1">
                 Operations & Wallets
               </div>
               {[
@@ -695,14 +693,14 @@ export function EnterpriseAdminDashboard() {
                 <button
                   key={m.key}
                   onClick={() => { setActiveTab(m.key); setSearchQuery(''); setSelectedIds([]); }}
-                  className={`w-full text-left rounded-lg px-3 py-2 text-xs font-semibold transition-all flex items-center gap-2 ${activeTab === m.key ? 'bg-primary text-white shadow-md' : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-100'
+                  className={`w-full text-left rounded-lg px-4 py-2.5 text-sm font-semibold transition-all flex items-center gap-2 ${activeTab === m.key ? 'bg-primary/15 text-white font-semibold shadow-sm' : 'text-slate-400 hover:bg-slate-800/60 hover:text-slate-100 font-medium'
                     }`}
                 >
                   <m.icon className="h-4 w-4" /> {m.label}
                 </button>
               ))}
 
-              <div className="pt-2.5 pb-1 px-3 text-[10px] font-bold uppercase text-slate-500 tracking-wider border-t border-slate-850 mt-2">
+              <div className="pt-6 pb-2 px-4 text-[10px] font-bold uppercase tracking-wider text-slate-500 mt-1">
                 Products & Services
               </div>
               {[
@@ -714,14 +712,14 @@ export function EnterpriseAdminDashboard() {
                 <button
                   key={m.key}
                   onClick={() => { setActiveTab(m.key); setSearchQuery(''); setSelectedIds([]); }}
-                  className={`w-full text-left rounded-lg px-3 py-2 text-xs font-semibold transition-all flex items-center gap-2 ${activeTab === m.key ? 'bg-primary text-white shadow-md' : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-100'
+                  className={`w-full text-left rounded-lg px-4 py-2.5 text-sm font-semibold transition-all flex items-center gap-2 ${activeTab === m.key ? 'bg-primary/15 text-white font-semibold shadow-sm' : 'text-slate-400 hover:bg-slate-800/60 hover:text-slate-100 font-medium'
                     }`}
                 >
                   <m.icon className="h-4 w-4" /> {m.label}
                 </button>
               ))}
 
-              <div className="pt-2.5 pb-1 px-3 text-[10px] font-bold uppercase text-slate-500 tracking-wider border-t border-slate-850 mt-2">
+              <div className="pt-6 pb-2 px-4 text-[10px] font-bold uppercase tracking-wider text-slate-500 mt-1">
                 Support & CMS
               </div>
               {[
@@ -734,14 +732,14 @@ export function EnterpriseAdminDashboard() {
                 <button
                   key={m.key}
                   onClick={() => { setActiveTab(m.key); setSearchQuery(''); setSelectedIds([]); }}
-                  className={`w-full text-left rounded-lg px-3 py-2 text-xs font-semibold transition-all flex items-center gap-2 ${activeTab === m.key ? 'bg-primary text-white shadow-md' : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-100'
+                  className={`w-full text-left rounded-lg px-4 py-2.5 text-sm font-semibold transition-all flex items-center gap-2 ${activeTab === m.key ? 'bg-primary/15 text-white font-semibold shadow-sm' : 'text-slate-400 hover:bg-slate-800/60 hover:text-slate-100 font-medium'
                     }`}
                 >
                   <m.icon className="h-4 w-4" /> {m.label}
                 </button>
               ))}
 
-              <div className="pt-2.5 pb-1 px-3 text-[10px] font-bold uppercase text-slate-500 tracking-wider border-t border-slate-850 mt-2">
+              <div className="pt-6 pb-2 px-4 text-[10px] font-bold uppercase tracking-wider text-slate-500 mt-1">
                 Configuration & Map
               </div>
               {[
@@ -755,7 +753,7 @@ export function EnterpriseAdminDashboard() {
                 <button
                   key={m.key}
                   onClick={() => { setActiveTab(m.key); setSearchQuery(''); setSelectedIds([]); }}
-                  className={`w-full text-left rounded-lg px-3 py-2 text-xs font-semibold transition-all flex items-center gap-2 ${activeTab === m.key ? 'bg-primary text-white shadow-md' : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-100'
+                  className={`w-full text-left rounded-lg px-4 py-2.5 text-sm font-semibold transition-all flex items-center gap-2 ${activeTab === m.key ? 'bg-primary/15 text-white font-semibold shadow-sm' : 'text-slate-400 hover:bg-slate-800/60 hover:text-slate-100 font-medium'
                     }`}
                 >
                   <m.icon className="h-4 w-4" /> {m.label}
@@ -764,17 +762,29 @@ export function EnterpriseAdminDashboard() {
 
               <button
                 onClick={() => { setActiveTab('audit'); setSearchQuery(''); }}
-                className={`w-full text-left rounded-lg px-3 py-2 text-xs font-semibold transition-all flex items-center gap-2 mt-2 border-t border-slate-800 pt-3 ${activeTab === 'audit' ? 'bg-primary text-white shadow-md' : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-100'
+                className={`w-full text-left rounded-lg px-4 py-2.5 text-sm font-semibold transition-all flex items-center gap-2 mt-4 ${activeTab === 'audit' ? 'bg-primary/15 text-white font-semibold shadow-sm' : 'text-slate-400 hover:bg-slate-800/60 hover:text-slate-100 font-medium'
                   }`}
               >
                 <Activity className="h-4 w-4 text-rose-500" /> Admin Audit Logs
               </button>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+      </aside>
 
-        {/* Content Pane display */}
-        <div className="lg:col-span-3 space-y-6">
+      {/* Main Content Area */}
+      <main className="flex-1 flex flex-col h-screen overflow-hidden bg-background relative">
+        {/* Top Header */}
+        <header className="h-16 border-b border-slate-200 flex items-center justify-between px-6 bg-white shrink-0 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.05)] z-10 sticky top-0">
+          <h1 className="text-sm font-bold text-foreground flex items-center gap-2">
+            <Database className="h-4 w-4 text-primary" /> {getTabTitle(activeTab)}
+          </h1>
+          <div className="flex items-center gap-3">
+             <Badge variant="outline" className="text-xs font-medium bg-primary/5">{activeRole}</Badge>
+          </div>
+        </header>
+
+        {/* Scrollable Content Pane display */}
+        <div className="flex-1 overflow-y-auto p-4 lg:p-6 space-y-6 custom-scrollbar">
           {activeTab === 'overview' ? (
             // --- OVERVIEW & ANALYTICS WIDGETS ---
             <div className="space-y-6 animate-fade-in">
@@ -1628,7 +1638,7 @@ export function EnterpriseAdminDashboard() {
             </div>
           )}
         </div>
-      </div>
+      </main>
 
       {/* SPREADSHEET IMPORT DIALOG */}
       <Dialog open={isImportOpen} onOpenChange={setIsImportOpen}>

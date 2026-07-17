@@ -27,6 +27,7 @@ import { RideBookingPage } from '@/pages/booking/ride-booking-page';
 import { DoctorAppointmentPage } from '@/pages/booking/doctor-appointment-page';
 
 import { DashboardHome } from '@/pages/dashboard/dashboard-home';
+import { EnterpriseAdminDashboard } from '@/pages/admin/enterprise-admin-dashboard';
 import { ProfilePage } from '@/pages/dashboard/profile-page';
 import { OrdersPage } from '@/pages/dashboard/orders-page';
 import { ReportsPage } from '@/pages/dashboard/reports-page';
@@ -59,6 +60,13 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <Routes>
+          {/* Admin routes outside RootLayout so they can be full-screen */}
+          <Route path="/admin" element={
+            <ProtectedRoute>
+              <EnterpriseAdminDashboard />
+            </ProtectedRoute>
+          } />
+
           <Route element={<RootLayout />}>
             <Route path="/" element={<LandingPage />} />
             <Route path="/search" element={<SearchPage />} />

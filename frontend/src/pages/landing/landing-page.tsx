@@ -130,7 +130,7 @@ function HeroSection() {
                   <div className="absolute bottom-4 left-4 right-4 text-white">
                     <Badge className="mb-2 bg-success text-success-foreground">Available Now</Badge>
                     <h3 className="text-lg font-bold">Deep Home Cleaning</h3>
-                    <p className="text-sm opacity-90">From $35 · 15 min away</p>
+                    <p className="text-sm opacity-90">From ৳35 · 15 min away</p>
                   </div>
                 </div>
               </Card>

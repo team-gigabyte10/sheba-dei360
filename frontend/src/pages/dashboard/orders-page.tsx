@@ -42,7 +42,7 @@ export function OrdersPage() {
                     <p className="text-sm text-muted-foreground">{order.providerName} · {order.date}</p>
                   </div>
                   <div className="text-right">
-                    <p className="font-semibold">${order.amount}</p>
+                    <p className="font-semibold">৳{order.amount}</p>
                     <Badge className={cn('text-xs capitalize', statusColors[order.status])}>{order.status.replace('-', ' ')}</Badge>
                   </div>
                   {order.status === 'in-progress' && (
@@ -73,7 +73,7 @@ export function OrdersPage() {
                     <p className="text-sm text-muted-foreground">{order.address} · {order.date}</p>
                   </div>
                   <div className="text-right">
-                    <p className="font-semibold">${order.amount}</p>
+                    <p className="font-semibold">৳{order.amount}</p>
                     <Badge className={cn('text-xs capitalize', statusColors[order.status])}>{order.status}</Badge>
                   </div>
                 </CardContent>
