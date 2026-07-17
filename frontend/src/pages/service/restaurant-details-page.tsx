@@ -177,7 +177,7 @@ export function RestaurantDetailsPage() {
                       </div>
                     </div>
                     <Button className="w-full mt-4" onClick={handleCheckout}>
-                      Checkout · ${cartItemCount} items
+                      Checkout · ৳{cartItemCount} items
                     </Button>
                     <Button variant="ghost" className="w-full mt-1" onClick={clearCart}>Clear Cart</Button>
                   </>

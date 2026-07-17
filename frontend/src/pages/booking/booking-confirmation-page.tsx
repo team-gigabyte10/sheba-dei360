@@ -136,18 +136,18 @@ export function BookingConfirmationPage() {
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
               <span className="text-muted-foreground">Subtotal</span>
-              <span className="font-semibold">${baseAmount.toFixed(2)}</span>
+              <span className="font-semibold">৳{baseAmount.toFixed(2)}</span>
             </div>
             {deliveryFee > 0 && (
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Delivery Fee</span>
-                <span className="font-semibold">${deliveryFee.toFixed(2)}</span>
+                <span className="font-semibold">৳{deliveryFee.toFixed(2)}</span>
               </div>
             )}
             <Separator />
             <div className="flex justify-between text-base">
               <span className="font-semibold">Total Paid</span>
-              <span className="font-bold">${total.toFixed(2)}</span>
+              <span className="font-bold">৳{total.toFixed(2)}</span>
             </div>
           </div>
         </CardContent>

@@ -150,7 +150,7 @@ export function BookingPaymentPage() {
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">Wallet Balance</span>
-                  <span className="font-semibold">${user?.walletBalance.toFixed(2)}</span>
+                  <span className="font-semibold">৳{user?.walletBalance.toFixed(2)}</span>
                 </div>
                 {total > (user?.walletBalance ?? 0) && (
                   <p className="mt-2 text-xs text-destructive">Insufficient balance. Please top up or choose another method.</p>
@@ -227,22 +227,22 @@ export function BookingPaymentPage() {
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Subtotal</span>
-                  <span className="font-semibold">${baseAmount.toFixed(2)}</span>
+                  <span className="font-semibold">৳{baseAmount.toFixed(2)}</span>
                 </div>
                 {deliveryFee > 0 && (
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Delivery Fee</span>
-                    <span className="font-semibold">${deliveryFee.toFixed(2)}</span>
+                    <span className="font-semibold">৳{deliveryFee.toFixed(2)}</span>
                   </div>
                 )}
                 <Separator />
                 <div className="flex justify-between text-base">
                   <span className="font-semibold">Total</span>
-                  <span className="font-bold">${total.toFixed(2)}</span>
+                  <span className="font-bold">৳{total.toFixed(2)}</span>
                 </div>
               </div>
               <Button className="w-full" size="lg" onClick={handlePay} disabled={processing}>
-                {processing ? 'Processing...' : `Pay $${total.toFixed(2)}`}
+                {processing ? 'Processing...' : `Pay ৳${total.toFixed(2)}`}
               </Button>
               <div className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
                 <Shield className="h-3 w-3" /> Secure payment powered by ServeNear

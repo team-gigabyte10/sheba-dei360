@@ -61,7 +61,7 @@ export function BookingsPage() {
               <span>·</span>
               <span className="capitalize">{booking.paymentMethod}</span>
               <span>·</span>
-              <span className="font-semibold text-foreground">${booking.amount}</span>
+              <span className="font-semibold text-foreground">৳{booking.amount}</span>
             </div>
             <div className="mt-3 flex gap-2">
               {booking.status === 'completed' && !booking.rating && (

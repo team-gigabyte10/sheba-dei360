@@ -208,7 +208,7 @@ export function ServiceDetailsPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-xs text-muted-foreground">Starting from</p>
-                    <p className="text-3xl font-bold">${provider.priceFrom}</p>
+                    <p className="text-3xl font-bold">৳{provider.priceFrom}</p>
                     <p className="text-xs text-muted-foreground">per {provider.priceUnit}</p>
                   </div>
                   <Badge variant="secondary" className="flex items-center gap-1">

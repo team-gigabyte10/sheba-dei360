@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Package, Wallet, Bell, Star, ArrowRight,
@@ -20,7 +20,6 @@ import { useBookingStore } from '@/store/booking-store';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { Separator } from '@/components/ui/separator';
-import { EnterpriseAdminDashboard } from '@/pages/admin/enterprise-admin-dashboard';
 
 const statusColors: Record<string, string> = {
   completed: 'bg-success text-success-foreground',
@@ -58,7 +57,7 @@ function CustomerDashboard() {
 
   const stats = [
     { label: 'Total Orders', value: user?.totalOrders ?? 0, icon: Package, color: 'text-primary', bg: 'bg-primary/10' },
-    { label: 'Wallet Balance', value: `$${user?.walletBalance.toFixed(2) ?? '0'}`, icon: Wallet, color: 'text-success', bg: 'bg-success/10' },
+    { label: 'Wallet Balance', value: `৳${user?.walletBalance.toFixed(2) ?? '0'}`, icon: Wallet, color: 'text-success', bg: 'bg-success/10' },
     { label: 'Notifications', value: unreadCount, icon: Bell, color: 'text-warning', bg: 'bg-warning/10' },
     { label: 'Member Level', value: user?.memberLevel ?? 'bronze', icon: Star, color: 'text-amber-500', bg: 'bg-amber-500/10' },
   ];
@@ -120,7 +119,7 @@ function CustomerDashboard() {
                   <p className="text-xs text-muted-foreground">{booking.date} · {booking.time}</p>
                 </div>
                 <div className="text-right">
-                  <p className="font-semibold text-sm">${booking.amount}</p>
+                  <p className="font-semibold text-sm">৳{booking.amount}</p>
                   <Badge className={cn('text-[10px] capitalize border-none', statusColors[booking.status])}>
                     {booking.status.replace('-', ' ')}
                   </Badge>
@@ -175,7 +174,7 @@ function ProviderDashboard() {
   ]);
 
   const stats = [
-    { label: 'Today\'s Earnings', value: '$135.00', icon: Wallet, color: 'text-success', bg: 'bg-success/10' },
+    { label: 'Today\'s Earnings', value: '৳135.00', icon: Wallet, color: 'text-success', bg: 'bg-success/10' },
     { label: 'Completed Jobs', value: '1,240', icon: Package, color: 'text-primary', bg: 'bg-primary/10' },
     { label: 'Active Requests', value: requests.length, icon: Bell, color: 'text-warning', bg: 'bg-warning/10' },
     { label: 'Rating', value: '4.92 / 5.0', icon: Star, color: 'text-amber-500', bg: 'bg-amber-500/10' },
@@ -261,7 +260,7 @@ function ProviderDashboard() {
                     </div>
                   </div>
                   <div className="flex items-center justify-between md:flex-col md:items-end gap-3 shrink-0">
-                    <div className="text-lg font-bold text-success">${req.price}</div>
+                    <div className="text-lg font-bold text-success">৳{req.price}</div>
                     <div className="flex gap-2">
                       <Button size="sm" variant="destructive" onClick={() => handleJobAction(req.id, 'reject')} className="rounded-xl px-4">
                         <X className="h-4 w-4 mr-1" /> Decline
@@ -290,21 +289,21 @@ function ProviderDashboard() {
             <div className="space-y-2">
               <div className="flex justify-between text-xs">
                 <span>AC Repair visit</span>
-                <span className="font-semibold text-success">+$25.00</span>
+                <span className="font-semibold text-success">+৳25.00</span>
               </div>
               <div className="flex justify-between text-xs">
                 <span>Deep Cleaning</span>
-                <span className="font-semibold text-success">+$35.00</span>
+                <span className="font-semibold text-success">+৳35.00</span>
               </div>
               <div className="flex justify-between text-xs">
                 <span>Home Salon Visit</span>
-                <span className="font-semibold text-success">+$75.00</span>
+                <span className="font-semibold text-success">+৳75.00</span>
               </div>
             </div>
             <Separator />
             <div className="flex justify-between text-sm font-semibold">
               <span>Gross Total</span>
-              <span className="text-success">$135.00</span>
+              <span className="text-success">৳135.00</span>
             </div>
             <Button className="w-full rounded-xl" size="sm" variant="outline">Withdraw Earnings</Button>
           </CardContent>
@@ -394,7 +393,7 @@ function BusinessDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs text-muted-foreground">Today's Sales</p>
-                <p className="text-2xl font-bold mt-1">$412.50</p>
+                <p className="text-2xl font-bold mt-1">৳412.50</p>
               </div>
               <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-success/10 text-success">
                 <Wallet className="h-5 w-5" />
@@ -459,7 +458,7 @@ function BusinessDashboard() {
                   </Badge>
                   <p className="font-semibold text-sm truncate">{item.name}</p>
                   <p className="text-xs text-muted-foreground truncate">{item.description}</p>
-                  <p className="font-bold text-sm text-foreground mt-1">${item.price.toFixed(2)}</p>
+                  <p className="font-bold text-sm text-foreground mt-1">৳{item.price.toFixed(2)}</p>
                 </div>
                 <button
                   onClick={() => handleDeleteItem(item.id)}
@@ -547,7 +546,7 @@ function BusinessDashboard() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="itemPrice">Price ($)</Label>
+                <Label htmlFor="itemPrice">Price (৳)</Label>
                 <Input id="itemPrice" type="number" step="0.01" placeholder="10.99" value={newItemPrice} onChange={(e) => setNewItemPrice(e.target.value)} required />
               </div>
               <div className="space-y-2">
@@ -574,6 +573,5 @@ function BusinessDashboard() {
 // 4. ADMIN DASHBOARD
 // ----------------------------------------------------
 function AdminDashboard() {
-  return <EnterpriseAdminDashboard />;
+  return <Navigate to="/admin" replace />;
 }
-

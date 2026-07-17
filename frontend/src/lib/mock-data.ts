@@ -218,7 +218,7 @@ export const notifications: AppNotification[] = [
   { id: 'n1', type: 'booking', title: 'Booking Confirmed', message: 'Your booking for At-Home Salon & Spa is confirmed for Jan 25, 3:00 PM', timestamp: '2024-01-19T10:30:00', read: false, actionUrl: '/dashboard/bookings' },
   { id: 'n2', type: 'promo', title: '50% Off This Weekend!', message: 'Use code WEEKEND50 for 50% off on all home services this weekend', timestamp: '2024-01-19T09:00:00', read: false, actionUrl: '/search' },
   { id: 'n3', type: 'chat', title: 'New Message', message: 'Ahmed Rahman: I will arrive in 15 minutes', timestamp: '2024-01-18T14:45:00', read: true, actionUrl: '/chat/p1' },
-  { id: 'n4', type: 'payment', title: 'Payment Successful', message: 'Your payment of $35.00 for Deep Home Cleaning was successful', timestamp: '2024-01-18T11:00:00', read: true },
+  { id: 'n4', type: 'payment', title: 'Payment Successful', message: 'Your payment of ৳35.00 for Deep Home Cleaning was successful', timestamp: '2024-01-18T11:00:00', read: true },
   { id: 'n5', type: 'system', title: 'Welcome to ServeNear Gold!', message: 'You have been upgraded to Gold member. Enjoy exclusive benefits!', timestamp: '2024-01-15T08:00:00', read: true },
 ];
 
@@ -232,7 +232,7 @@ export const supportTickets: SupportTicket[] = [
   { id: 's2', subject: 'Provider didn\'t show up', category: 'Booking', status: 'resolved', priority: 'high', createdAt: '2024-01-10', lastUpdate: '2024-01-12',
     messages: [
       { id: 'sm4', sender: 'user', text: 'The provider didn\'t arrive for my scheduled appointment.', timestamp: '2024-01-10T15:00:00' },
-      { id: 'sm5', sender: 'support', text: 'We\'re sorry for the inconvenience. A full refund has been issued and a $10 credit added to your wallet.', timestamp: '2024-01-11T10:00:00' },
+      { id: 'sm5', sender: 'support', text: 'We\'re sorry for the inconvenience. A full refund has been issued and a ৳10 credit added to your wallet.', timestamp: '2024-01-11T10:00:00' },
     ] },
 ];
 

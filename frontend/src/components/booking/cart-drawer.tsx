@@ -89,7 +89,7 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
                   <img src={item.image} alt={item.name} className="h-16 w-16 object-cover rounded-lg shrink-0 border border-border" />
                   <div className="flex-1 min-w-0 pr-6 space-y-1">
                     <p className="font-semibold text-sm truncate">{item.name}</p>
-                    <p className="font-bold text-sm text-foreground">${item.price.toFixed(2)}</p>
+                    <p className="font-bold text-sm text-foreground">৳{item.price.toFixed(2)}</p>
                     
                     <div className="flex items-center gap-2 mt-1">
                       <Button
@@ -158,7 +158,7 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
             <div className="space-y-2 text-sm">
               <div className="flex justify-between text-muted-foreground">
                 <span>Subtotal</span>
-                <span>${cartTotal().toFixed(2)}</span>
+                <span>৳{cartTotal().toFixed(2)}</span>
               </div>
               
               {promoCode && (
@@ -170,7 +170,7 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
               
               <div className="flex justify-between text-muted-foreground">
                 <span>Delivery Charge</span>
-                <span>$2.50</span>
+                <span>৳2.50</span>
               </div>
 
               <Separator className="my-1" />
@@ -179,11 +179,11 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
                 <span>Total</span>
                 {promoCode ? (
                   <div className="flex items-center gap-2">
-                    <span className="text-xs line-through text-muted-foreground">${(cartTotal() + 2.5).toFixed(2)}</span>
-                    <span className="text-emerald-600">${(discountedTotal() + 2.5).toFixed(2)}</span>
+                    <span className="text-xs line-through text-muted-foreground">৳{(cartTotal() + 2.5).toFixed(2)}</span>
+                    <span className="text-emerald-600">৳{(discountedTotal() + 2.5).toFixed(2)}</span>
                   </div>
                 ) : (
-                  <span>${(cartTotal() + 2.5).toFixed(2)}</span>
+                  <span>৳{(cartTotal() + 2.5).toFixed(2)}</span>
                 )}
               </div>
             </div>

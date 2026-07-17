@@ -186,7 +186,7 @@ export function RideBookingPage() {
                       <p className="font-bold text-sm mt-3">{type.name}</p>
                       <div className="flex justify-between w-full items-center mt-1 text-[11px] text-muted-foreground font-medium">
                         <span>{type.time} away</span>
-                        <span className="font-bold text-foreground text-xs">${type.price.toFixed(2)}</span>
+                        <span className="font-bold text-foreground text-xs">৳{type.price.toFixed(2)}</span>
                       </div>
                     </button>
                   );

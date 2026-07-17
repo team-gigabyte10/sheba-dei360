@@ -42,7 +42,7 @@ export function WishlistPage() {
                 <p className="text-sm text-muted-foreground">{item.providerName}</p>
                 <div className="mt-2 flex items-center justify-between">
                   <RatingStars rating={item.rating} showValue={false} />
-                  <span className="font-semibold">${item.price}</span>
+                  <span className="font-semibold">৳{item.price}</span>
                 </div>
                 <Button className="w-full mt-3" size="sm" asChild>
                   <Link to={item.serviceId.startsWith('r') ? `/restaurant/${item.serviceId}` : `/service/${item.serviceId}`}>
