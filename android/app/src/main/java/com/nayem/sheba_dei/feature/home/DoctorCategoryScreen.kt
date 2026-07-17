@@ -21,30 +21,21 @@ import androidx.compose.ui.unit.sp
 import com.nayem.sheba_dei.core.language.LocalAppLanguage
 import android.app.Activity
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
+import com.nayem.sheba_dei.ui.components.GlobalAppBar
+import com.nayem.sheba_dei.ui.components.SetStatusBarColor
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DoctorCategoryScreen(onBack: () -> Unit) {
+fun DoctorCategoryScreen(onBack: () -> Unit, onCategoryClick: (String) -> Unit) {
     val languageState = LocalAppLanguage.current
     val isBengali = languageState.isBengali
 
     val view = LocalView.current
-    if (!view.isInEditMode) {
-        SideEffect {
-            var ctx = view.context
-            while (ctx is android.content.ContextWrapper) {
-                if (ctx is Activity) break
-                ctx = ctx.baseContext
-            }
-            if (ctx is Activity) {
-                val window = ctx.window
-                window.statusBarColor = android.graphics.Color.parseColor("#020617") // Very Dark Navy / Almost Black
-                WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = false
-            }
-        }
-    }
+    SetStatusBarColor()
 
     val doctors = if (isBengali) listOf(
         Category("মেডিসিন", Icons.Default.Medication),
@@ -116,7 +107,29 @@ fun DoctorCategoryScreen(onBack: () -> Unit) {
         Category("Hepatology", Icons.Default.MedicalServices)
     )
 
-    Scaffold() { innerPadding ->
+    var showFilterDialog by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
+
+    Scaffold(
+        topBar = {
+            GlobalAppBar(
+                title = if (isBengali) "ডাক্তার" else "Doctors",
+                onBackClick = onBack,
+
+            )
+        }
+    ) { innerPadding ->
+        if (showFilterDialog) {
+            AlertDialog(
+                onDismissRequest = { showFilterDialog = false },
+                title = { Text(if (isBengali) "ফিল্টার করুন" else "Filter") },
+                text = { Text(if (isBengali) "সারা বাংলাদেশের ডাক্তারদের ফিল্টার করার অপশন এখানে থাকবে।" else "Options to filter doctors all over Bangladesh will be here.") },
+                confirmButton = {
+                    TextButton(onClick = { showFilterDialog = false }) {
+                        Text(if (isBengali) "ঠিক আছে" else "OK")
+                    }
+                }
+            )
+        }
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -185,7 +198,11 @@ fun DoctorCategoryScreen(onBack: () -> Unit) {
                     item {
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             rowDoctors.forEach { doctorCategory ->
-                                CategoryItem(doctorCategory, Modifier.weight(1f))
+                                CategoryItem(
+                                    category = doctorCategory,
+                                    modifier = Modifier.weight(1f),
+                                    onClick = { onCategoryClick(doctorCategory.name) }
+                                )
                             }
                             repeat(4 - rowDoctors.size) {
                                 Spacer(modifier = Modifier.weight(1f))

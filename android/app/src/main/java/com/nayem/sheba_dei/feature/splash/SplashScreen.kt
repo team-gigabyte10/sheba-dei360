@@ -1,5 +1,6 @@
 package com.nayem.sheba_dei.feature.splash
 
+import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -9,17 +10,30 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import kotlinx.coroutines.delay
 import com.nayem.sheba_dei.core.language.LocalAppLanguage
 
 @Composable
-fun SplashScreen(onNavigateToHome: () -> Unit) {
+fun SplashScreen(
+    onNavigateToHome: () -> Unit,
+    onNavigateToOnboarding: () -> Unit
+) {
     val isBengali = LocalAppLanguage.current.isBengali
+    val context = LocalContext.current
 
     LaunchedEffect(key1 = true) {
         delay(2000L) // Simulate some loading/delay
-        onNavigateToHome()
+        
+        val sharedPreferences = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+        val isOnboardingCompleted = sharedPreferences.getBoolean("onboarding_completed", false)
+        
+        if (isOnboardingCompleted) {
+            onNavigateToHome()
+        } else {
+            onNavigateToOnboarding()
+        }
     }
 
     Box(

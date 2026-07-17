@@ -29,6 +29,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.nayem.sheba_dei.core.language.LocalAppLanguage
+import com.nayem.sheba_dei.ui.components.GlobalAppBar
+import com.nayem.sheba_dei.ui.components.SetStatusBarColor
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -44,16 +46,12 @@ fun UpdateProfileScreen(
     var phone by remember { mutableStateOf("+880 1712 345678") }
     var address by remember { mutableStateOf("Banani, Dhaka") }
 
+    SetStatusBarColor()
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text(if (isBengali) "প্রোফাইল আপডেট করুন" else "Update Profile", color = Color.White, fontWeight = FontWeight.Bold) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.White)
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFF1E3A8A))
+            GlobalAppBar(
+                title = if (isBengali) "প্রোফাইল আপডেট করুন" else "Update Profile",
+                onBackClick = onBack
             )
         },
         containerColor = Color(0xFFF8FAFC)

@@ -24,6 +24,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.nayem.sheba_dei.R
+import com.nayem.sheba_dei.ui.components.GlobalAppBar
+import com.nayem.sheba_dei.ui.components.SetStatusBarColor
 
 data class BookingMock(
     val id: String,
@@ -46,16 +48,12 @@ fun BookingsScreen(
         BookingMock("2", "এসি সার্ভিসিং", "আব্দুর রহমান", "সম্পন্ন", "২৫ অক্টোবর ২০২৩, সকাল ১০:০০", false, R.drawable.dummy_person)
     )
 
+    SetStatusBarColor()
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("আমার বুকিংস", color = Color.White, fontWeight = FontWeight.Bold) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.White)
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFF1E3A8A))
+            GlobalAppBar(
+                title = "আমার বুকিংস",
+                onBackClick = onBack
             )
         },
         containerColor = Color(0xFFF8FAFC)

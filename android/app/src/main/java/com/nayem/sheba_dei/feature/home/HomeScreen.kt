@@ -27,6 +27,9 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.view.WindowCompat
+import com.nayem.sheba_dei.ui.components.GlobalAppBar
+import com.nayem.sheba_dei.ui.components.SetStatusBarColor
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import com.nayem.sheba_dei.R
@@ -41,7 +44,18 @@ fun HomeScreen(
     onNavigateToProviderDetails: (String) -> Unit = {},
     onNavigateToBookings: () -> Unit = {},
     onNavigateToSettings: () -> Unit = {},
-    onNavigateToDoctor: () -> Unit = {}
+    onNavigateToDoctor: () -> Unit = {},
+    onNavigateToHospital: () -> Unit = {},
+    onNavigateToHouseRent: () -> Unit = {},
+    onNavigateToShopping: () -> Unit = {},
+    onNavigateToMatrimony: () -> Unit = {},
+    onNavigateToBloodDonor: () -> Unit = {},
+    onNavigateToEventService: () -> Unit = {},
+    onNavigateToMistriService: () -> Unit = {},
+    onNavigateToTutor: () -> Unit = {},
+    onNavigateToHotel: () -> Unit = {},
+    onNavigateToRestaurant: () -> Unit = {},
+    onNavigateToFlatLand: () -> Unit = {}
 ) {
     var searchQuery by remember { mutableStateOf("") }
     
@@ -57,20 +71,7 @@ fun HomeScreen(
     val coroutineScope = rememberCoroutineScope()
     
     val view = LocalView.current
-    if (!view.isInEditMode) {
-        SideEffect {
-            var ctx = view.context
-            while (ctx is android.content.ContextWrapper) {
-                if (ctx is Activity) break
-                ctx = ctx.baseContext
-            }
-            if (ctx is Activity) {
-                val window = ctx.window
-                window.statusBarColor = android.graphics.Color.parseColor("#020617") // Very Dark Navy / Almost Black
-                androidx.core.view.WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = false
-            }
-        }
-    }
+    SetStatusBarColor()
 
     BackHandler {
         if (drawerState.isOpen) {
@@ -101,7 +102,8 @@ fun HomeScreen(
         Category("লঞ্চ", Icons.Default.DirectionsBoat),
         Category("ঐতিহাসিক স্থান", Icons.Default.AccountBalance),
         Category("বাসা ভাড়া", Icons.Default.House),
-        Category("শপিং", Icons.Default.ShoppingCart),
+        Category("কেনা-কাটা", Icons.Default.ShoppingCart),
+        Category("পাত্র-পাত্রী", Icons.Default.People),
         Category("ফায়ার সার্ভিস", Icons.Default.LocalFireDepartment),
         Category("রক্তদাতা", Icons.Default.Bloodtype),
         Category("ডায়াগনস্টিক", Icons.Default.Biotech),
@@ -302,25 +304,19 @@ fun HomeScreen(
     ) {
         Scaffold(
             topBar = {
-                TopAppBar(
-                    title = { Text(if (isBengali) "বরিশাল সিটি সার্ভিস" else "Barisal City Service", fontWeight = FontWeight.Bold) },
+                GlobalAppBar(
+                    title = if (isBengali) "বরিশাল সিটি সার্ভিস" else "Barisal City Service",
                     navigationIcon = {
                         IconButton(onClick = { coroutineScope.launch { drawerState.open() } }) {
                             Icon(Icons.Default.Menu, contentDescription = "Menu")
                         }
                     },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = Color(0xFF1E3A8A), // Navy Blue
-                        titleContentColor = Color.White,
-                        navigationIconContentColor = Color.White,
-                        actionIconContentColor = Color.White
-                    ),
                     actions = {
                         Row(
                             modifier = Modifier
                                 .padding(end = 16.dp)
                                 .clip(RoundedCornerShape(16.dp))
-                                .background(Color.White.copy(alpha = 0.2f))
+                                .background(Color.LightGray.copy(alpha = 0.3f))
                                 .clickable {
                                     languageState.currentLanguage = if (isBengali) AppLanguage.ENGLISH else AppLanguage.BENGALI
                                 }
@@ -331,14 +327,14 @@ fun HomeScreen(
                                 imageVector = Icons.Default.Language,
                                 contentDescription = "Change Language",
                                 modifier = Modifier.size(16.dp),
-                                tint = Color.White
+                                tint = Color.Black
                             )
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(
                                 text = if (isBengali) "ENG" else "BAN",
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = Color.White
+                                color = Color.Black
                             )
                         }
                     }
@@ -411,21 +407,7 @@ fun HomeScreen(
                 verticalArrangement = Arrangement.spacedBy(24.dp)
             ) {
                 item {
-                    Spacer(modifier = Modifier.height(16.dp))
-                    OutlinedTextField(
-                        value = searchQuery,
-                        onValueChange = { searchQuery = it },
-                        placeholder = { Text(if (isBengali) "সার্ভিস খুঁজুন..." else "Search services...") },
-                        leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search", tint = Color.Gray) },
-                        trailingIcon = { Icon(Icons.Default.Mic, contentDescription = "Voice", tint = Color.Gray) },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(24.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            unfocusedContainerColor = Color.White,
-                            focusedContainerColor = Color.White,
-                            unfocusedBorderColor = Color(0xFFE2E8F0)
-                        )
-                    )
+                    AutoSliderBanner()
                 }
 
                 // 3. Category Grid (2 rows of 4 items)
@@ -444,6 +426,28 @@ fun HomeScreen(
                                         onClick = {
                                             if (category.name == "ডাক্তার" || category.name == "Doctor") {
                                                 onNavigateToDoctor()
+                                            } else if (category.name == "হাসপাতাল" || category.name == "Hospital") {
+                                                onNavigateToHospital()
+                                            } else if (category.name == "বাসা ভাড়া" || category.name == "House Rent") {
+                                                onNavigateToHouseRent()
+                                            } else if (category.name == "কেনা-কাটা" || category.name == "Shopping") {
+                                                onNavigateToShopping()
+                                            } else if (category.name == "পাত্র-পাত্রী" || category.name == "Matrimony") {
+                                                onNavigateToMatrimony()
+                                            } else if (category.name == "রক্তদাতা" || category.name == "Blood Donor") {
+                                                onNavigateToBloodDonor()
+                                            } else if (category.name == "ইভেন্ট সার্ভিস" || category.name == "Event Service") {
+                                                onNavigateToEventService()
+                                            } else if (category.name == "মিস্ত্রি" || category.name == "Mistri" || category.name == "Labour") {
+                                                onNavigateToMistriService()
+                                            } else if (category.name == "টিউটর" || category.name == "Tutor") {
+                                                onNavigateToTutor()
+                                            } else if (category.name == "হোটেল" || category.name == "Hotel") {
+                                                onNavigateToHotel()
+                                            } else if (category.name == "রেস্টুরেন্ট" || category.name == "Restaurant") {
+                                                onNavigateToRestaurant()
+                                            } else if (category.name == "ফ্ল্যাট ও জমি" || category.name == "Flat and Land") {
+                                                onNavigateToFlatLand()
                                             }
                                         }
                                     )
@@ -546,6 +550,20 @@ fun HomeScreen(
 
 @Composable
 fun CategoryItem(category: Category, modifier: Modifier = Modifier, onClick: () -> Unit = {}) {
+    val colorPalette = listOf(
+        Pair(Color(0xFF3B82F6), Color(0xFFDBEAFE)), // Blue
+        Pair(Color(0xFF14B8A6), Color(0xFFCCFBF1)), // Teal
+        Pair(Color(0xFFF97316), Color(0xFFFFEDD5)), // Orange
+        Pair(Color(0xFF8B5CF6), Color(0xFFEDE9FE)), // Purple
+        Pair(Color(0xFFEF4444), Color(0xFFFEE2E2)), // Red
+        Pair(Color(0xFF10B981), Color(0xFFD1FAE5)), // Emerald
+        Pair(Color(0xFFEAB308), Color(0xFFFEF9C3)), // Yellow
+        Pair(Color(0xFFEC4899), Color(0xFFFCE7F3))  // Pink
+    )
+    val colorIndex = kotlin.math.abs(category.name.hashCode()) % colorPalette.size
+    val iconColor = colorPalette[colorIndex].first
+    val bgColor = colorPalette[colorIndex].second
+
     Card(
         modifier = modifier
             .aspectRatio(0.9f)
@@ -562,10 +580,10 @@ fun CategoryItem(category: Category, modifier: Modifier = Modifier, onClick: () 
             Icon(
                 imageVector = category.icon,
                 contentDescription = category.name,
-                tint = Color(0xFF1E3A8A), // Using Navy blue since original was Navy
+                tint = iconColor,
                 modifier = Modifier.size(40.dp)
             )
-            Spacer(modifier = Modifier.height(6.dp))
+            Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = category.name, 
                 fontSize = 13.sp, 
@@ -720,5 +738,63 @@ fun DrawerMenuItem(
             fontSize = 16.sp,
             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
         )
+    }
+}
+
+@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
+@Composable
+fun AutoSliderBanner() {
+    val banners = listOf(
+        R.drawable.open,
+        R.drawable.open1,
+        R.drawable.open2
+    )
+    
+    val pagerState = androidx.compose.foundation.pager.rememberPagerState(pageCount = { banners.size })
+    
+    LaunchedEffect(pagerState) {
+        while (true) {
+            kotlinx.coroutines.delay(3000)
+            val nextPage = (pagerState.currentPage + 1) % banners.size
+            pagerState.animateScrollToPage(nextPage)
+        }
+    }
+    
+    Column(modifier = Modifier.fillMaxWidth()) {
+        androidx.compose.foundation.pager.HorizontalPager(
+            state = pagerState,
+            modifier = Modifier.fillMaxWidth().height(150.dp)
+        ) { page ->
+            Card(
+                modifier = Modifier.fillMaxSize().padding(horizontal = 4.dp),
+                shape = RoundedCornerShape(12.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            ) {
+                Image(
+                    painter = painterResource(id = banners[page]),
+                    contentDescription = "Banner ${page + 1}",
+                    contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
+        }
+        Spacer(modifier = Modifier.height(12.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center
+        ) {
+            repeat(banners.size) { iteration ->
+                val color = if (pagerState.currentPage == iteration) Color(0xFF1E3A8A) else Color.LightGray
+                val width = if (pagerState.currentPage == iteration) 24.dp else 8.dp
+                Box(
+                    modifier = Modifier
+                        .padding(horizontal = 4.dp)
+                        .clip(CircleShape)
+                        .background(color)
+                        .height(8.dp)
+                        .width(width)
+                )
+            }
+        }
     }
 }

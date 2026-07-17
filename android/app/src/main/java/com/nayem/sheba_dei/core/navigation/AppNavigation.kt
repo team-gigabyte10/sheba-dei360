@@ -17,15 +17,22 @@ fun AppNavigation() {
 
     NavHost(navController = navController, startDestination = "splash") {
         composable("splash") {
-            SplashScreen(onNavigateToHome = {
-                navController.navigate("onboarding") {
-                    popUpTo("splash") { inclusive = true }
+            SplashScreen(
+                onNavigateToHome = {
+                    navController.navigate("home") {
+                        popUpTo("splash") { inclusive = true }
+                    }
+                },
+                onNavigateToOnboarding = {
+                    navController.navigate("onboarding") {
+                        popUpTo("splash") { inclusive = true }
+                    }
                 }
-            })
+            )
         }
         composable("onboarding") {
             OnboardingScreen(onFinishOnboarding = {
-                navController.navigate("login") {
+                navController.navigate("home") {
                     popUpTo("onboarding") { inclusive = true }
                 }
             })
@@ -87,11 +94,127 @@ fun AppNavigation() {
                 },
                 onNavigateToDoctor = {
                     navController.navigate("doctor_category")
+                },
+                onNavigateToHospital = {
+                    navController.navigate("hospital_list")
+                },
+                onNavigateToHouseRent = {
+                    navController.navigate("house_rent_list")
+                },
+                onNavigateToShopping = {
+                    navController.navigate("shopping_list")
+                },
+                onNavigateToMatrimony = {
+                    navController.navigate("matrimony_home")
+                },
+                onNavigateToBloodDonor = {
+                    navController.navigate("blood_donor")
+                },
+                onNavigateToEventService = {
+                    navController.navigate("event_service")
+                },
+                onNavigateToMistriService = {
+                    navController.navigate("mistri_service")
+                },
+                onNavigateToTutor = {
+                    navController.navigate("tutor")
+                },
+                onNavigateToHotel = {
+                    navController.navigate("hotel")
+                },
+                onNavigateToRestaurant = {
+                    navController.navigate("restaurant")
+                },
+                onNavigateToFlatLand = {
+                    navController.navigate("flat_land")
                 }
+            )
+        }
+        composable("matrimony_home") {
+            com.nayem.sheba_dei.feature.matrimony.MatrimonyHomeScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToSearch = { navController.navigate("matrimony_search") },
+                onNavigateToProfile = { profileId -> navController.navigate("matrimony_profile/$profileId") }
+            )
+        }
+        composable("matrimony_search") {
+            com.nayem.sheba_dei.feature.matrimony.MatrimonySearchScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToProfile = { profileId -> navController.navigate("matrimony_profile/$profileId") }
+            )
+        }
+        composable("blood_donor") {
+            com.nayem.sheba_dei.feature.blood.BloodDonationScreen(
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+        composable("event_service") {
+            com.nayem.sheba_dei.feature.event.EventServiceScreen(
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+        composable("house_rent_list") {
+            com.nayem.sheba_dei.feature.home.HouseRentListScreen(
+                onBack = { navController.popBackStack() }
+            )
+        }
+        composable("mistri_service") {
+            com.nayem.sheba_dei.feature.home.MistriServiceScreen(
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+        composable("tutor") {
+            com.nayem.sheba_dei.feature.home.TutorScreen(
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+        composable("hotel") {
+            com.nayem.sheba_dei.feature.hotel.HotelScreen(
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+        composable("restaurant") {
+            com.nayem.sheba_dei.feature.restaurant.RestaurantScreen(
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+        composable("flat_land") {
+            com.nayem.sheba_dei.feature.property.FlatLandScreen(
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+        composable("shopping_list") {
+            com.nayem.sheba_dei.feature.home.ShoppingListScreen(
+                onBack = { navController.popBackStack() },
+                onNavigateToDetails = { productId ->
+                    navController.navigate("shopping_details/$productId")
+                }
+            )
+        }
+        composable("shopping_details/{productId}") { backStackEntry ->
+            val productId = backStackEntry.arguments?.getString("productId") ?: ""
+            com.nayem.sheba_dei.feature.home.ShoppingDetailsScreen(
+                productId = productId,
+                onBack = { navController.popBackStack() }
+            )
+        }
+        composable("hospital_list") {
+            com.nayem.sheba_dei.feature.home.HospitalListScreen(
+                onBack = { navController.popBackStack() }
             )
         }
         composable("doctor_category") {
             com.nayem.sheba_dei.feature.home.DoctorCategoryScreen(
+                onBack = { navController.popBackStack() },
+                onCategoryClick = { categoryName ->
+                    navController.navigate("doctor_list/$categoryName")
+                }
+            )
+        }
+        composable("doctor_list/{categoryName}") { backStackEntry ->
+            val categoryName = backStackEntry.arguments?.getString("categoryName") ?: ""
+            com.nayem.sheba_dei.feature.home.DoctorListScreen(
+                categoryName = categoryName,
                 onBack = { navController.popBackStack() }
             )
         }
