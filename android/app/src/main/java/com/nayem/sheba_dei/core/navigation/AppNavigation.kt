@@ -154,17 +154,17 @@ fun AppNavigation() {
             )
         }
         composable("house_rent_list") {
-            com.nayem.sheba_dei.feature.home.HouseRentListScreen(
+            com.nayem.sheba_dei.feature.houserent.HouseRentListScreen(
                 onBack = { navController.popBackStack() }
             )
         }
         composable("mistri_service") {
-            com.nayem.sheba_dei.feature.home.MistriServiceScreen(
+            com.nayem.sheba_dei.feature.mistri.MistriServiceScreen(
                 onNavigateBack = { navController.popBackStack() }
             )
         }
         composable("tutor") {
-            com.nayem.sheba_dei.feature.home.TutorScreen(
+            com.nayem.sheba_dei.feature.tutor.TutorScreen(
                 onNavigateBack = { navController.popBackStack() }
             )
         }
@@ -184,27 +184,35 @@ fun AppNavigation() {
             )
         }
         composable("shopping_list") {
-            com.nayem.sheba_dei.feature.home.ShoppingListScreen(
+            com.nayem.sheba_dei.feature.shopping.ShoppingListScreen(
                 onBack = { navController.popBackStack() },
                 onNavigateToDetails = { productId ->
                     navController.navigate("shopping_details/$productId")
+                },
+                onNavigateToPostProduct = {
+                    navController.navigate("post_product")
                 }
+            )
+        }
+        composable("post_product") {
+            com.nayem.sheba_dei.feature.shopping.PostProductScreen(
+                onBack = { navController.popBackStack() }
             )
         }
         composable("shopping_details/{productId}") { backStackEntry ->
             val productId = backStackEntry.arguments?.getString("productId") ?: ""
-            com.nayem.sheba_dei.feature.home.ShoppingDetailsScreen(
+            com.nayem.sheba_dei.feature.shopping.ShoppingDetailsScreen(
                 productId = productId,
                 onBack = { navController.popBackStack() }
             )
         }
         composable("hospital_list") {
-            com.nayem.sheba_dei.feature.home.HospitalListScreen(
+            com.nayem.sheba_dei.feature.hospital.HospitalListScreen(
                 onBack = { navController.popBackStack() }
             )
         }
         composable("doctor_category") {
-            com.nayem.sheba_dei.feature.home.DoctorCategoryScreen(
+            com.nayem.sheba_dei.feature.doctor.DoctorCategoryScreen(
                 onBack = { navController.popBackStack() },
                 onCategoryClick = { categoryName ->
                     navController.navigate("doctor_list/$categoryName")
@@ -213,7 +221,7 @@ fun AppNavigation() {
         }
         composable("doctor_list/{categoryName}") { backStackEntry ->
             val categoryName = backStackEntry.arguments?.getString("categoryName") ?: ""
-            com.nayem.sheba_dei.feature.home.DoctorListScreen(
+            com.nayem.sheba_dei.feature.doctor.DoctorListScreen(
                 categoryName = categoryName,
                 onBack = { navController.popBackStack() }
             )

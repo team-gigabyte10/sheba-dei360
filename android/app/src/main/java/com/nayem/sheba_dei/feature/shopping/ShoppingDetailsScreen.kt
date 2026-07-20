@@ -1,8 +1,9 @@
-package com.nayem.sheba_dei.feature.home
+package com.nayem.sheba_dei.feature.shopping
 
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -11,8 +12,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -21,9 +23,22 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import android.location.Location
+import androidx.core.content.ContextCompat
+import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import com.nayem.sheba_dei.core.language.LocalAppLanguage
 import com.nayem.sheba_dei.ui.components.GlobalAppBar
 import com.nayem.sheba_dei.ui.components.SetStatusBarColor
+import com.google.maps.android.compose.GoogleMap
+import com.google.maps.android.compose.MapProperties
+import com.google.maps.android.compose.MapUiSettings
+import com.google.maps.android.compose.Marker
+import com.google.maps.android.compose.MarkerState
+import com.google.maps.android.compose.rememberCameraPositionState
+import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.CameraPosition
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -42,6 +57,22 @@ fun ShoppingDetailsScreen(
     // Fetch product using productId. Mocking here.
     val product = dummyProducts.find { it.id == productId } ?: dummyProducts.first()
 
+    val hasLocationPermission = com.nayem.sheba_dei.core.utils.rememberLocationPermissionState()
+
+    val parts = product.latLng.split(",")
+    val sellerLat = parts.getOrNull(0)?.toDoubleOrNull() ?: 23.6061
+    val sellerLng = parts.getOrNull(1)?.toDoubleOrNull() ?: 89.8406
+    val sellerLocation = LatLng(sellerLat, sellerLng)
+    
+    // Mock Buyer Location (Dhaka)
+    val buyerLat = 23.8103
+    val buyerLng = 90.4125
+    val buyerLocation = LatLng(buyerLat, buyerLng)
+    
+    val cameraPositionState = rememberCameraPositionState {
+        position = CameraPosition.fromLatLngZoom(sellerLocation, 10f)
+    }
+
     Scaffold(
         topBar = {
             GlobalAppBar(
@@ -55,7 +86,7 @@ fun ShoppingDetailsScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
                 .background(Color(0xFFF9FAFB)) // Very light gray
-                .verticalScroll(rememberScrollState())
+                .verticalScroll(rememberScrollState(), enabled = !cameraPositionState.isMoving)
         ) {
             // Top Image Header
             Box(
@@ -213,46 +244,81 @@ fun ShoppingDetailsScreen(
                 
                 Spacer(modifier = Modifier.height(16.dp))
                 
-                // Map Row
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
+                // Location & Map Section
+                Text(
+                    text = if (isBengali) "অবস্থান এবং দূরত্ব" else "Location & Distance",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp,
+                    color = Color.Black
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                val distanceResults = FloatArray(1)
+                Location.distanceBetween(buyerLat, buyerLng, sellerLat, sellerLng, distanceResults)
+                val distanceKm = distanceResults[0] / 1000f
+                val distanceText = String.format("%.1f", distanceKm)
+                
+                Text(
+                    text = if (isBengali) "আপনার থেকে দূরত্ব: $distanceText কি.মি." else "Distance from you: $distanceText km",
+                    color = Color.DarkGray,
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
+                
+                Spacer(modifier = Modifier.height(12.dp))
+                
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .height(350.dp)
                         .clip(RoundedCornerShape(12.dp))
-                        .background(Color.White)
-                        .clickable {
-                            val gmmIntentUri = Uri.parse("geo:${product.latLng}?q=${product.latLng}(${Uri.encode(product.shopName)})")
-                            val mapIntent = Intent(Intent.ACTION_VIEW, gmmIntentUri)
-                            mapIntent.setPackage("com.google.android.apps.maps")
-                            if (mapIntent.resolveActivity(context.packageManager) != null) {
-                                context.startActivity(mapIntent)
-                            } else {
-                                val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://maps.google.com/?q=${product.latLng}"))
-                                context.startActivity(browserIntent)
-                            }
-                        }
-                        .padding(16.dp)
+                        .border(1.dp, Color.LightGray, RoundedCornerShape(12.dp))
                 ) {
-                    Box(
-                        modifier = Modifier.size(48.dp).clip(CircleShape).background(Color(0xFFE3F2FD)),
-                        contentAlignment = Alignment.Center
+                    GoogleMap(
+                        modifier = Modifier.fillMaxSize(),
+                        cameraPositionState = cameraPositionState,
+                        properties = MapProperties(isMyLocationEnabled = hasLocationPermission),
+                        uiSettings = MapUiSettings(myLocationButtonEnabled = true)
                     ) {
-                        Icon(Icons.Default.Map, contentDescription = "Map", tint = Color(0xFF1565C0))
-                    }
-                    Spacer(modifier = Modifier.width(16.dp))
-                    Column {
-                        Text(
-                            text = if (isBengali) "ম্যাপে দেখুন" else "View on Map",
-                            color = Color.Gray,
-                            fontSize = 14.sp
+                        Marker(
+                            state = MarkerState(position = sellerLocation),
+                            title = product.shopName,
+                            snippet = if (isBengali) "বিক্রেতা" else "Seller"
                         )
-                        Text(
-                            text = "Google Map",
-                            fontWeight = FontWeight.Bold,
-                            color = Color.Black,
-                            fontSize = 18.sp
+                        Marker(
+                            state = MarkerState(position = buyerLocation),
+                            title = if (isBengali) "আপনি (মক)" else "You (Mock)"
                         )
                     }
+                }
+                
+                Spacer(modifier = Modifier.height(12.dp))
+                
+                // Navigate Button
+                Button(
+                    onClick = {
+                        val navIntentUri = Uri.parse("google.navigation:q=${sellerLat},${sellerLng}")
+                        val mapIntent = Intent(Intent.ACTION_VIEW, navIntentUri)
+                        mapIntent.setPackage("com.google.android.apps.maps")
+                        if (mapIntent.resolveActivity(context.packageManager) != null) {
+                            context.startActivity(mapIntent)
+                        } else {
+                            val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://maps.google.com/?q=${sellerLat},${sellerLng}"))
+                            context.startActivity(browserIntent)
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth().height(50.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = primaryColor),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Icon(Icons.Default.Navigation, contentDescription = null, tint = Color.White)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = if (isBengali) "নেভিগেশন শুরু করুন" else "Start Navigation",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
                 }
                 
                 Spacer(modifier = Modifier.height(32.dp))
