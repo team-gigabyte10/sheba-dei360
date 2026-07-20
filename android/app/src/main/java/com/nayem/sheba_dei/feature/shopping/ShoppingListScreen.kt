@@ -1,4 +1,4 @@
-package com.nayem.sheba_dei.feature.home
+package com.nayem.sheba_dei.feature.shopping
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -66,7 +66,8 @@ val dummyProducts = listOf(
 @Composable
 fun ShoppingListScreen(
     onBack: () -> Unit,
-    onNavigateToDetails: (String) -> Unit
+    onNavigateToDetails: (String) -> Unit,
+    onNavigateToPostProduct: () -> Unit
 ) {
     val languageState = LocalAppLanguage.current
     val isBengali = languageState.isBengali
@@ -90,6 +91,15 @@ fun ShoppingListScreen(
                     }
                 }
             )
+        },
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = { onNavigateToPostProduct() },
+                containerColor = primaryColor,
+                contentColor = Color.White
+            ) {
+                Icon(Icons.Default.Add, contentDescription = if (isBengali) "পণ্য যোগ করুন" else "Post Product")
+            }
         }
     ) { innerPadding ->
         if (showZillaFilterDialog) {

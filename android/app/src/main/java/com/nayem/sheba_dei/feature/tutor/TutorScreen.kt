@@ -1,4 +1,4 @@
-package com.nayem.sheba_dei.feature.home
+package com.nayem.sheba_dei.feature.tutor
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background

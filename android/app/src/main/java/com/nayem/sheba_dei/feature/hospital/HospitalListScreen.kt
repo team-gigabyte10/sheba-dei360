@@ -1,4 +1,4 @@
-package com.nayem.sheba_dei.feature.home
+package com.nayem.sheba_dei.feature.hospital
 
 import android.content.Intent
 import android.net.Uri

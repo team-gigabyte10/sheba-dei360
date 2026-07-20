@@ -1,4 +1,4 @@
-package com.nayem.sheba_dei.feature.home
+package com.nayem.sheba_dei.feature.doctor
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
