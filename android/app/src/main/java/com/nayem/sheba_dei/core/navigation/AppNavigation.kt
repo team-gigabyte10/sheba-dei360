@@ -127,20 +127,102 @@ fun AppNavigation() {
                 },
                 onNavigateToFlatLand = {
                     navController.navigate("flat_land")
+                },
+                onNavigateToCategoryMap = { categoryKey ->
+                    navController.navigate("category_map/$categoryKey")
+                },
+                onNavigateToAllServices = {
+                    navController.navigate("all_services")
+                },
+                onNavigateToHealthServices = {
+                    navController.navigate("health_services")
+                },
+                onNavigateToRide = {
+                    navController.navigate("ride_screen")
+                },
+                onNavigateToCourier = {
+                    navController.navigate("courier_screen")
+                },
+                onNavigateToTransportService = {
+                    navController.navigate("transport_service")
+                },
+                onNavigateToEmergencyService = {
+                    navController.navigate("emergency_service")
+                },
+                onNavigateToProfile = {
+                    navController.navigate("profile")
                 }
+            )
+        }
+        composable("emergency_service") {
+            com.nayem.sheba_dei.feature.emergency.EmergencyServiceScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToCategoryMap = { categoryKey ->
+                    navController.navigate("category_map/$categoryKey")
+                }
+            )
+        }
+        composable("transport_service") {
+            com.nayem.sheba_dei.feature.transport.TransportServiceScreen(
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+        composable("ride_screen") {
+            com.nayem.sheba_dei.feature.ride.RideScreen(
+                onBack = { navController.popBackStack() }
+            )
+        }
+        composable("courier_screen") {
+            com.nayem.sheba_dei.feature.courier.CourierScreen(
+                onBack = { navController.popBackStack() }
+            )
+        }
+        composable("all_services") {
+            com.nayem.sheba_dei.feature.service.AllServicesScreen(
+                onBack = { navController.popBackStack() },
+                onCategoryClick = { categoryKey ->
+                    if (categoryKey == "health_services") {
+                        navController.navigate("health_services")
+                    } else {
+                        navController.navigate("category_map/$categoryKey")
+                    }
+                }
+            )
+        }
+        composable("category_map/{categoryKey}") { backStackEntry ->
+            val categoryKey = backStackEntry.arguments?.getString("categoryKey") ?: ""
+            com.nayem.sheba_dei.feature.service.CategoryMapScreen(
+                categoryKey = categoryKey,
+                onBack = { navController.popBackStack() }
             )
         }
         composable("matrimony_home") {
             com.nayem.sheba_dei.feature.matrimony.MatrimonyHomeScreen(
                 onNavigateBack = { navController.popBackStack() },
                 onNavigateToSearch = { navController.navigate("matrimony_search") },
-                onNavigateToProfile = { profileId -> navController.navigate("matrimony_profile/$profileId") }
+                onNavigateToProfile = { profileId -> navController.navigate("matrimony_profile/$profileId") },
+                onNavigateToCreateProfile = { navController.navigate("create_matrimony_profile") }
+            )
+        }
+        composable("create_matrimony_profile") {
+            com.nayem.sheba_dei.feature.matrimony.CreateMatrimonyProfileScreen(
+                onBack = { navController.popBackStack() },
+                onProfileCreated = { newProfile ->
+                    // Profile created handler
+                }
             )
         }
         composable("matrimony_search") {
             com.nayem.sheba_dei.feature.matrimony.MatrimonySearchScreen(
                 onNavigateBack = { navController.popBackStack() },
                 onNavigateToProfile = { profileId -> navController.navigate("matrimony_profile/$profileId") }
+            )
+        }
+        composable("matrimony_profile/{profileId}") { backStackEntry ->
+            val profileId = backStackEntry.arguments?.getString("profileId") ?: ""
+            com.nayem.sheba_dei.feature.matrimony.MatrimonyProfileScreen(
+                profileId = profileId,
+                onBack = { navController.popBackStack() }
             )
         }
         composable("blood_donor") {
@@ -203,7 +285,19 @@ fun AppNavigation() {
             val productId = backStackEntry.arguments?.getString("productId") ?: ""
             com.nayem.sheba_dei.feature.shopping.ShoppingDetailsScreen(
                 productId = productId,
-                onBack = { navController.popBackStack() }
+                onBack = { navController.popBackStack() },
+                onNavigateToDetails = { newProductId ->
+                    navController.navigate("shopping_details/$newProductId")
+                }
+            )
+        }
+        composable("health_services") {
+            com.nayem.sheba_dei.feature.doctor.HealthServicesScreen(
+                onBack = { navController.popBackStack() },
+                onNavigateToDoctor = { navController.navigate("doctor_category") },
+                onNavigateToHospital = { navController.navigate("hospital_list") },
+                onNavigateToBloodDonor = { navController.navigate("blood_donor") },
+                onNavigateToCategoryMap = { categoryKey -> navController.navigate("category_map/$categoryKey") }
             )
         }
         composable("hospital_list") {
@@ -268,8 +362,25 @@ fun AppNavigation() {
                         popUpTo("home") { inclusive = true }
                     }
                 },
+                onNavigateToHome = {
+                    navController.navigate("home") {
+                        popUpTo("home") { inclusive = true }
+                    }
+                },
+                onNavigateToAllServices = {
+                    navController.navigate("all_services")
+                },
+                onNavigateToBookings = {
+                    navController.navigate("bookings")
+                },
                 onNavigateToSettings = {
                     navController.navigate("settings")
+                },
+                onNavigateToUpdateProfile = {
+                    navController.navigate("update_profile")
+                },
+                onNavigateToChangePassword = {
+                    navController.navigate("change_password")
                 }
             )
         }

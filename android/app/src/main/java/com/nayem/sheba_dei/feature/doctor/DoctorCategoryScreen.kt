@@ -27,6 +27,8 @@ import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 import com.nayem.sheba_dei.ui.components.GlobalAppBar
 import com.nayem.sheba_dei.ui.components.SetStatusBarColor
+import com.nayem.sheba_dei.feature.home.Category
+import com.nayem.sheba_dei.feature.home.CategoryItem
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

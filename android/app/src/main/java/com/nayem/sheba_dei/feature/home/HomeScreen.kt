@@ -32,6 +32,8 @@ import com.nayem.sheba_dei.ui.components.GlobalAppBar
 import com.nayem.sheba_dei.ui.components.SetStatusBarColor
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
+import android.content.Intent
+import android.net.Uri
 import com.nayem.sheba_dei.R
 import com.nayem.sheba_dei.ui.components.ExitAppDialog
 import com.nayem.sheba_dei.core.language.AppLanguage
@@ -55,7 +57,15 @@ fun HomeScreen(
     onNavigateToTutor: () -> Unit = {},
     onNavigateToHotel: () -> Unit = {},
     onNavigateToRestaurant: () -> Unit = {},
-    onNavigateToFlatLand: () -> Unit = {}
+    onNavigateToFlatLand: () -> Unit = {},
+    onNavigateToCategoryMap: (String) -> Unit = {},
+    onNavigateToAllServices: () -> Unit = {},
+    onNavigateToHealthServices: () -> Unit = {},
+    onNavigateToRide: () -> Unit = {},
+    onNavigateToCourier: () -> Unit = {},
+    onNavigateToTransportService: () -> Unit = {},
+    onNavigateToEmergencyService: () -> Unit = {},
+    onNavigateToProfile: () -> Unit = {}
 ) {
     var searchQuery by remember { mutableStateOf("") }
     
@@ -94,70 +104,58 @@ fun HomeScreen(
         )
     }
 
-    val categories = if (isBengali) listOf(
-        Category("ডাক্তার", Icons.Default.MedicalServices),
-        Category("হাসপাতাল", Icons.Default.LocalHospital),
-        Category("বাস", Icons.Default.DirectionsBus),
-        Category("ট্রেন", Icons.Default.Train),
-        Category("লঞ্চ", Icons.Default.DirectionsBoat),
-        Category("ঐতিহাসিক স্থান", Icons.Default.AccountBalance),
-        Category("বাসা ভাড়া", Icons.Default.House),
-        Category("কেনা-কাটা", Icons.Default.ShoppingCart),
-        Category("পাত্র-পাত্রী", Icons.Default.People),
-        Category("ফায়ার সার্ভিস", Icons.Default.LocalFireDepartment),
-        Category("রক্তদাতা", Icons.Default.Bloodtype),
-        Category("ডায়াগনস্টিক", Icons.Default.Biotech),
-        Category("ইভেন্ট সার্ভিস", Icons.Default.Event),
-        Category("রাইড", Icons.Default.TwoWheeler),
-        Category("কুরিয়ার", Icons.Default.LocalShipping),
-        Category("থানা-পুলিশ", Icons.Default.LocalPolice),
-        Category("পৌর সেবা", Icons.Default.LocationCity),
-        Category("বিদ্যুৎ সেবা", Icons.Default.ElectricBolt),
-        Category("মিস্ত্রি", Icons.Default.Construction),
-        Category("জরুরী সেবা", Icons.Default.Emergency),
-        Category("চাকরি", Icons.Default.Work),
-        Category("উদ্যোক্তা", Icons.Default.BusinessCenter),
-        Category("টিউটর", Icons.Default.School),
-        Category("হোটেল", Icons.Default.Hotel),
-        Category("রেস্টুরেন্ট", Icons.Default.Restaurant),
-        Category("ফ্ল্যাট ও জমি", Icons.Default.Landscape),
-        Category("শিক্ষা প্রতিষ্ঠান", Icons.Default.CastForEducation),
-        Category("নার্সারি", Icons.Default.Nature)
-    ) else listOf(
-        Category("Doctor", Icons.Default.MedicalServices),
-        Category("Hospital", Icons.Default.LocalHospital),
-        Category("Bus", Icons.Default.DirectionsBus),
-        Category("Train", Icons.Default.Train),
-        Category("Launch", Icons.Default.DirectionsBoat),
-        Category("Historical Place", Icons.Default.AccountBalance),
-        Category("House Rent", Icons.Default.House),
-        Category("Shopping", Icons.Default.ShoppingCart),
-        Category("Fire Service", Icons.Default.LocalFireDepartment),
-        Category("Blood Donor", Icons.Default.Bloodtype),
-        Category("Diagnostic", Icons.Default.Biotech),
-        Category("Event Service", Icons.Default.Event),
-        Category("Ride", Icons.Default.TwoWheeler),
-        Category("Courier", Icons.Default.LocalShipping),
-        Category("Thana-Police", Icons.Default.LocalPolice),
-        Category("Municipality Service", Icons.Default.LocationCity),
-        Category("Electricity Service", Icons.Default.ElectricBolt),
-        Category("Mistri", Icons.Default.Construction),
-        Category("Emergency Service", Icons.Default.Emergency),
-        Category("Job", Icons.Default.Work),
-        Category("Entrepreneur", Icons.Default.BusinessCenter),
-        Category("Tutor", Icons.Default.School),
-        Category("Hotel", Icons.Default.Hotel),
-        Category("Restaurant", Icons.Default.Restaurant),
-        Category("Flat and Land", Icons.Default.Landscape),
-        Category("Educational Institution", Icons.Default.CastForEducation),
-        Category("Nursery", Icons.Default.Nature)
-    )
+    var selectedZilla by remember { mutableStateOf<String?>(null) }
+    var showZillaFilterDialog by remember { mutableStateOf(false) }
 
-    val providers = listOf(
-        ProviderMock("1", if(isBengali) "মোঃ রুবেল মিয়া" else "Md. Rubel Mia", if(isBengali) "৳ ৬০০ /ঘণ্টা" else "৳600 /hr", 4.8, 213, "বনানী, গুলশান", "Plumber", if (isBengali) "প্লাম্বার" else "Plumber", Icons.Default.Plumbing),
-        ProviderMock("2", if(isBengali) "রহিম ট্রেডার্স" else "Rahim Traders", if(isBengali) "৳ ৪৫০ /ঘণ্টা" else "৳450 /hr", 4.5, 189, "মিরপুর, আগারগাঁও", "General", if (isBengali) "সাধারণ" else "General", Icons.Default.Person),
-        ProviderMock("3", if(isBengali) "প্লাম্বিং এক্সপার্ট" else "Plumbing Expert", if(isBengali) "৳ ৭০০ /ঘণ্টা" else "৳700 /hr", 4.9, 310, "ধানমন্ডি", "Plumber", "Plumber", Icons.Default.Plumbing)
-    )
+    val categories = remember(isBengali) {
+        if (isBengali) listOf(
+            Category("স্বাস্থ্য সেবা", Icons.Default.MedicalServices),
+            Category("যাতায়াত সেবা", Icons.Default.Commute),
+            Category("বাসা ভাড়া", Icons.Default.House),
+            Category("কেনা-কাটা", Icons.Default.ShoppingCart),
+            Category("পাত্র-পাত্রী", Icons.Default.People),
+            Category("ইভেন্ট সার্ভিস", Icons.Default.Event),
+            Category("রাইড", Icons.Default.TwoWheeler),
+            Category("কুরিয়ার", Icons.Default.LocalShipping),
+            Category("মিস্ত্রি", Icons.Default.Construction),
+            Category("জরুরী সেবা", Icons.Default.Emergency),
+            Category("টিউটর", Icons.Default.School),
+            Category("ফ্ল্যাট ও জমি", Icons.Default.Landscape),
+            Category("লোকেশন ভিত্তিক সেবা", Icons.Default.LocationOn)
+        ) else listOf(
+            Category("Health Services", Icons.Default.MedicalServices),
+            Category("Transport Services", Icons.Default.Commute),
+            Category("House Rent", Icons.Default.House),
+            Category("Shopping", Icons.Default.ShoppingCart),
+            Category("Matrimony", Icons.Default.People),
+            Category("Event Service", Icons.Default.Event),
+            Category("Ride", Icons.Default.TwoWheeler),
+            Category("Courier", Icons.Default.LocalShipping),
+            Category("Mistri", Icons.Default.Construction),
+            Category("Emergency Service", Icons.Default.Emergency),
+            Category("Tutor", Icons.Default.School),
+            Category("Flat and Land", Icons.Default.Landscape),
+            Category("Location Based Services", Icons.Default.LocationOn)
+        )
+    }
+
+    val filteredCategories = remember(searchQuery, categories) {
+        if (searchQuery.isBlank()) categories
+        else categories.filter { it.name.contains(searchQuery, ignoreCase = true) }
+    }
+
+    val providers = remember(isBengali, selectedZilla, searchQuery) {
+        val list = listOf(
+            ProviderMock("1", if(isBengali) "মোঃ রুবেল মিয়া" else "Md. Rubel Mia", if(isBengali) "৳ ৬০০ /ঘণ্টা" else "৳600 /hr", 4.8, 213, "বনানী, গুলশান, ঢাকা", "Plumber", if (isBengali) "প্লাম্বার" else "Plumber", Icons.Default.Plumbing),
+            ProviderMock("2", if(isBengali) "রহিম ট্রেডার্স" else "Rahim Traders", if(isBengali) "৳ ৪৫০ /ঘণ্টা" else "৳450 /hr", 4.5, 189, "কেডিএ অ্যাভিনিউ, বরিশাল", "General", if (isBengali) "সাধারণ" else "General", Icons.Default.Person),
+            ProviderMock("3", if(isBengali) "প্লাম্বিং এক্সপার্ট" else "Plumbing Expert", if(isBengali) "৳ ৭০০ /ঘণ্টা" else "৳700 /hr", 4.9, 310, "ধানমন্ডি, ঢাকা", "Plumber", "Plumber", Icons.Default.Plumbing)
+        )
+        list.filter { provider ->
+            val matchesZilla = selectedZilla == null || provider.area.contains(selectedZilla!!, ignoreCase = true)
+            val matchesQuery = searchQuery.isBlank() || provider.name.contains(searchQuery, ignoreCase = true) || provider.area.contains(searchQuery, ignoreCase = true)
+            matchesZilla && matchesQuery
+        }
+    }
     
     ModalNavigationDrawer(
         drawerState = drawerState,
@@ -268,53 +266,53 @@ fun HomeScreen(
                     isSelected = false,
                     onClick = { coroutineScope.launch { drawerState.close() } }
                 )
-                
-                Spacer(modifier = Modifier.weight(1f))
-                
-                // Footer
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { /* Logout action */ }
-                        .padding(horizontal = 24.dp, vertical = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.ExitToApp,
-                        contentDescription = "Logout",
-                        tint = Color(0xFFDC2626) // Red
-                    )
-                    Spacer(modifier = Modifier.width(16.dp))
-                    Text(
-                        text = if (isBengali) "লগ আউট" else "Log Out",
-                        color = Color(0xFFDC2626),
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 16.sp
-                    )
-                }
-                
-                Text(
-                    text = if (isBengali) "অ্যাপ ভার্সন v3.1.2" else "App Version v3.1.2",
-                    fontSize = 12.sp,
-                    color = Color.Gray,
-                    modifier = Modifier.padding(start = 24.dp, bottom = 24.dp)
-                )
             }
         }
     ) {
         Scaffold(
             topBar = {
                 GlobalAppBar(
-                    title = if (isBengali) "বরিশাল সিটি সার্ভিস" else "Barisal City Service",
+                    title = if (isBengali) "সেবা দেই ৩৬০" else "Sheba Dei 360",
                     navigationIcon = {
                         IconButton(onClick = { coroutineScope.launch { drawerState.open() } }) {
                             Icon(Icons.Default.Menu, contentDescription = "Menu")
                         }
                     },
                     actions = {
+                        // District Location Selector Badge
                         Row(
                             modifier = Modifier
-                                .padding(end = 16.dp)
+                                .clip(RoundedCornerShape(16.dp))
+                                .background(Color(0xFFF1F5F9))
+                                .clickable { showZillaFilterDialog = true }
+                                .padding(horizontal = 10.dp, vertical = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.LocationOn,
+                                contentDescription = "Select District",
+                                modifier = Modifier.size(16.dp),
+                                tint = Color(0xFF0F766E)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = selectedZilla ?: (if (isBengali) "সকল জেলা" else "All Districts"),
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF0F766E)
+                            )
+                            Icon(
+                                imageVector = Icons.Default.ArrowDropDown,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp),
+                                tint = Color(0xFF0F766E)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
+                        // Language Switcher
+                        Row(
+                            modifier = Modifier
+                                .padding(end = 12.dp)
                                 .clip(RoundedCornerShape(16.dp))
                                 .background(Color.LightGray.copy(alpha = 0.3f))
                                 .clickable {
@@ -347,20 +345,7 @@ fun HomeScreen(
                     NavigationBarItem(
                         icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
                         label = { Text(if (isBengali) "হোম" else "Home") },
-                        selected = false,
-                        onClick = { },
-                        colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = Color(0xFF1E3A8A),
-                            selectedTextColor = Color(0xFF1E3A8A),
-                            indicatorColor = Color.Transparent,
-                            unselectedIconColor = Color.Gray,
-                            unselectedTextColor = Color.Gray
-                        )
-                    )
-                    NavigationBarItem(
-                        icon = { Icon(Icons.Default.Search, contentDescription = "Search") },
-                        label = { Text(if (isBengali) "অনুসন্ধান" else "Search") },
-                        selected = true, // Set search as active based on image
+                        selected = true,
                         onClick = { },
                         colors = NavigationBarItemDefaults.colors(
                             selectedIconColor = Color(0xFF1E3A8A),
@@ -387,7 +372,7 @@ fun HomeScreen(
                         icon = { Icon(Icons.Default.Person, contentDescription = "Profile") },
                         label = { Text(if (isBengali) "প্রোফাইল" else "Profile") },
                         selected = false,
-                        onClick = { },
+                        onClick = { onNavigateToProfile() },
                         colors = NavigationBarItemDefaults.colors(
                             selectedIconColor = Color(0xFF1E3A8A),
                             selectedTextColor = Color(0xFF1E3A8A),
@@ -399,55 +384,93 @@ fun HomeScreen(
                 }
             }
         ) { innerPadding ->
+            if (showZillaFilterDialog) {
+                com.nayem.sheba_dei.ui.components.CustomDialog(
+                    onDismissRequest = { showZillaFilterDialog = false },
+                    title = if (isBengali) "জেলা নির্বাচন করুন" else "Select District",
+                    confirmButtonText = if (isBengali) "বন্ধ করুন" else "Close",
+                    onConfirm = { showZillaFilterDialog = false }
+                ) {
+                    androidx.compose.foundation.lazy.LazyColumn(
+                        modifier = Modifier.fillMaxWidth().heightIn(max = 400.dp)
+                    ) {
+                        item {
+                            TextButton(onClick = { 
+                                selectedZilla = null
+                                showZillaFilterDialog = false 
+                            }) {
+                                Text(if (isBengali) "সকল বাংলাদেশ (রিসেট)" else "All Bangladesh (Reset)", color = Color.Red, fontWeight = FontWeight.Bold)
+                            }
+                        }
+                        items(com.nayem.sheba_dei.core.utils.bangladeshZillas) { zilla ->
+                            TextButton(
+                                onClick = { 
+                                    selectedZilla = zilla
+                                    showZillaFilterDialog = false 
+                                },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text(
+                                    text = zilla,
+                                    color = if (selectedZilla == zilla) Color(0xFF0F766E) else Color.Black,
+                                    fontWeight = if (selectedZilla == zilla) FontWeight.Bold else FontWeight.Normal,
+                                    modifier = Modifier.fillMaxWidth(),
+                                    textAlign = androidx.compose.ui.text.style.TextAlign.Start
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding)
                     .padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(24.dp)
+                verticalArrangement = Arrangement.spacedBy(20.dp)
             ) {
+                // 1. Auto Slider Banner
                 item {
                     AutoSliderBanner()
                 }
 
-                // 3. Category Grid (2 rows of 4 items)
+                // 2. Category Grid Header
                 item {
-                    Text(if (isBengali) "আমাদের সেবাসমূহ" else "Our Services", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                    Text(
+                        text = if (isBengali) "সেবাসমূহ" else "Our Services",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
                 
                 item {
                     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        categories.chunked(4).forEach { rowCategories ->
+                        filteredCategories.chunked(4).forEach { rowCategories ->
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                 rowCategories.forEach { category ->
                                     CategoryItem(
                                         category = category,
                                         modifier = Modifier.weight(1f),
                                         onClick = {
-                                            if (category.name == "ডাক্তার" || category.name == "Doctor") {
-                                                onNavigateToDoctor()
-                                            } else if (category.name == "হাসপাতাল" || category.name == "Hospital") {
-                                                onNavigateToHospital()
-                                            } else if (category.name == "বাসা ভাড়া" || category.name == "House Rent") {
-                                                onNavigateToHouseRent()
-                                            } else if (category.name == "কেনা-কাটা" || category.name == "Shopping") {
-                                                onNavigateToShopping()
-                                            } else if (category.name == "পাত্র-পাত্রী" || category.name == "Matrimony") {
-                                                onNavigateToMatrimony()
-                                            } else if (category.name == "রক্তদাতা" || category.name == "Blood Donor") {
-                                                onNavigateToBloodDonor()
-                                            } else if (category.name == "ইভেন্ট সার্ভিস" || category.name == "Event Service") {
-                                                onNavigateToEventService()
-                                            } else if (category.name == "মিস্ত্রি" || category.name == "Mistri" || category.name == "Labour") {
-                                                onNavigateToMistriService()
-                                            } else if (category.name == "টিউটর" || category.name == "Tutor") {
-                                                onNavigateToTutor()
-                                            } else if (category.name == "হোটেল" || category.name == "Hotel") {
-                                                onNavigateToHotel()
-                                            } else if (category.name == "রেস্টুরেন্ট" || category.name == "Restaurant") {
-                                                onNavigateToRestaurant()
-                                            } else if (category.name == "ফ্ল্যাট ও জমি" || category.name == "Flat and Land") {
-                                                onNavigateToFlatLand()
+                                            when (category.name) {
+                                                "লোকেশন ভিত্তিক সেবা", "Location Based Services", "সকল সেবা", "All Services" -> onNavigateToAllServices()
+                                                "স্বাস্থ্য সেবা", "Health Services" -> onNavigateToHealthServices()
+                                                "যাতায়াত সেবা", "Transport Services", "বাস", "Bus", "ট্রেন", "Train", "লঞ্চ", "Launch" -> onNavigateToTransportService()
+                                                "ডাক্তার", "Doctor" -> onNavigateToDoctor()
+                                                "হাসপাতাল", "Hospital" -> onNavigateToHospital()
+                                                "বাসা ভাড়া", "House Rent" -> onNavigateToHouseRent()
+                                                "কেনা-কাটা", "Shopping" -> onNavigateToShopping()
+                                                "পাত্র-পাত্রী", "Matrimony" -> onNavigateToMatrimony()
+                                                "রাইড", "Ride" -> onNavigateToRide()
+                                                "কুরিয়ার", "Courier" -> onNavigateToCourier()
+                                                "রক্তদাতা", "Blood Donor" -> onNavigateToBloodDonor()
+                                                "ইভেন্ট সার্ভিস", "Event Service" -> onNavigateToEventService()
+                                                "জরুরী সেবা", "Emergency Service" -> onNavigateToEmergencyService()
+                                                "মিস্ত্রি", "Mistri", "Labour" -> onNavigateToMistriService()
+                                                "টিউটর", "Tutor" -> onNavigateToTutor()
+                                                "ফ্ল্যাট ও জমি", "Flat and Land" -> onNavigateToFlatLand()
+                                                else -> onNavigateToCategoryMap(category.name)
                                             }
                                         }
                                     )
@@ -473,6 +496,7 @@ fun HomeScreen(
                                     .height(130.dp)
                                     .clip(RoundedCornerShape(16.dp))
                                     .background(Color(0xFF2563EB)) // Blue Banner
+                                    .clickable { onNavigateToCategoryMap("ঈদ স্পেশাল অফার") }
                                     .padding(16.dp)
                             ) {
                                 // Decorative circles to simulate the image background
@@ -488,7 +512,6 @@ fun HomeScreen(
                                         modifier = Modifier
                                             .clip(RoundedCornerShape(20.dp))
                                             .background(Color.White)
-                                            .clickable { }
                                             .padding(horizontal = 16.dp, vertical = 6.dp)
                                     ) {
                                         Text(if (isBengali) "বুকিং করুন" else "Book Now", color = Color(0xFF2563EB), fontSize = 12.sp, fontWeight = FontWeight.Bold)
@@ -504,6 +527,7 @@ fun HomeScreen(
                                     .height(130.dp)
                                     .clip(RoundedCornerShape(16.dp))
                                     .background(Color(0xFF0F766E)) // Teal/Green Banner
+                                    .clickable { onNavigateToMistriService() }
                                     .padding(16.dp)
                             ) {
                                 // Background decoration
@@ -517,7 +541,6 @@ fun HomeScreen(
                                         modifier = Modifier
                                             .clip(RoundedCornerShape(20.dp))
                                             .background(Color.White)
-                                            .clickable { }
                                             .padding(horizontal = 16.dp, vertical = 6.dp)
                                     ) {
                                         Text(if (isBengali) "বিস্তারিত দেখুন" else "View Details", color = Color(0xFF0F766E), fontSize = 12.sp, fontWeight = FontWeight.Bold)
@@ -530,14 +553,21 @@ fun HomeScreen(
 
                 // 5. Popular Services Header
                 item {
-                    Text(if (isBengali) "জনপ্রিয় সেবা" else "Popular Services", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                    Text(if (isBengali) "জনপ্রিয় সেবা প্রোভাইডার" else "Popular Service Providers", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                 }
 
                 // 6. Provider List
                 items(providers) { provider ->
-                    ProviderCard(provider) {
-                        onNavigateToProviderDetails(provider.id)
-                    }
+                    ProviderCard(
+                        provider = provider,
+                        onCallClick = {
+                            val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:01712345678"))
+                            context.startActivity(intent)
+                        },
+                        onClick = {
+                            onNavigateToProviderDetails(provider.id)
+                        }
+                    )
                 }
                 
                 item {
@@ -598,7 +628,11 @@ fun CategoryItem(category: Category, modifier: Modifier = Modifier, onClick: () 
 }
 
 @Composable
-fun ProviderCard(provider: ProviderMock, onClick: () -> Unit) {
+fun ProviderCard(
+    provider: ProviderMock,
+    onCallClick: () -> Unit = {},
+    onClick: () -> Unit = {}
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -656,31 +690,31 @@ fun ProviderCard(provider: ProviderMock, onClick: () -> Unit) {
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(provider.icon, contentDescription = null, tint = Color(0xFF1E3A8A), modifier = Modifier.size(20.dp))
+                    Icon(provider.icon, contentDescription = null, tint = Color(0xFF0F766E), modifier = Modifier.size(20.dp))
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text(text = provider.categoryTextBan, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1E3A8A))
+                    Text(text = provider.categoryTextBan, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0F766E))
                 }
                 
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedButton(
-                        onClick = { },
+                        onClick = onCallClick,
                         shape = RoundedCornerShape(20.dp),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF1E3A8A)),
-                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF0F766E)),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
                     ) {
-                        Icon(Icons.Default.Call, contentDescription = "Call", tint = Color(0xFF1E3A8A), modifier = Modifier.size(16.dp))
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(text = "কল করুন", color = Color(0xFF1E3A8A), fontWeight = FontWeight.Bold)
+                        Icon(Icons.Default.Call, contentDescription = "Call", tint = Color(0xFF0F766E), modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(text = "কল করুন", color = Color(0xFF0F766E), fontWeight = FontWeight.Bold, fontSize = 12.sp)
                     }
                     Button(
-                        onClick = { },
+                        onClick = onClick,
                         shape = RoundedCornerShape(20.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1E3A8A)),
-                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0F766E)),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
                     ) {
-                        Icon(Icons.Default.Message, contentDescription = "Message", tint = Color.White, modifier = Modifier.size(16.dp))
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(text = "মেসেজ করুন", color = Color.White, fontWeight = FontWeight.Bold)
+                        Icon(Icons.Default.CalendarMonth, contentDescription = "Book", tint = Color.White, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(text = "বুকিং করুন", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp)
                     }
                 }
             }

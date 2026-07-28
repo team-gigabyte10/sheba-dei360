@@ -40,6 +40,7 @@ fun MistriServiceScreen(
 
     var showZillaFilterDialog by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
     var selectedZilla by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<String?>(null) }
+    var selectedCategoryForMap by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<MistriCategory?>(null) }
 
     val categories = listOf(
         MistriCategory("রাজ মিস্ত্রি", Icons.Default.Construction),
@@ -64,102 +65,116 @@ fun MistriServiceScreen(
         MistriCategory("অন্যান্য মিস্ত্রি", Icons.Default.MoreHoriz)
     )
 
-    Scaffold(
-        topBar = {
-            com.nayem.sheba_dei.ui.components.GlobalAppBar(
-                title = "মিস্ত্রি সার্ভিস",
-                onBackClick = onNavigateBack,
-                actions = {
-                    IconButton(onClick = { showZillaFilterDialog = true }) {
-                        Icon(Icons.Default.MoreVert, contentDescription = "More", tint = Color.Black)
-                    }
-                }
-            )
+    if (selectedCategoryForMap != null) {
+        androidx.activity.compose.BackHandler {
+            selectedCategoryForMap = null
         }
-    ) { innerPadding ->
-        if (showZillaFilterDialog) {
-            com.nayem.sheba_dei.ui.components.CustomDialog(
-                onDismissRequest = { showZillaFilterDialog = false },
-                title = "জেলা নির্বাচন করুন",
-                confirmButtonText = "বন্ধ করুন",
-                onConfirm = { showZillaFilterDialog = false }
-            ) {
-                androidx.compose.foundation.lazy.LazyColumn(
-                    modifier = Modifier.fillMaxWidth().heightIn(max = 400.dp)
+        MistriProviderMapScreen(
+            category = selectedCategoryForMap!!,
+            selectedZilla = selectedZilla,
+            onBack = { selectedCategoryForMap = null }
+        )
+    } else {
+        Scaffold(
+            topBar = {
+                com.nayem.sheba_dei.ui.components.GlobalAppBar(
+                    title = "মিস্ত্রি সার্ভিস",
+                    onBackClick = onNavigateBack,
+                    actions = {
+                        IconButton(onClick = { showZillaFilterDialog = true }) {
+                            Icon(Icons.Default.MoreVert, contentDescription = "More", tint = Color.Black)
+                        }
+                    }
+                )
+            }
+        ) { innerPadding ->
+            if (showZillaFilterDialog) {
+                com.nayem.sheba_dei.ui.components.CustomDialog(
+                    onDismissRequest = { showZillaFilterDialog = false },
+                    title = "জেলা নির্বাচন করুন",
+                    confirmButtonText = "বন্ধ করুন",
+                    onConfirm = { showZillaFilterDialog = false }
                 ) {
-                    item {
-                        TextButton(onClick = { 
-                            selectedZilla = null
-                            showZillaFilterDialog = false 
-                        }) {
-                            Text("রিসেট", color = Color.Red, fontWeight = FontWeight.Bold)
-                        }
-                    }
-                    items(com.nayem.sheba_dei.core.utils.bangladeshZillas) { zilla ->
-                        TextButton(
-                            onClick = { 
-                                selectedZilla = zilla
-                                showZillaFilterDialog = false 
-                            },
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text(
-                                text = zilla,
-                                color = if (selectedZilla == zilla) Color(0xFF1E3A8A) else Color.Black,
-                                fontWeight = if (selectedZilla == zilla) FontWeight.Bold else FontWeight.Normal,
-                                modifier = Modifier.fillMaxWidth(),
-                                textAlign = androidx.compose.ui.text.style.TextAlign.Start
-                            )
-                        }
-                    }
-                }
-            }
-        }
-
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color(0xFFF8FAFC)) // Light gray background
-                .padding(innerPadding)
-        ) {
-            // Ad Banner Box
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
-                    .height(130.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(Color(0xFF2563EB)) // Blue Banner similar to image
-                    .padding(16.dp)
-            ) {
-                // Banner text content
-                Column(verticalArrangement = Arrangement.Center, modifier = Modifier.fillMaxHeight()) {
-                    Text("আপনার সেবার", color = Color.White, fontSize = 14.sp)
-                    Text("বিজ্ঞাপন দিন", color = Color.White, fontSize = 22.sp, fontWeight = FontWeight.Bold)
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(20.dp))
-                            .background(Color(0xFF10B981))
-                            .padding(horizontal = 12.dp, vertical = 4.dp)
+                    androidx.compose.foundation.lazy.LazyColumn(
+                        modifier = Modifier.fillMaxWidth().heightIn(max = 400.dp)
                     ) {
-                        Text("আজই বিজ্ঞাপন দিন", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        item {
+                            TextButton(onClick = { 
+                                selectedZilla = null
+                                showZillaFilterDialog = false 
+                            }) {
+                                Text("রিসেট", color = Color.Red, fontWeight = FontWeight.Bold)
+                            }
+                        }
+                        items(com.nayem.sheba_dei.core.utils.bangladeshZillas) { zilla ->
+                            TextButton(
+                                onClick = { 
+                                    selectedZilla = zilla
+                                    showZillaFilterDialog = false 
+                                },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text(
+                                    text = zilla,
+                                    color = if (selectedZilla == zilla) Color(0xFF1E3A8A) else Color.Black,
+                                    fontWeight = if (selectedZilla == zilla) FontWeight.Bold else FontWeight.Normal,
+                                    modifier = Modifier.fillMaxWidth(),
+                                    textAlign = androidx.compose.ui.text.style.TextAlign.Start
+                                )
+                            }
+                        }
                     }
                 }
             }
 
-            // Categories Grid
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(4),
+            Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 12.dp),
-                contentPadding = PaddingValues(bottom = 24.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                    .background(Color(0xFFF8FAFC)) // Light gray background
+                    .padding(innerPadding)
             ) {
-                items(categories) { category ->
-                    MistriCategoryItem(category = category)
+                // Ad Banner Box
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                        .height(130.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(Color(0xFF2563EB)) // Blue Banner similar to image
+                        .padding(16.dp)
+                ) {
+                    // Banner text content
+                    Column(verticalArrangement = Arrangement.Center, modifier = Modifier.fillMaxHeight()) {
+                        Text("আপনার সেবার", color = Color.White, fontSize = 14.sp)
+                        Text("বিজ্ঞাপন দিন", color = Color.White, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(20.dp))
+                                .background(Color(0xFF10B981))
+                                .padding(horizontal = 12.dp, vertical = 4.dp)
+                        ) {
+                            Text("আজই বিজ্ঞাপন দিন", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+
+                // Categories Grid
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(4),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 12.dp),
+                    contentPadding = PaddingValues(bottom = 24.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(categories) { category ->
+                        MistriCategoryItem(
+                            category = category,
+                            onClick = { selectedCategoryForMap = category }
+                        )
+                    }
                 }
             }
         }
@@ -167,7 +182,10 @@ fun MistriServiceScreen(
 }
 
 @Composable
-fun MistriCategoryItem(category: MistriCategory) {
+fun MistriCategoryItem(
+    category: MistriCategory,
+    onClick: () -> Unit
+) {
     val colorPalette = listOf(
         Pair(Color(0xFF3B82F6), Color(0xFFDBEAFE)), // Blue
         Pair(Color(0xFF14B8A6), Color(0xFFCCFBF1)), // Teal
@@ -185,7 +203,7 @@ fun MistriCategoryItem(category: MistriCategory) {
         modifier = Modifier
             .fillMaxWidth()
             .aspectRatio(0.9f)
-            .clickable { },
+            .clickable { onClick() },
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)

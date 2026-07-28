@@ -84,7 +84,7 @@ fun MatrimonySearchScreen(
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(16.dp))
-                            .background(if (isSelected) Color(0xFFE91E63) else Color.White)
+                            .background(if (isSelected) Color(0xFFBE123C) else Color.White)
                             .border(1.dp, if (isSelected) Color.Transparent else Color(0xFFE2E8F0), RoundedCornerShape(16.dp))
                             .clickable { selectedFilter = filter }
                             .padding(horizontal = 16.dp, vertical = 8.dp)
@@ -154,7 +154,7 @@ fun SearchProfileCard(profile: MatrimonyProfile, onClick: () -> Unit) {
             }
             
             IconButton(onClick = { /* TODO Save to favorites */ }) {
-                Icon(Icons.Default.FavoriteBorder, contentDescription = "Favorite", tint = Color(0xFFE91E63))
+                Icon(Icons.Default.FavoriteBorder, contentDescription = "Favorite", tint = Color(0xFFBE123C))
             }
         }
     }

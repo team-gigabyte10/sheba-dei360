@@ -1,12 +1,16 @@
 package com.nayem.sheba_dei.feature.shopping
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -15,8 +19,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.nayem.sheba_dei.core.language.LocalAppLanguage
@@ -34,31 +43,79 @@ data class ProductInfo(
     val address: String,
     val latLng: String,
     val contactInfo: String,
-    val description: String
+    val description: String,
+    val condition: String = "Used"
+)
+
+data class ShoppingCategory(
+    val nameEng: String,
+    val nameBan: String,
+    val icon: ImageVector
+)
+
+val shoppingCategories = listOf(
+    ShoppingCategory("Services", "সার্ভিসেস", Icons.Default.Build),
+    ShoppingCategory("Repair & Construction", "রিপেয়ার ও কনস্ট্রাকশন", Icons.Default.Construction),
+    ShoppingCategory("Commercial Equipment & Tools", "কমার্শিয়াল ইকুইপমেন্ট", Icons.Default.PrecisionManufacturing),
+    ShoppingCategory("Leisure & Activities", "বিনোদন ও স্পোর্টস", Icons.Default.FitnessCenter),
+    ShoppingCategory("Babies & Kids", "শিশু ও কিডস", Icons.Default.ChildCare),
+    ShoppingCategory("Food, Agriculture & Farming", "খাবার ও কৃষি", Icons.Default.Agriculture),
+    ShoppingCategory("Animals & Pets", "পশুপাখি ও পেটস", Icons.Default.Pets),
+    ShoppingCategory("Jobs", "চাকরি", Icons.Default.Work),
+    ShoppingCategory("Seeking Work - CVs", "সিভি / কাজ খুঁজছি", Icons.Default.Description),
+    ShoppingCategory("Mobiles & Electronics", "মোবাইল ও ইলেকট্রনিক্স", Icons.Default.Smartphone),
+    ShoppingCategory("Vehicles & Property", "গাড়ি ও প্রপার্টি", Icons.Default.DirectionsCar),
+    ShoppingCategory("Home & Living", "হোম ও লিভিং", Icons.Default.Chair)
 )
 
 val dummyProducts = listOf(
     ProductInfo(
         id = "1",
-        productName = "HP Core i5 Laptop",
-        shopName = "Tech World BD",
+        productName = "Walton 32 GB Blue",
+        shopName = "Mohshin Telecom",
         date = "12 Jun 2026",
-        price = "৳৪৫,০০০",
-        address = "মুজিব সড়ক, ফরিদপুর",
+        price = "BDT 4,200",
+        address = "Pabna, Pabna Sadar",
         latLng = "23.6061,89.8406",
         contactInfo = "01711-223344",
-        description = "HP Core i5, 11th Gen, 8GB RAM, 512GB SSD. Used for 1 year. Fresh condition."
+        description = "Walton 32 GB Blue. Fresh condition.",
+        condition = "Used"
     ),
     ProductInfo(
         id = "2",
-        productName = "Redmi Note 12",
-        shopName = "Mobile Point",
+        productName = "Vivo Y20 64 GB Blue",
+        shopName = "Mohshin Telecom",
         date = "10 Jun 2026",
-        price = "৳১৫,০০০",
-        address = "নিউ মার্কেট, ফরিদপুর",
+        price = "BDT 5,300",
+        address = "Pabna, Pabna Sadar",
         latLng = "23.6012,89.8322",
         contactInfo = "01712-334455",
-        description = "4GB RAM, 128GB ROM. No scratches. Box and charger available."
+        description = "4GB RAM, 64GB ROM. No scratches.",
+        condition = "Used"
+    ),
+    ProductInfo(
+        id = "3",
+        productName = "HP Core i5 Laptop 11th Gen",
+        shopName = "Tech World BD",
+        date = "08 Jun 2026",
+        price = "BDT 45,000",
+        address = "Faridpur, Faridpur Sadar",
+        latLng = "23.6061,89.8406",
+        contactInfo = "01713-445566",
+        description = "8GB RAM, 512GB SSD. Excellent condition.",
+        condition = "Used"
+    ),
+    ProductInfo(
+        id = "4",
+        productName = "Redmi Note 12 (8/128)",
+        shopName = "Mobile Point",
+        date = "05 Jun 2026",
+        price = "BDT 15,000",
+        address = "Dhaka, New Market",
+        latLng = "23.7000,90.4000",
+        contactInfo = "01714-556677",
+        description = "Official variant with box and charger.",
+        condition = "Used"
     )
 )
 
@@ -72,25 +129,141 @@ fun ShoppingListScreen(
     val languageState = LocalAppLanguage.current
     val isBengali = languageState.isBengali
 
-    SetStatusBarColor()
+    SetStatusBarColor(colorString = "#FFFFFF", isLightIcons = false)
 
     var searchQuery by remember { mutableStateOf("") }
     var showZillaFilterDialog by remember { mutableStateOf(false) }
     var selectedZilla by remember { mutableStateOf<String?>(null) }
-    
-    val primaryColor = Color(0xFFE65100) // Orange theme for shopping
+    var selectedCategory by remember { mutableStateOf<String?>(null) }
+    var selectedCondition by remember { mutableStateOf("All") } // All, New, Used, Verified
+    var isGridView by remember { mutableStateOf(true) }
+
+    var favoriteProductIds by remember { mutableStateOf(setOf<String>()) }
+    var cartItems by remember { mutableStateOf(mapOf<ProductInfo, Int>()) }
+    var showCartDialog by remember { mutableStateOf(false) }
+    var showWishlistOnly by remember { mutableStateOf(false) }
+
+    val primaryColor = Color(0xFF059669) // Green theme accent
+
+    val context = LocalContext.current
+
+    val totalCartCount = cartItems.values.sum()
 
     Scaffold(
+        containerColor = Color(0xFFF8FAFC),
         topBar = {
-            GlobalAppBar(
-                title = if (isBengali) "কেনা-কাটা" else "Shopping",
-                onBackClick = onBack,
-                actions = {
-                    IconButton(onClick = { showZillaFilterDialog = true }) {
-                        Icon(Icons.Default.MoreVert, contentDescription = "Filter by Zilla", tint = Color.Black)
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Color.White)
+                    .padding(bottom = 10.dp)
+            ) {
+                GlobalAppBar(
+                    title = if (isBengali) "কেনা-কাটা" else "Shopping",
+                    onBackClick = onBack,
+                    containerColor = Color.White,
+                    contentColor = Color.Black,
+                    actions = {
+                        IconButton(onClick = { showWishlistOnly = !showWishlistOnly }) {
+                            Icon(
+                                imageVector = if (showWishlistOnly) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                                contentDescription = "Wishlist",
+                                tint = if (showWishlistOnly) Color(0xFFE11D48) else Color.DarkGray
+                            )
+                        }
+
+                        IconButton(
+                            onClick = { showCartDialog = true },
+                            modifier = Modifier.padding(end = 8.dp)
+                        ) {
+                            BadgedBox(
+                                badge = {
+                                    if (totalCartCount > 0) {
+                                        Badge(containerColor = primaryColor, contentColor = Color.White) {
+                                            Text("$totalCartCount")
+                                        }
+                                    }
+                                }
+                            ) {
+                                Icon(Icons.Default.ShoppingCart, contentDescription = "Cart", tint = primaryColor)
+                            }
+                        }
+                    }
+                )
+
+                // Single Row: 64 Zilla Dropdown Button & Search Box
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 14.dp),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // 1. 64 Zilla Selector
+                    Row(
+                        modifier = Modifier
+                            .widthIn(max = 135.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(Color(0xFFF1F5F9))
+                            .clickable { showZillaFilterDialog = true }
+                            .padding(horizontal = 10.dp, vertical = 9.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = selectedZilla ?: (if (isBengali) "বাংলাদেশ..." else "Banglade..."),
+                            color = Color(0xFF1F2937),
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Medium,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f, fill = false)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Icon(
+                            imageVector = Icons.Default.ArrowDropDown,
+                            contentDescription = "Select Zilla",
+                            tint = Color(0xFF4B5563),
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+
+                    // 2. Search Box
+                    Row(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(Color(0xFFF1F5F9))
+                            .padding(horizontal = 12.dp, vertical = 7.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
+                            if (searchQuery.isEmpty()) {
+                                Text(
+                                    text = if (isBengali) "আমি খুঁজছি..." else "I am looking for...",
+                                    color = Color(0xFF6B7280),
+                                    fontSize = 13.sp
+                                )
+                            }
+                            BasicTextField(
+                                value = searchQuery,
+                                onValueChange = { searchQuery = it },
+                                textStyle = TextStyle(color = Color(0xFF1F2937), fontSize = 13.sp),
+                                cursorBrush = SolidColor(Color(0xFF1F2937)),
+                                singleLine = true,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Icon(
+                            imageVector = Icons.Default.Search,
+                            contentDescription = "Search",
+                            tint = Color(0xFF6B7280),
+                            modifier = Modifier.size(20.dp)
+                        )
                     }
                 }
-            )
+            }
         },
         floatingActionButton = {
             FloatingActionButton(
@@ -110,27 +283,29 @@ fun ShoppingListScreen(
                 onConfirm = { showZillaFilterDialog = false }
             ) {
                 LazyColumn(
-                    modifier = Modifier.fillMaxWidth().heightIn(max = 400.dp)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(max = 400.dp)
                 ) {
                     item {
-                        TextButton(onClick = { 
+                        TextButton(onClick = {
                             selectedZilla = null
-                            showZillaFilterDialog = false 
+                            showZillaFilterDialog = false
                         }) {
-                            Text(if (isBengali) "রিসেট" else "Reset", color = Color.Red, fontWeight = FontWeight.Bold)
+                            Text(if (isBengali) "রিসেট (সকল বাংলাদেশ)" else "Reset (All Bangladesh)", color = Color.Red, fontWeight = FontWeight.Bold)
                         }
                     }
                     items(bangladeshZillas) { zilla ->
                         TextButton(
-                            onClick = { 
+                            onClick = {
                                 selectedZilla = zilla
-                                showZillaFilterDialog = false 
+                                showZillaFilterDialog = false
                             },
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Text(
                                 text = zilla,
-                                color = if (selectedZilla == zilla) Color(0xFF1E3A8A) else Color.Black,
+                                color = if (selectedZilla == zilla) Color(0xFF059669) else Color.Black,
                                 fontWeight = if (selectedZilla == zilla) FontWeight.Bold else FontWeight.Normal,
                                 modifier = Modifier.fillMaxWidth(),
                                 textAlign = TextAlign.Start
@@ -140,186 +315,546 @@ fun ShoppingListScreen(
                 }
             }
         }
-        
-        Column(
+
+        LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .background(Color(0xFFF3F4F6)) // Light gray background
+                .background(Color(0xFFF8FAFC)),
+            contentPadding = PaddingValues(bottom = 80.dp)
         ) {
-            // Search Bar Area
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                OutlinedTextField(
-                    value = searchQuery,
-                    onValueChange = { searchQuery = it },
-                    placeholder = { Text(if (isBengali) "পণ্য খুঁজুন..." else "Search product...") },
-                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search") },
+            // Categories Grid (4 items per row)
+            item {
+                Spacer(modifier = Modifier.height(16.dp))
+                Column(
                     modifier = Modifier
-                        .weight(1f)
-                        .background(Color.White, RoundedCornerShape(8.dp)),
-                    shape = RoundedCornerShape(8.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        unfocusedContainerColor = Color.White,
-                        focusedContainerColor = Color.White,
-                        unfocusedBorderColor = Color.LightGray,
-                        focusedBorderColor = primaryColor
-                    ),
-                    singleLine = true
-                )
-                
-                Spacer(modifier = Modifier.width(12.dp))
-                
-                // Count Badge
-                Box(
-                    modifier = Modifier
-                        .background(Color(0xFFFFE0B2), RoundedCornerShape(8.dp))
-                        .padding(horizontal = 16.dp, vertical = 14.dp),
-                    contentAlignment = Alignment.Center
+                        .fillMaxWidth()
+                        .padding(horizontal = 14.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    Text(
-                        text = "${dummyProducts.size}",
-                        color = Color.DarkGray,
-                        fontWeight = FontWeight.Bold
-                    )
+                    val filteredCategories = if (searchQuery.isNotEmpty()) {
+                        shoppingCategories.filter {
+                            it.nameEng.contains(searchQuery, ignoreCase = true) ||
+                            it.nameBan.contains(searchQuery, ignoreCase = true)
+                        }
+                    } else {
+                        shoppingCategories
+                    }
+
+                    filteredCategories.chunked(4).forEach { rowCategories ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            rowCategories.forEach { category ->
+                                CategoryCardItem(
+                                    category = category,
+                                    isBengali = isBengali,
+                                    isSelected = selectedCategory == category.nameEng,
+                                    modifier = Modifier.weight(1f),
+                                    onClick = {
+                                        selectedCategory = if (selectedCategory == category.nameEng) null else category.nameEng
+                                    }
+                                )
+                            }
+                            repeat(4 - rowCategories.size) {
+                                Spacer(modifier = Modifier.weight(1f))
+                            }
+                        }
+                    }
                 }
             }
 
-            // List of Products
-            LazyColumn(
-                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+            // Section Header: Trending & Condition Filter Chips
+            item {
+                Spacer(modifier = Modifier.height(20.dp))
+                Column(modifier = Modifier.padding(horizontal = 14.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = if (showWishlistOnly) (if (isBengali) "পছন্দের তালিকা" else "Wishlist") else (if (isBengali) "জনপ্রিয় পণ্য" else "Trending Items"),
+                            color = Color(0xFF0F172A),
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        IconButton(
+                            onClick = { isGridView = !isGridView },
+                            modifier = Modifier
+                                .size(36.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(Color(0xFFE2E8F0))
+                        ) {
+                            Icon(
+                                imageVector = if (isGridView) Icons.Default.FormatListBulleted else Icons.Default.GridView,
+                                contentDescription = "Toggle View",
+                                tint = Color(0xFF0F172A),
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    // Condition Filter Chips
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        val conditions = listOf("All" to "সব", "New" to "নতুন", "Used" to "ব্যবহৃত")
+                        conditions.forEach { (key, label) ->
+                            val isSelected = selectedCondition == key
+                            FilterChip(
+                                selected = isSelected,
+                                onClick = { selectedCondition = key },
+                                label = { Text(label, fontSize = 12.sp, fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium) },
+                                colors = FilterChipDefaults.filterChipColors(
+                                    selectedContainerColor = primaryColor,
+                                    selectedLabelColor = Color.White
+                                )
+                            )
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(10.dp))
+            }
+
+            // Shopping Cards Grid (2 items per row)
+            val filteredProducts = dummyProducts.filter { product ->
+                (selectedZilla == null || product.address.contains(selectedZilla!!, ignoreCase = true)) &&
+                (searchQuery.isEmpty() || product.productName.contains(searchQuery, ignoreCase = true) || product.address.contains(searchQuery, ignoreCase = true)) &&
+                (selectedCondition == "All" || product.condition.equals(selectedCondition, ignoreCase = true)) &&
+                (!showWishlistOnly || favoriteProductIds.contains(product.id))
+            }
+
+            if (filteredProducts.isEmpty()) {
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(32.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = if (isBengali) "কোনো পণ্য পাওয়া যায়নি" else "No products found",
+                            color = Color.Gray,
+                            fontSize = 14.sp
+                        )
+                    }
+                }
+            } else if (isGridView) {
+                filteredProducts.chunked(2).forEach { productPair ->
+                    item {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 14.dp, vertical = 5.dp),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            productPair.forEach { product ->
+                                ShoppingGridCard(
+                                    product = product,
+                                    isBengali = isBengali,
+                                    isFavorite = favoriteProductIds.contains(product.id),
+                                    onFavoriteToggle = {
+                                        favoriteProductIds = if (favoriteProductIds.contains(product.id)) {
+                                            favoriteProductIds - product.id
+                                        } else {
+                                            favoriteProductIds + product.id
+                                        }
+                                    },
+                                    onAddToCart = {
+                                        val currentQty = cartItems[product] ?: 0
+                                        cartItems = cartItems + (product to (currentQty + 1))
+                                        Toast.makeText(context, if (isBengali) "${product.productName} কার্টে যুক্ত হয়েছে" else "Added to cart", Toast.LENGTH_SHORT).show()
+                                    },
+                                    modifier = Modifier.weight(1f),
+                                    onNavigateToDetails = { onNavigateToDetails(product.id) }
+                                )
+                            }
+                            if (productPair.size == 1) {
+                                Spacer(modifier = Modifier.weight(1f))
+                            }
+                        }
+                    }
+                }
+            } else {
+                items(filteredProducts) { product ->
+                    Box(modifier = Modifier.padding(horizontal = 14.dp, vertical = 5.dp)) {
+                        ShoppingListCardItem(
+                            product = product,
+                            isBengali = isBengali,
+                            isFavorite = favoriteProductIds.contains(product.id),
+                            onFavoriteToggle = {
+                                favoriteProductIds = if (favoriteProductIds.contains(product.id)) {
+                                    favoriteProductIds - product.id
+                                } else {
+                                    favoriteProductIds + product.id
+                                }
+                            },
+                            onAddToCart = {
+                                val currentQty = cartItems[product] ?: 0
+                                cartItems = cartItems + (product to (currentQty + 1))
+                                Toast.makeText(context, if (isBengali) "${product.productName} কার্টে যুক্ত হয়েছে" else "Added to cart", Toast.LENGTH_SHORT).show()
+                            },
+                            onNavigateToDetails = { onNavigateToDetails(product.id) }
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    if (showCartDialog) {
+        ShoppingCartDialog(
+            cartItems = cartItems,
+            onDismiss = { showCartDialog = false },
+            onUpdateQty = { product, newQty ->
+                cartItems = if (newQty <= 0) {
+                    cartItems - product
+                } else {
+                    cartItems + (product to newQty)
+                }
+            },
+            onCheckout = {
+                cartItems = emptyMap()
+                showCartDialog = false
+                Toast.makeText(context, if (isBengali) "অর্ডার সফলভাবে প্লেস হয়েছে!" else "Order placed successfully!", Toast.LENGTH_LONG).show()
+            }
+        )
+    }
+}
+
+@Composable
+fun CategoryCardItem(
+    category: ShoppingCategory,
+    isBengali: Boolean,
+    isSelected: Boolean = false,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
+) {
+    Column(
+        modifier = modifier.clickable { onClick() },
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Box(
+            modifier = Modifier
+                .size(70.dp)
+                .clip(RoundedCornerShape(18.dp))
+                .background(if (isSelected) Color(0xFF059669) else Color(0xFFE6F4EA)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = category.icon,
+                contentDescription = category.nameEng,
+                tint = if (isSelected) Color.White else Color(0xFF059669),
+                modifier = Modifier.size(36.dp)
+            )
+        }
+        Spacer(modifier = Modifier.height(6.dp))
+        Text(
+            text = if (isBengali) category.nameBan else category.nameEng,
+            color = Color(0xFF1F2937),
+            fontSize = 13.sp,
+            fontWeight = FontWeight.SemiBold,
+            textAlign = TextAlign.Center,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+            lineHeight = 16.sp
+        )
+    }
+}
+
+@Composable
+fun ShoppingGridCard(
+    product: ProductInfo,
+    isBengali: Boolean,
+    isFavorite: Boolean = false,
+    onFavoriteToggle: () -> Unit = {},
+    onAddToCart: () -> Unit = {},
+    modifier: Modifier = Modifier,
+    onNavigateToDetails: () -> Unit
+) {
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable { onNavigateToDetails() },
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Column(modifier = Modifier.fillMaxWidth()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(150.dp)
+                    .background(Color(0xFFF1F5F9)),
+                contentAlignment = Alignment.Center
             ) {
-                items(dummyProducts) { product ->
-                    ShoppingCard(
-                        product = product, 
-                        isBengali = isBengali, 
-                        primaryColor = primaryColor,
-                        onNavigateToDetails = { onNavigateToDetails(product.id) }
+                Icon(
+                    imageVector = Icons.Default.Smartphone,
+                    contentDescription = null,
+                    tint = Color(0xFF94A3B8),
+                    modifier = Modifier.size(48.dp)
+                )
+
+                IconButton(
+                    onClick = onFavoriteToggle,
+                    modifier = Modifier.align(Alignment.TopEnd)
+                ) {
+                    Icon(
+                        imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                        contentDescription = "Bookmark",
+                        tint = if (isFavorite) Color(0xFFE11D48) else Color.DarkGray
                     )
                 }
+
+                Text(
+                    text = "SHEBA SHOPPING",
+                    color = Color.Black.copy(alpha = 0.08f),
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.align(Alignment.Center)
+                )
+            }
+
+            Column(
+                modifier = Modifier.padding(10.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = product.price,
+                        color = Color(0xFF059669),
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    IconButton(
+                        onClick = onAddToCart,
+                        modifier = Modifier.size(28.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.AddShoppingCart,
+                            contentDescription = "Add to Cart",
+                            tint = Color(0xFF059669),
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(2.dp))
+
+                Text(
+                    text = product.productName,
+                    color = Color(0xFF0F172A),
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+
+                Text(
+                    text = "${product.address} • ${product.condition}",
+                    color = Color(0xFF64748B),
+                    fontSize = 11.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
             }
         }
     }
 }
 
 @Composable
-fun ShoppingCard(
-    product: ProductInfo, 
-    isBengali: Boolean, 
-    primaryColor: Color,
+fun ShoppingListCardItem(
+    product: ProductInfo,
+    isBengali: Boolean,
+    isFavorite: Boolean = false,
+    onFavoriteToggle: () -> Unit = {},
+    onAddToCart: () -> Unit = {},
     onNavigateToDetails: () -> Unit
 ) {
     Card(
-        modifier = Modifier.fillMaxWidth().clickable { onNavigateToDetails() },
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onNavigateToDetails() },
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
-        Column(modifier = Modifier.fillMaxWidth()) {
-            
-            // Top: Image Box
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(10.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .height(200.dp)
-                    .background(Color(0xFFE5E7EB)), // Light Gray
+                    .size(85.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(Color(0xFFF1F5F9)),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(Icons.Default.Image, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(64.dp))
-                
-                // Price Tag overlay
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(12.dp)
-                        .background(primaryColor, RoundedCornerShape(8.dp))
-                        .padding(horizontal = 12.dp, vertical = 6.dp)
-                ) {
-                    Text(
-                        text = product.price,
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 14.sp
-                    )
-                }
+                Icon(
+                    imageVector = Icons.Default.Smartphone,
+                    contentDescription = null,
+                    tint = Color(0xFF94A3B8),
+                    modifier = Modifier.size(36.dp)
+                )
             }
-            
-            // Carousel Dots Mock
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 12.dp),
-                horizontalArrangement = Arrangement.Center
-            ) {
-                repeat(4) { index ->
-                    Box(
-                        modifier = Modifier
-                            .padding(horizontal = 4.dp)
-                            .size(if (index == 0) 8.dp else 6.dp)
-                            .clip(CircleShape)
-                            .background(if (index == 0) primaryColor else Color.LightGray)
-                    )
-                }
-            }
-            
-            // Bottom: Details
-            Column(modifier = Modifier.padding(16.dp)) {
-                // Name and Date
+            Spacer(modifier = Modifier.width(12.dp))
+            Column(modifier = Modifier.weight(1f)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.Top
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = product.productName,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 18.sp,
-                        color = Color.Black,
-                        modifier = Modifier.weight(1f)
+                        text = product.price,
+                        color = Color(0xFF059669),
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Bold
                     )
-                    Text(
-                        text = product.date,
-                        color = Color.Gray,
-                        fontSize = 12.sp,
-                        modifier = Modifier.padding(top = 4.dp)
-                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        IconButton(onClick = onFavoriteToggle, modifier = Modifier.size(28.dp)) {
+                            Icon(
+                                imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                                contentDescription = "Bookmark",
+                                tint = if (isFavorite) Color(0xFFE11D48) else Color.DarkGray,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                        IconButton(onClick = onAddToCart, modifier = Modifier.size(28.dp)) {
+                            Icon(
+                                imageVector = Icons.Default.AddShoppingCart,
+                                contentDescription = "Add to Cart",
+                                tint = Color(0xFF059669),
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                    }
                 }
-                
-                Spacer(modifier = Modifier.height(12.dp))
-                
-                // Shop Name
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.Storefront, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(16.dp))
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(product.shopName, fontSize = 14.sp, color = Color.DarkGray)
-                }
-                
-                Spacer(modifier = Modifier.height(6.dp))
-                
-                // Address
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.LocationOn, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(16.dp))
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(product.address, fontSize = 14.sp, color = Color.DarkGray)
-                }
-                
-                Spacer(modifier = Modifier.height(16.dp))
-                
-                // View Details Button (Full Width)
-                Button(
-                    onClick = onNavigateToDetails,
-                    colors = ButtonDefaults.buttonColors(containerColor = primaryColor),
-                    shape = RoundedCornerShape(8.dp),
-                    modifier = Modifier.fillMaxWidth().height(48.dp)
-                ) {
-                    Text(if (isBengali) "বিস্তারিত দেখুন" else "View Details", fontSize = 16.sp, color = Color.White, fontWeight = FontWeight.Bold)
-                }
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = product.productName,
+                    color = Color(0xFF0F172A),
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "${product.address} • ${product.condition}",
+                    color = Color(0xFF64748B),
+                    fontSize = 12.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
             }
         }
     }
+}
+
+@Composable
+fun ShoppingCartDialog(
+    cartItems: Map<ProductInfo, Int>,
+    onDismiss: () -> Unit,
+    onUpdateQty: (ProductInfo, Int) -> Unit,
+    onCheckout: () -> Unit
+) {
+    val subtotal = cartItems.entries.sumOf { (product, qty) ->
+        val digitsOnly = product.price.filter { it.isDigit() }
+        val priceInt = digitsOnly.toIntOrNull() ?: 0
+        priceInt * qty
+    }
+    val deliveryFee = if (cartItems.isEmpty()) 0 else 60
+    val grandTotal = subtotal + deliveryFee
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Default.ShoppingCart, contentDescription = null, tint = Color(0xFF059669))
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("শপিং কার্ট (${cartItems.values.sum()} টি পণ্য)", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = Color(0xFF059669))
+            }
+        },
+        text = {
+            if (cartItems.isEmpty()) {
+                Box(modifier = Modifier.fillMaxWidth().padding(24.dp), contentAlignment = Alignment.Center) {
+                    Text("আপনার কার্ট বর্তমানে খালি।", color = Color.Gray)
+                }
+            } else {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    cartItems.forEach { (product, qty) ->
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(containerColor = Color(0xFFF1F5F9)),
+                            shape = RoundedCornerShape(10.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(10.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(product.productName, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                                    Text(product.price, fontSize = 12.sp, color = Color(0xFF059669), fontWeight = FontWeight.SemiBold)
+                                }
+
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    IconButton(onClick = { onUpdateQty(product, qty - 1) }, modifier = Modifier.size(28.dp)) {
+                                        Icon(Icons.Default.Remove, contentDescription = "Decrease", modifier = Modifier.size(16.dp))
+                                    }
+                                    Text("$qty", fontWeight = FontWeight.Bold, fontSize = 14.sp, modifier = Modifier.padding(horizontal = 6.dp))
+                                    IconButton(onClick = { onUpdateQty(product, qty + 1) }, modifier = Modifier.size(28.dp)) {
+                                        Icon(Icons.Default.Add, contentDescription = "Increase", modifier = Modifier.size(16.dp))
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp), color = Color(0xFFCBD5E1))
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                        Text("পণ্যের সাবটোটাল:", fontSize = 13.sp, color = Color.DarkGray)
+                        Text("৳ $subtotal", fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                    }
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                        Text("ডেলিভারি চার্জ:", fontSize = 13.sp, color = Color.DarkGray)
+                        Text("৳ $deliveryFee", fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                    }
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                        Text("সর্বমোট মূল্য:", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = Color(0xFF059669))
+                        Text("৳ $grandTotal", fontSize = 18.sp, fontWeight = FontWeight.ExtraBold, color = Color(0xFF059669))
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            if (cartItems.isNotEmpty()) {
+                Button(
+                    onClick = onCheckout,
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF059669))
+                ) {
+                    Text("অর্ডার নিশ্চিত করুন", color = Color.White, fontWeight = FontWeight.Bold)
+                }
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("বন্ধ করুন", color = Color.Gray)
+            }
+        }
+    )
 }
