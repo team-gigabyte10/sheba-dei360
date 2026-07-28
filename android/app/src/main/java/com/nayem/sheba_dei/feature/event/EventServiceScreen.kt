@@ -27,6 +27,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import android.content.Intent
+import android.net.Uri
+import androidx.activity.compose.BackHandler
+import androidx.compose.ui.platform.LocalContext
+import com.nayem.sheba_dei.core.language.LocalAppLanguage
 import com.nayem.sheba_dei.ui.components.SetStatusBarColor
 
 @Composable
@@ -34,88 +39,168 @@ fun EventServiceScreen(
     onNavigateBack: () -> Unit
 ) {
     SetStatusBarColor()
+    val context = LocalContext.current
+    val isBengali = LocalAppLanguage.current.isBengali
+
     var showZillaFilterDialog by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
     var selectedZilla by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<String?>(null) }
 
-    Scaffold(
-        containerColor = Color(0xFFF8FAFC), // Light gray background
-        topBar = {
-            com.nayem.sheba_dei.ui.components.GlobalAppBar(
-                title = "ইভেন্ট সার্ভিস",
-                onBackClick = onNavigateBack,
-                actions = {
-                    IconButton(onClick = { showZillaFilterDialog = true }) {
-                        Icon(Icons.Default.MoreVert, contentDescription = "More", tint = Color.Black)
-                    }
-                }
-            )
+    var selectedCategoryForMap by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<EventCategory?>(null) }
+    var showBudgetCalculator by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
+
+    if (selectedCategoryForMap != null) {
+        BackHandler {
+            selectedCategoryForMap = null
         }
-    ) { innerPadding ->
-        if (showZillaFilterDialog) {
-            com.nayem.sheba_dei.ui.components.CustomDialog(
-                onDismissRequest = { showZillaFilterDialog = false },
-                title = "জেলা নির্বাচন করুন",
-                confirmButtonText = "বন্ধ করুন",
-                onConfirm = { showZillaFilterDialog = false }
-            ) {
-                androidx.compose.foundation.lazy.LazyColumn(
-                    modifier = Modifier.fillMaxWidth().heightIn(max = 400.dp)
+        EventProviderMapScreen(
+            category = selectedCategoryForMap!!,
+            selectedZilla = selectedZilla,
+            onBack = { selectedCategoryForMap = null }
+        )
+    } else {
+        Scaffold(
+            containerColor = Color(0xFFF8FAFC),
+            topBar = {
+                com.nayem.sheba_dei.ui.components.GlobalAppBar(
+                    title = if (isBengali) "ইভেন্ট সার্ভিস" else "Event Services",
+                    onBackClick = onNavigateBack,
+                    actions = {
+                        IconButton(onClick = { showZillaFilterDialog = true }) {
+                            Icon(Icons.Default.MoreVert, contentDescription = "More", tint = Color.Black)
+                        }
+                    }
+                )
+            }
+        ) { innerPadding ->
+            if (showZillaFilterDialog) {
+                com.nayem.sheba_dei.ui.components.CustomDialog(
+                    onDismissRequest = { showZillaFilterDialog = false },
+                    title = "জেলা নির্বাচন করুন",
+                    confirmButtonText = "বন্ধ করুন",
+                    onConfirm = { showZillaFilterDialog = false }
                 ) {
-                    item {
-                        TextButton(onClick = { 
-                            selectedZilla = null
-                            showZillaFilterDialog = false 
-                        }) {
-                            Text("রিসেট", color = Color.Red, fontWeight = FontWeight.Bold)
-                        }
-                    }
-                    items(com.nayem.sheba_dei.core.utils.bangladeshZillas) { zilla ->
-                        TextButton(
-                            onClick = { 
-                                selectedZilla = zilla
+                    androidx.compose.foundation.lazy.LazyColumn(
+                        modifier = Modifier.fillMaxWidth().heightIn(max = 400.dp)
+                    ) {
+                        item {
+                            TextButton(onClick = { 
+                                selectedZilla = null
                                 showZillaFilterDialog = false 
-                            },
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text(
-                                text = zilla,
-                                color = if (selectedZilla == zilla) Color(0xFF1E3A8A) else Color.Black,
-                                fontWeight = if (selectedZilla == zilla) FontWeight.Bold else FontWeight.Normal,
-                                modifier = Modifier.fillMaxWidth(),
-                                textAlign = androidx.compose.ui.text.style.TextAlign.Start
-                            )
+                            }) {
+                                Text("রিসেট", color = Color.Red, fontWeight = FontWeight.Bold)
+                            }
+                        }
+                        items(com.nayem.sheba_dei.core.utils.bangladeshZillas) { zilla ->
+                            TextButton(
+                                onClick = { 
+                                    selectedZilla = zilla
+                                    showZillaFilterDialog = false 
+                                },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text(
+                                    text = zilla,
+                                    color = if (selectedZilla == zilla) Color(0xFF1E3A8A) else Color.Black,
+                                    fontWeight = if (selectedZilla == zilla) FontWeight.Bold else FontWeight.Normal,
+                                    modifier = Modifier.fillMaxWidth(),
+                                    textAlign = androidx.compose.ui.text.style.TextAlign.Start
+                                )
+                            }
                         }
                     }
                 }
             }
-        }
 
-        LazyVerticalGrid(
-
-            columns = GridCells.Fixed(3),
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .statusBarsPadding(),
-            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            // Top Banner
-            item(span = { GridItemSpan(3) }) {
-                EventBanner()
+            if (showBudgetCalculator) {
+                EventBudgetCalculatorDialog(
+                    onDismissRequest = { showBudgetCalculator = false }
+                )
             }
 
-            // Categories
-            items(eventCategories) { category ->
-                EventCategoryItem(category)
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(3),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding),
+                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                // Top Banner
+                item(span = { GridItemSpan(3) }) {
+                    EventBanner(
+                        onCallClick = {
+                            val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:01703418374"))
+                            context.startActivity(intent)
+                        }
+                    )
+                }
+
+                // Quick Budget Calculator Bar
+                item(span = { GridItemSpan(3) }) {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { showBudgetCalculator = true },
+                        shape = RoundedCornerShape(14.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFF1E3A8A)),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                Surface(
+                                    shape = CircleShape,
+                                    color = Color(0xFF3B82F6).copy(alpha = 0.3f),
+                                    modifier = Modifier.size(40.dp)
+                                ) {
+                                    Box(contentAlignment = Alignment.Center) {
+                                        Icon(Icons.Default.Calculate, contentDescription = null, tint = Color.White, modifier = Modifier.size(24.dp))
+                                    }
+                                }
+                                Column {
+                                    Text(
+                                        text = if (isBengali) "ইভেন্ট বাজেট ক্যালকুলেটর" else "Event Budget Calculator",
+                                        color = Color.White,
+                                        fontSize = 15.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Text(
+                                        text = if (isBengali) "মেহমান অনুযায়ী ক্যাটারিং ও ডেকোরেশন খরচ জানুন" else "Estimate catering & decoration costs",
+                                        color = Color(0xFF93C5FD),
+                                        fontSize = 11.sp
+                                    )
+                                }
+                            }
+                            Icon(Icons.Default.ChevronRight, contentDescription = null, tint = Color.White)
+                        }
+                    }
+                }
+
+                // Categories
+                items(eventCategories) { category ->
+                    EventCategoryItem(
+                        category = category,
+                        onClick = { selectedCategoryForMap = category }
+                    )
+                }
             }
         }
     }
 }
 
 @Composable
-fun EventBanner() {
+fun EventBanner(
+    onCallClick: () -> Unit = {}
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -174,6 +259,7 @@ fun EventBanner() {
                     modifier = Modifier
                         .background(Color.White, RoundedCornerShape(16.dp))
                         .border(1.dp, Color(0xFF10B981), RoundedCornerShape(16.dp))
+                        .clickable { onCallClick() }
                         .padding(horizontal = 12.dp, vertical = 4.dp)
                 ) {
                     Icon(Icons.Default.Phone, contentDescription = "Phone", tint = Color(0xFF10B981), modifier = Modifier.size(16.dp))
@@ -186,12 +272,15 @@ fun EventBanner() {
 }
 
 @Composable
-fun EventCategoryItem(category: EventCategory) {
+fun EventCategoryItem(
+    category: EventCategory,
+    onClick: () -> Unit = {}
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .aspectRatio(1f)
-            .clickable { /* Handle Click */ },
+            .clickable { onClick() },
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
         shape = RoundedCornerShape(12.dp),

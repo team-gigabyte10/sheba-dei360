@@ -3,6 +3,7 @@ package com.nayem.sheba_dei.feature.houserent
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -49,17 +50,27 @@ fun HouseRentListScreen(onBack: () -> Unit) {
     SetStatusBarColor()
 
     var searchQuery by remember { mutableStateOf("") }
-    
     var showZillaFilterDialog by remember { mutableStateOf(false) }
     var selectedZilla by remember { mutableStateOf<String?>(null) }
-    
-    val primaryColor = Color(0xFF00897B) // Teal theme matching the image
+    val primaryColor = Color(0xFF00897B)
+
+    var selectedSubCategory by remember { mutableStateOf("সব") }
+    val houseRentSubCategories = listOf(
+        "সব",
+        "ফ্ল্যাট ভাড়া",
+        "ব্যাচেলর রুম/সিট",
+        "সাবলেট",
+        "হোস্টেল",
+        "অফিস স্পেস",
+        "দোকান",
+        "গ্যারেজ"
+    )
 
     val dummyHouses = listOf(
         HouseRentInfo(
             landlordName = "Sabira Priyq",
             date = "06 Jun 2026",
-            houseType = if (isBengali) "ফ্লাট বাসা" else "Flat House",
+            houseType = "ফ্ল্যাট ভাড়া",
             address = if (isBengali) "অম্বিকাপুর, গ্রামীন ফোনের টাওয়ারের সামনে। সদর, ফরিদপুর" else "Ambikapur, In front of GP Tower. Sadar, Faridpur",
             latLng = "23.6061,89.8406",
             contactInfo = "01711-223344",
@@ -69,14 +80,46 @@ fun HouseRentListScreen(onBack: () -> Unit) {
         HouseRentInfo(
             landlordName = "MD Shahidul Islam",
             date = "03 Jun 2026",
-            houseType = if (isBengali) "ফ্লাট বাসা" else "Flat House",
+            houseType = "ব্যাচেলর রুম/সিট",
             address = if (isBengali) "চুনাঘাটা ব্রীজের ওপার, ইকবালের ফার্ম এর সামনের বাসা" else "Across Chunaghata Bridge, In front of Iqbal's farm",
             latLng = "23.6012,89.8322",
             contactInfo = "01712-334455",
-            rentAmount = if (isBengali) "৳৮,৫০০/মাস" else "৳8,500/month",
-            details = if (isBengali) "২ বেডরুমের ছিমছাম বাসা। ছোট ফ্যামিলির জন্য উপযোগী।" else "Neat 2 bedroom house. Suitable for small family."
+            rentAmount = if (isBengali) "৳৪,৫০০/মাস" else "৳4,500/month",
+            details = if (isBengali) "ব্যাচেলর ছাত্রদের জন্য ১টি সিঙ্গেল সিট খালি আছে। ওয়াইফাই ও ফিল্টার পানি ফ্রি।" else "Single bachelor seat available for students. Free Wifi & Filter water."
+        ),
+        HouseRentInfo(
+            landlordName = "রফিকুল ইসলাম",
+            date = "01 Jun 2026",
+            houseType = "অফিস স্পেস",
+            address = if (isBengali) "ধানমন্ডি ২৭, ঢাকা" else "Dhanmondi 27, Dhaka",
+            latLng = "23.7542,90.3768",
+            contactInfo = "01713-556677",
+            rentAmount = if (isBengali) "৳৩৫,০০০/মাস" else "৳35,000/month",
+            details = if (isBengali) "১২০০ বর্গফুট বাণিজ্যিক স্পেস অফিস বা শোরুমের জন্য ভাড়া দেওয়া হবে।" else "1200 sqft commercial space for office or showroom."
+        ),
+        HouseRentInfo(
+            landlordName = "কামরুল হাসান",
+            date = "28 May 2026",
+            houseType = "দোকান",
+            address = if (isBengali) "মিরপুর ১০ প্রধান সড়ক, ঢাকা" else "Mirpur 10 Main Road, Dhaka",
+            latLng = "23.8069,90.3687",
+            contactInfo = "01819-889900",
+            rentAmount = if (isBengali) "৳২৫,০০০/মাস" else "৳25,000/month",
+            details = if (isBengali) "প্রধান সড়ক সংলগ্ন রেডি দোকান। আইটি বা রিটেইল শপের জন্য আদর্শ।" else "Ready shop on main road. Ideal for IT or retail."
         )
     )
+
+    val filteredHouses = remember(searchQuery, selectedSubCategory, selectedZilla) {
+        dummyHouses.filter { house ->
+            val matchesQuery = searchQuery.isEmpty() ||
+                    house.landlordName.contains(searchQuery, ignoreCase = true) ||
+                    house.address.contains(searchQuery, ignoreCase = true) ||
+                    house.details.contains(searchQuery, ignoreCase = true)
+            val matchesCategory = selectedSubCategory == "সব" || house.houseType == selectedSubCategory
+            val matchesZilla = selectedZilla == null || house.address.contains(selectedZilla!!, ignoreCase = true)
+            matchesQuery && matchesCategory && matchesZilla
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -171,19 +214,46 @@ fun HouseRentListScreen(onBack: () -> Unit) {
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "${dummyHouses.size}",
+                        text = "${filteredHouses.size}",
                         color = Color.DarkGray,
                         fontWeight = FontWeight.Bold
                     )
                 }
             }
 
+            // Sub-category Filter Chips
+            androidx.compose.foundation.lazy.LazyRow(
+                contentPadding = PaddingValues(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                items(houseRentSubCategories) { cat ->
+                    val isSelected = cat == selectedSubCategory
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(20.dp))
+                            .background(if (isSelected) primaryColor else Color.White)
+                            .border(1.dp, if (isSelected) Color.Transparent else Color.LightGray, RoundedCornerShape(20.dp))
+                            .clickable { selectedSubCategory = cat }
+                            .padding(horizontal = 14.dp, vertical = 8.dp)
+                    ) {
+                        Text(
+                            text = cat,
+                            color = if (isSelected) Color.White else Color.DarkGray,
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                            fontSize = 13.sp
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
             // List of Houses
             LazyColumn(
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                items(dummyHouses) { house ->
+                items(filteredHouses) { house ->
                     HouseRentCard(house = house, isBengali = isBengali, primaryColor = primaryColor)
                 }
             }
