@@ -1,0 +1,52 @@
+package com.barisal.cityservice.feature.splash
+
+import android.content.Context
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
+import kotlinx.coroutines.delay
+import com.barisal.cityservice.core.language.LocalAppLanguage
+
+@Composable
+fun SplashScreen(
+    onNavigateToHome: () -> Unit,
+    onNavigateToOnboarding: () -> Unit
+) {
+    val isBengali = LocalAppLanguage.current.isBengali
+    val context = LocalContext.current
+
+    LaunchedEffect(key1 = true) {
+        delay(2000L) // Simulate some loading/delay
+        
+        val sharedPreferences = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+        val isOnboardingCompleted = sharedPreferences.getBoolean("onboarding_completed", false)
+        
+        if (isOnboardingCompleted) {
+            onNavigateToHome()
+        } else {
+            onNavigateToOnboarding()
+        }
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.primary),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = if (isBengali) "বরিশাল সিটি সার্ভিস" else "Barisal City Service",
+            style = MaterialTheme.typography.displayMedium,
+            color = MaterialTheme.colorScheme.onPrimary,
+            fontWeight = FontWeight.Bold
+        )
+    }
+}

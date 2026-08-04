@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "757090506347",
+    "firebase_url": "https://buy-now-31fd2-default-rtdb.firebaseio.com",
+    "project_id": "buy-now-31fd2",
+    "storage_bucket": "buy-now-31fd2.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:757090506347:android:faa01433e849352274432e",
+        "android_client_info": {
+          "package_name": "com.barisal.cityservice"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "757090506347-66ul54giumvf41o1ct4u2d96nhe23u1p.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDPBcKBKWkEQZeqBDdCDAXBQUs4Bfybk30"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "757090506347-66ul54giumvf41o1ct4u2d96nhe23u1p.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,14 +1,15 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.google.services)
 }
 
 android {
-    namespace = "com.nayem.sheba_dei"
+    namespace = "com.barisal.cityservice"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.nayem.sheba_dei"
+        applicationId = "com.barisal.cityservice"
         minSdk = 24
         targetSdk = 35
         versionCode = 1
@@ -31,6 +32,19 @@ android {
     buildFeatures {
         compose = true
     }
+    packaging {
+        resources {
+            excludes += "/META-INF/{AL2.0,LGPL2.1}"
+            excludes += "META-INF/DEPENDENCIES"
+            excludes += "META-INF/LICENSE"
+            excludes += "META-INF/LICENSE.txt"
+            excludes += "META-INF/license.txt"
+            excludes += "META-INF/NOTICE"
+            excludes += "META-INF/NOTICE.txt"
+            excludes += "META-INF/notice.txt"
+            excludes += "META-INF/INDEX.LIST"
+        }
+    }
 }
 
 dependencies {
@@ -47,6 +61,18 @@ dependencies {
 
     // Navigation
     implementation(libs.androidx.navigation.compose)
+
+    // Firebase SDKs
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.analytics)
+    implementation(libs.firebase.auth)
+    implementation(libs.firebase.firestore)
+    implementation(libs.firebase.database)
+    implementation(libs.firebase.functions)
+    // Google Auth & Google Drive API Credentials
+    implementation("com.google.auth:google-auth-library-oauth2-http:1.23.0") {
+        exclude(group = "org.apache.httpcomponents", module = "httpclient")
+    }
 
     // Retrofit
     implementation(libs.retrofit)

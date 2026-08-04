@@ -1,0 +1,467 @@
+package com.barisal.cityservice.feature.admin
+
+import android.net.Uri
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import coil.compose.rememberAsyncImagePainter
+import com.barisal.cityservice.core.language.LocalAppLanguage
+import com.barisal.cityservice.data.model.CategoryDto
+import com.barisal.cityservice.data.model.CategoryItem
+import com.barisal.cityservice.data.repository.CITY_SERVICE_DRIVE_FOLDER_ID
+import com.barisal.cityservice.data.repository.CategoryRepository
+import com.barisal.cityservice.ui.components.GlobalAppBar
+import com.barisal.cityservice.core.utils.toCoilModel
+import kotlinx.coroutines.launch
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AddCategoryScreen(
+    onNavigateBack: () -> Unit = {}
+) {
+    val context = LocalContext.current
+    val isBengali = LocalAppLanguage.current.isBengali
+    val coroutineScope = rememberCoroutineScope()
+
+    var nameEn by remember { mutableStateOf("") }
+    var nameBn by remember { mutableStateOf("") }
+    var routeKey by remember { mutableStateOf("") }
+    var displayOrder by remember { mutableStateOf("1") }
+    var isActive by remember { mutableStateOf(true) }
+
+    var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
+    var isUploading by remember { mutableStateOf(false) }
+
+    val categoryRepository = remember { CategoryRepository() }
+    val categories by categoryRepository.getCategoriesFlow()
+        .collectAsState(initial = categoryRepository.getDefaultCategories())
+
+    val imagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        selectedImageUri = uri
+    }
+
+    Scaffold(
+        topBar = {
+            GlobalAppBar(
+                title = if (isBengali) "ক্যাটাগরি এন্ট্রি (City_Service)" else "Category Entry (City_Service)",
+                navigationIcon = {
+                    IconButton(onClick = onNavigateBack) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back",
+                            tint = Color.White
+                        )
+                    }
+                }
+            )
+        }
+    ) { paddingValues ->
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            item {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFFF8FAFC)),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Text(
+                            text = if (isBengali) "স্থায়ী ক্যাটাগরি তথ্য (Static Preset)" else "Static System Categories (System Preset)",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF1E293B)
+                        )
+
+                        Text(
+                            text = if (isBengali) "ক্যাটাগরিগুলো অ্যাপের অভ্যন্তরীণ স্থায়ী ডেটা (ফায়ারস্টোরে সংরক্ষিত হবে না)" else "Categories are static system presets (Not stored in Firestore)",
+                            fontSize = 12.sp,
+                            color = Color(0xFF0F766E),
+                            fontWeight = FontWeight.Medium
+                        )
+
+                        // 1. English Name Input
+                        OutlinedTextField(
+                            value = nameEn,
+                            onValueChange = { nameEn = it },
+                            label = { Text(if (isBengali) "ক্যাটাগরি নাম (English)" else "Category Name (English)") },
+                            placeholder = { Text("e.g. Health Services") },
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true
+                        )
+
+                        // 2. Bengali Name Input
+                        OutlinedTextField(
+                            value = nameBn,
+                            onValueChange = { nameBn = it },
+                            label = { Text(if (isBengali) "ক্যাটাগরি নাম (বাংলা)" else "Category Name (Bengali)") },
+                            placeholder = { Text("e.g. স্বাস্থ্য সেবা") },
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true
+                        )
+
+                        // 3. Route Key
+                        OutlinedTextField(
+                            value = routeKey,
+                            onValueChange = { routeKey = it },
+                            label = { Text(if (isBengali) "রুট কি (Route Identifier)" else "Route Identifier Key") },
+                            placeholder = { Text("e.g. health") },
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true
+                        )
+
+                        // 4. Display Order
+                        OutlinedTextField(
+                            value = displayOrder,
+                            onValueChange = { displayOrder = it },
+                            label = { Text(if (isBengali) "ডিসপ্লে অর্ডার" else "Display Order Position") },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true
+                        )
+
+                        // 5. Active Status Switch
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = if (isBengali) "সক্রিয় অবস্থা (Active Status)" else "Active Status",
+                                fontWeight = FontWeight.Medium
+                            )
+                            Switch(
+                                checked = isActive,
+                                onCheckedChange = { isActive = it }
+                            )
+                        }
+
+                        HorizontalDivider(color = Color(0xFFE2E8F0))
+
+                        // 6. Image Picker Section
+                        Text(
+                            text = if (isBengali) "ক্যাটাগরি আইকন নির্বাচন করুন" else "Select Category Icon Graphic",
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 14.sp
+                        )
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(72.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(Color(0xFFE2E8F0))
+                                    .border(1.dp, Color(0xFFCBD5E1), RoundedCornerShape(12.dp))
+                                    .clickable { imagePickerLauncher.launch("image/*") },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                if (selectedImageUri != null) {
+                                    Image(
+                                        painter = rememberAsyncImagePainter(model = selectedImageUri),
+                                        contentDescription = "Category Icon Preview",
+                                        modifier = Modifier.fillMaxSize(),
+                                        contentScale = ContentScale.Crop
+                                    )
+                                } else {
+                                    Icon(
+                                        imageVector = Icons.Default.AddPhotoAlternate,
+                                        contentDescription = "Pick Image",
+                                        tint = Color(0xFF64748B),
+                                        modifier = Modifier.size(32.dp)
+                                    )
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.width(16.dp))
+
+                            Column {
+                                OutlinedButton(
+                                    onClick = { imagePickerLauncher.launch("image/*") }
+                                ) {
+                                    Icon(Icons.Default.CloudUpload, contentDescription = null)
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(if (isBengali) "গ্যালারি থেকে আইকন বাছাই করুন" else "Browse Icon File")
+                                }
+
+                                if (selectedImageUri != null) {
+                                    Text(
+                                        text = if (isBengali) "আইকন নির্বাচিত হয়েছে" else "Icon Selected",
+                                        fontSize = 12.sp,
+                                        color = Color(0xFF10B981),
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        // 7. Live Card Preview
+                        Text(
+                            text = if (isBengali) "লাইভ প্রিভিউ (Home Screen Card)" else "Live Card Preview",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 14.sp
+                        )
+
+                        Card(
+                            modifier = Modifier
+                                .width(110.dp)
+                                .height(110.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = CardDefaults.cardColors(containerColor = Color.White),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(8.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center
+                            ) {
+                                if (selectedImageUri != null) {
+                                    Image(
+                                        painter = rememberAsyncImagePainter(model = selectedImageUri),
+                                        contentDescription = null,
+                                        modifier = Modifier.size(40.dp)
+                                    )
+                                } else {
+                                    Icon(
+                                        imageVector = categoryRepository.matchFallbackIcon(routeKey),
+                                        contentDescription = null,
+                                        tint = Color(0xFF3B82F6),
+                                        modifier = Modifier.size(40.dp)
+                                    )
+                                }
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    text = if (nameEn.isNotBlank() || nameBn.isNotBlank()) {
+                                        if (isBengali && nameBn.isNotBlank()) nameBn else nameEn
+                                    } else {
+                                        if (isBengali) "ক্যাটাগরি নাম" else "Category Title"
+                                    },
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    color = Color.Black,
+                                    maxLines = 2
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        // Submit Button
+                        Button(
+                            onClick = {
+                                if (nameEn.isBlank() && nameBn.isBlank()) {
+                                    Toast.makeText(
+                                        context,
+                                        if (isBengali) "অনুগ্রহ করে ক্যাটাগরি নাম লিখুন" else "Please enter category name",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                    return@Button
+                                }
+
+                                isUploading = true
+
+                                coroutineScope.launch {
+                                    val categoryName = nameEn.ifBlank { nameBn }.trim()
+
+                                    // 1. Upload Icon to Google Drive
+                                    var uploadedIconUrl: String? = null
+                                    if (selectedImageUri != null) {
+                                        val uploadResult = categoryRepository.uploadCategoryIconToDrive(context, selectedImageUri!!)
+                                        if (uploadResult.isSuccess) {
+                                            uploadedIconUrl = uploadResult.getOrNull()
+                                        } else {
+                                            val driveError = uploadResult.exceptionOrNull()?.message ?: "Drive upload failed"
+                                            Toast.makeText(
+                                                context,
+                                                if (isBengali) "গুগল ড্রাইভ আপলোড এরর: $driveError" else "Google Drive Error: $driveError",
+                                                Toast.LENGTH_LONG
+                                            ).show()
+                                            isUploading = false
+                                            return@launch
+                                        }
+                                    }
+
+                                    val orderInt = displayOrder.toIntOrNull() ?: 1
+
+                                    val nextId = categoryRepository.getNextCategoryId()
+                                    val categoryDto = CategoryDto(
+                                        id = nextId,
+                                        nameEn = nameEn.ifBlank { nameBn },
+                                        nameBn = nameBn.ifBlank { nameEn },
+                                        iconUrl = uploadedIconUrl,
+                                        route = routeKey.ifBlank { categoryName.lowercase().replace(" ", "_") },
+                                        order = orderInt,
+                                        isActive = isActive
+                                    )
+
+                                    // 2. Save Category Document to Firebase Firestore
+                                    val saveResult = categoryRepository.saveCategoryToFirestore(categoryDto)
+
+                                    isUploading = false
+
+                                    if (saveResult.isSuccess) {
+                                        Toast.makeText(
+                                            context,
+                                            if (isBengali) "ক্যাটাগরি অ্যাপের অভ্যন্তরীণ স্থায়ী প্রেসেট (ফায়ারস্টোরে সংরক্ষণ প্রযোজ্য নয়)" 
+                                            else "Categories are static system presets (Not saved to Firestore)",
+                                            Toast.LENGTH_LONG
+                                        ).show()
+
+                                        // Reset Form
+                                        nameEn = ""
+                                        nameBn = ""
+                                        routeKey = ""
+                                        displayOrder = "1"
+                                        selectedImageUri = null
+                                    }
+                                }
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0F766E)),
+                            shape = RoundedCornerShape(12.dp),
+                            enabled = !isUploading
+                        ) {
+                            if (isUploading) {
+                                CircularProgressIndicator(
+                                    color = Color.White,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(if (isBengali) "প্রসেসিং হচ্ছে..." else "Processing...")
+                            } else {
+                                Icon(Icons.Default.Info, contentDescription = null)
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = if (isBengali) "ক্যাটাগরি তথ্য (স্থায়ী প্রেসেট)" 
+                                    else "Category Info (Static Preset)",
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Registered Categories List Section from Firestore
+            item {
+                Text(
+                    text = if (isBengali) "বিদ্যমান ক্যাটাগরি তালিকা (${categories.size})" else "Registered Categories (${categories.size})",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF1E293B)
+                )
+            }
+
+            items(categories) { item ->
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                modifier = Modifier
+                                    .size(44.dp)
+                                    .clip(CircleShape)
+                                    .background(Color(0xFFF1F5F9)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                if (!item.iconUrl.isNullOrBlank()) {
+                                    Image(
+                                        painter = rememberAsyncImagePainter(model = item.iconUrl.toCoilModel()),
+                                        contentDescription = null,
+                                        modifier = Modifier.size(28.dp)
+                                    )
+                                } else {
+                                    Icon(
+                                        imageVector = item.fallbackIcon ?: Icons.Default.Category,
+                                        contentDescription = null,
+                                        tint = Color(0xFF0F766E),
+                                        modifier = Modifier.size(24.dp)
+                                    )
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.width(12.dp))
+
+                            Column {
+                                Text(
+                                    text = item.getDisplayName(isBengali),
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 15.sp
+                                )
+                                Text(
+                                    text = "En: ${item.nameEn} | Bn: ${item.nameBn}",
+                                    fontSize = 12.sp,
+                                    color = Color.Gray
+                                )
+                            }
+                        }
+
+                        IconButton(onClick = {
+                            coroutineScope.launch {
+                                categoryRepository.deleteCategoryFromFirestore(item.id)
+                                Toast.makeText(
+                                    context,
+                                    if (isBengali) "ক্যাটাগরি ফায়ারস্টোর থেকে মুছে ফেলা হয়েছে" else "Category Removed from Firestore",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                        }) {
+                            Icon(Icons.Default.Delete, contentDescription = "Delete", tint = Color(0xFFEF4444))
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
