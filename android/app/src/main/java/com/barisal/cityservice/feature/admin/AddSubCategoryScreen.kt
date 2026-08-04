@@ -107,14 +107,14 @@ fun AddSubCategoryScreen(
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         Text(
-                            text = if (isBengali) "নতুন সাব-ক্যাটাগরি তৈরি করুন" else "Create New Sub-Category",
+                            text = if (isBengali) "স্থায়ী সাব-ক্যাটাগরি তথ্য (Static Preset)" else "Static Sub-Categories (System Preset)",
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color(0xFF1E293B)
                         )
 
                         Text(
-                            text = "Google Drive Target: City_Service (ID: $CITY_SERVICE_DRIVE_FOLDER_ID)",
+                            text = if (isBengali) "সাব-ক্যাটাগরিগুলো অ্যাপের অভ্যন্তরীণ স্থায়ী ডেটা (ফায়ারস্টোরে সংরক্ষিত হবে না)" else "Sub-Categories are static system presets (Not stored in Firestore)",
                             fontSize = 12.sp,
                             color = Color(0xFF0F766E),
                             fontWeight = FontWeight.Medium
@@ -330,8 +330,8 @@ fun AddSubCategoryScreen(
                                     if (saveResult.isSuccess) {
                                         Toast.makeText(
                                             context,
-                                            if (isBengali) "সাব-ক্যাটাগরি সফলভাবে ফায়ারস্টোর ও ড্রাইভে সংরক্ষিত হয়েছে!" 
-                                            else "Sub-Category saved to Firestore & Drive successfully!",
+                                            if (isBengali) "সাব-ক্যাটাগরি অ্যাপের অভ্যন্তরীণ স্থায়ী প্রেসেট (ফায়ারস্টোরে সংরক্ষণ প্রযোজ্য নয়)" 
+                                            else "Sub-Categories are static system presets (Not saved to Firestore)",
                                             Toast.LENGTH_LONG
                                         ).show()
 
@@ -339,12 +339,6 @@ fun AddSubCategoryScreen(
                                         nameEn = ""
                                         nameBn = ""
                                         selectedImageUri = null
-                                    } else {
-                                        Toast.makeText(
-                                            context,
-                                            "Firestore Error: ${saveResult.exceptionOrNull()?.message}",
-                                            Toast.LENGTH_LONG
-                                        ).show()
                                     }
                                 }
                             },
@@ -359,12 +353,12 @@ fun AddSubCategoryScreen(
                                     modifier = Modifier.size(24.dp)
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
-                                Text(if (isBengali) "সংরক্ষণ করা হচ্ছে..." else "Saving Sub-Category...")
+                                Text(if (isBengali) "প্রসেসিং হচ্ছে..." else "Processing...")
                             } else {
-                                Icon(Icons.Default.Save, contentDescription = null)
+                                Icon(Icons.Default.Info, contentDescription = null)
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
-                                    text = if (isBengali) "সাব-ক্যাটাগরি সংরক্ষণ করুন" else "Save Sub-Category",
+                                    text = if (isBengali) "সাব-ক্যাটাগরি তথ্য (স্থায়ী প্রেসেট)" else "Sub-Category Info (Static Preset)",
                                     fontWeight = FontWeight.Bold
                                 )
                             }
@@ -376,8 +370,8 @@ fun AddSubCategoryScreen(
             // Sub-Categories List Section
             item {
                 Text(
-                    text = if (isBengali) "নিবন্ধিত সাব-ক্যাটাগরি তালিকা (${filteredSubCategories.size})" 
-                    else "Registered Sub-Categories (${filteredSubCategories.size})",
+                    text = if (isBengali) "স্থায়ী সাব-ক্যাটাগরি তালিকা (${filteredSubCategories.size})" 
+                    else "Static Sub-Categories (${filteredSubCategories.size})",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color(0xFF1E293B)

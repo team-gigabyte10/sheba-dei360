@@ -102,14 +102,14 @@ fun AddCategoryScreen(
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         Text(
-                            text = if (isBengali) "নতুন ক্যাটাগরি যোগ করুন (Firestore + Drive)" else "Add Category (Firestore + Drive)",
+                            text = if (isBengali) "স্থায়ী ক্যাটাগরি তথ্য (Static Preset)" else "Static System Categories (System Preset)",
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color(0xFF1E293B)
                         )
 
                         Text(
-                            text = "Google Drive Target: City_Service (ID: $CITY_SERVICE_DRIVE_FOLDER_ID)",
+                            text = if (isBengali) "ক্যাটাগরিগুলো অ্যাপের অভ্যন্তরীণ স্থায়ী ডেটা (ফায়ারস্টোরে সংরক্ষিত হবে না)" else "Categories are static system presets (Not stored in Firestore)",
                             fontSize = 12.sp,
                             color = Color(0xFF0F766E),
                             fontWeight = FontWeight.Medium
@@ -343,8 +343,8 @@ fun AddCategoryScreen(
                                     if (saveResult.isSuccess) {
                                         Toast.makeText(
                                             context,
-                                            if (isBengali) "ক্যাটাগরি ফায়ারস্টোর ও গুগল ড্রাইভে সফলভাবে সংরক্ষণ করা হয়েছে!" 
-                                            else "Category saved to Firestore & Google Drive successfully!",
+                                            if (isBengali) "ক্যাটাগরি অ্যাপের অভ্যন্তরীণ স্থায়ী প্রেসেট (ফায়ারস্টোরে সংরক্ষণ প্রযোজ্য নয়)" 
+                                            else "Categories are static system presets (Not saved to Firestore)",
                                             Toast.LENGTH_LONG
                                         ).show()
 
@@ -354,12 +354,6 @@ fun AddCategoryScreen(
                                         routeKey = ""
                                         displayOrder = "1"
                                         selectedImageUri = null
-                                    } else {
-                                        Toast.makeText(
-                                            context,
-                                            "Firestore Error: ${saveResult.exceptionOrNull()?.message}",
-                                            Toast.LENGTH_LONG
-                                        ).show()
                                     }
                                 }
                             },
@@ -374,13 +368,13 @@ fun AddCategoryScreen(
                                     modifier = Modifier.size(24.dp)
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
-                                Text(if (isBengali) "আপলোড ও সংরক্ষণ হচ্ছে..." else "Uploading & Saving...")
+                                Text(if (isBengali) "প্রসেসিং হচ্ছে..." else "Processing...")
                             } else {
-                                Icon(Icons.Default.Save, contentDescription = null)
+                                Icon(Icons.Default.Info, contentDescription = null)
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
-                                    text = if (isBengali) "ক্যাটাগরি সংরক্ষণ করুন (Drive + Firestore)" 
-                                    else "Save Category to Drive & Firestore",
+                                    text = if (isBengali) "ক্যাটাগরি তথ্য (স্থায়ী প্রেসেট)" 
+                                    else "Category Info (Static Preset)",
                                     fontWeight = FontWeight.Bold
                                 )
                             }
