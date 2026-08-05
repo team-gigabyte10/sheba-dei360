@@ -2,11 +2,13 @@ package com.barisal.cityservice.feature.houserent
 
 import android.content.Intent
 import android.net.Uri
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -18,18 +20,26 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import com.barisal.cityservice.core.language.LocalAppLanguage
 import com.barisal.cityservice.core.utils.bangladeshZillas
+import com.barisal.cityservice.core.utils.toCoilModel
+import com.barisal.cityservice.data.model.FlatDetailsDto
+import com.barisal.cityservice.data.model.HouseRentDto
+import com.barisal.cityservice.data.repository.HouseRentRepository
 import com.barisal.cityservice.ui.components.CustomDialog
 import com.barisal.cityservice.ui.components.GlobalAppBar
 import com.barisal.cityservice.ui.components.SetStatusBarColor
+import kotlinx.coroutines.launch
 
 data class HouseRentInfo(
+    val id: String = "",
     val landlordName: String,
     val date: String,
     val houseType: String,
@@ -37,15 +47,24 @@ data class HouseRentInfo(
     val latLng: String,
     val contactInfo: String,
     val rentAmount: String,
-    val details: String
+    val details: String,
+    val zilla: String = "",
+    val imageUrls: List<String> = emptyList(),
+    val flatDetails: FlatDetailsDto = FlatDetailsDto(),
+    val isRented: Boolean = false
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HouseRentListScreen(onBack: () -> Unit) {
+fun HouseRentListScreen(
+    onBack: () -> Unit,
+    onNavigateToPostHouseRent: () -> Unit = {},
+    onNavigateToHouseRentDetail: (String) -> Unit = {}
+) {
     val languageState = LocalAppLanguage.current
     val isBengali = languageState.isBengali
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
 
     SetStatusBarColor()
 
@@ -66,57 +85,76 @@ fun HouseRentListScreen(onBack: () -> Unit) {
         "গ্যারেজ"
     )
 
-    val dummyHouses = listOf(
-        HouseRentInfo(
-            landlordName = "Sabira Priyq",
-            date = "06 Jun 2026",
-            houseType = "ফ্ল্যাট ভাড়া",
-            address = if (isBengali) "অম্বিকাপুর, গ্রামীন ফোনের টাওয়ারের সামনে। সদর, ফরিদপুর" else "Ambikapur, In front of GP Tower. Sadar, Faridpur",
-            latLng = "23.6061,89.8406",
-            contactInfo = "01711-223344",
-            rentAmount = if (isBengali) "৳১০,০০০/মাস" else "৳10,000/month",
-            details = if (isBengali) "৩ বেডরুম, ২ বাথরুম, ড্রয়িং ও ডাইনিং স্পেস সহ সুন্দর ফ্ল্যাট। গ্যাস ও পানির সুব্যবস্থা রয়েছে।" else "Beautiful flat with 3 bedrooms, 2 bathrooms, drawing and dining space. Gas and water available."
-        ),
-        HouseRentInfo(
-            landlordName = "MD Shahidul Islam",
-            date = "03 Jun 2026",
-            houseType = "ব্যাচেলর রুম/সিট",
-            address = if (isBengali) "চুনাঘাটা ব্রীজের ওপার, ইকবালের ফার্ম এর সামনের বাসা" else "Across Chunaghata Bridge, In front of Iqbal's farm",
-            latLng = "23.6012,89.8322",
-            contactInfo = "01712-334455",
-            rentAmount = if (isBengali) "৳৪,৫০০/মাস" else "৳4,500/month",
-            details = if (isBengali) "ব্যাচেলর ছাত্রদের জন্য ১টি সিঙ্গেল সিট খালি আছে। ওয়াইফাই ও ফিল্টার পানি ফ্রি।" else "Single bachelor seat available for students. Free Wifi & Filter water."
-        ),
-        HouseRentInfo(
-            landlordName = "রফিকুল ইসলাম",
-            date = "01 Jun 2026",
-            houseType = "অফিস স্পেস",
-            address = if (isBengali) "ধানমন্ডি ২৭, ঢাকা" else "Dhanmondi 27, Dhaka",
-            latLng = "23.7542,90.3768",
-            contactInfo = "01713-556677",
-            rentAmount = if (isBengali) "৳৩৫,০০০/মাস" else "৳35,000/month",
-            details = if (isBengali) "১২০০ বর্গফুট বাণিজ্যিক স্পেস অফিস বা শোরুমের জন্য ভাড়া দেওয়া হবে।" else "1200 sqft commercial space for office or showroom."
-        ),
-        HouseRentInfo(
-            landlordName = "কামরুল হাসান",
-            date = "28 May 2026",
-            houseType = "দোকান",
-            address = if (isBengali) "মিরপুর ১০ প্রধান সড়ক, ঢাকা" else "Mirpur 10 Main Road, Dhaka",
-            latLng = "23.8069,90.3687",
-            contactInfo = "01819-889900",
-            rentAmount = if (isBengali) "৳২৫,০০০/মাস" else "৳25,000/month",
-            details = if (isBengali) "প্রধান সড়ক সংলগ্ন রেডি দোকান। আইটি বা রিটেইল শপের জন্য আদর্শ।" else "Ready shop on main road. Ideal for IT or retail."
-        )
-    )
+    val houseRentRepository = remember { HouseRentRepository() }
+    val firestoreHouseRentsState by houseRentRepository.getHouseRents(if (selectedSubCategory == "সব") "" else selectedSubCategory)
+        .collectAsState(initial = emptyList())
 
-    val filteredHouses = remember(searchQuery, selectedSubCategory, selectedZilla) {
-        dummyHouses.filter { house ->
-            val matchesQuery = searchQuery.isEmpty() ||
+    val dummyHouses = remember(isBengali) {
+        listOf(
+            HouseRentInfo(
+                id = "dummy-1",
+                landlordName = "Sabira Priyq",
+                date = "06 Jun 2026",
+                houseType = "ফ্ল্যাট ভাড়া",
+                address = if (isBengali) "অম্বিকাপুর, গ্রামীন ফোনের টাওয়ারের সামনে। সদর, ফরিদপুর" else "Ambikapur, In front of GP Tower. Sadar, Faridpur",
+                latLng = "23.6061,89.8406",
+                contactInfo = "01711-223344",
+                rentAmount = if (isBengali) "৳১০,০০০/মাস" else "৳10,000/month",
+                details = if (isBengali) "৩ বেডরুম, ২ বাথরুম, ড্রয়িং ও ডাইনিং স্পেস সহ সুন্দর ফ্ল্যাট। গ্যাস ও পানির সুব্যবস্থা রয়েছে।" else "Beautiful flat with 3 bedrooms, 2 bathrooms, drawing and dining space. Gas and water available.",
+                zilla = if (isBengali) "ফরিদপুর" else "Faridpur",
+                flatDetails = FlatDetailsDto(houseNo = "৪৫", levelNo = "৩য় তলা", flatNo = "B-2", bedrooms = "৩টি", bathrooms = "২টি")
+            ),
+            HouseRentInfo(
+                id = "dummy-2",
+                landlordName = "MD Shahidul Islam",
+                date = "03 Jun 2026",
+                houseType = "ব্যাচেলর রুম/সিট",
+                address = if (isBengali) "চুনাঘাটা ব্রীজের ওপার, ইকবালের ফার্ম এর সামনের বাসা" else "Across Chunaghata Bridge, In front of Iqbal's farm",
+                latLng = "23.6012,89.8322",
+                contactInfo = "01712-334455",
+                rentAmount = if (isBengali) "৳৪,৫০০/মাস" else "৳4,500/month",
+                details = if (isBengali) "ব্যাচেলর ছাত্রদের জন্য ১টি সিঙ্গেল সিট খালি আছে। ওয়াইফাই ও ফিল্টার পানি ফ্রি।" else "Single bachelor seat available for students. Free Wifi & Filter water.",
+                zilla = if (isBengali) "ফরিদপুর" else "Faridpur",
+                flatDetails = FlatDetailsDto(bedrooms = "১টি সিট", bathrooms = "১টি")
+            )
+        )
+    }
+
+    val allHouses = remember(firestoreHouseRentsState, dummyHouses) {
+        if (firestoreHouseRentsState.isNotEmpty()) {
+            firestoreHouseRentsState.map { dto ->
+                val photos = dto.imageUrls
+                HouseRentInfo(
+                    id = dto.id,
+                    landlordName = dto.title.ifEmpty { if (isBengali) "বাসা ভাড়া" else "House Rent" },
+                    date = java.text.SimpleDateFormat("dd MMM yyyy", java.util.Locale.US).format(java.util.Date(dto.createdAt)),
+                    houseType = dto.houseType,
+                    address = dto.address,
+                    latLng = dto.latLng,
+                    contactInfo = dto.contactInfo,
+                    rentAmount = dto.rentAmount,
+                    details = dto.details,
+                    zilla = dto.zilla,
+                    imageUrls = photos,
+                    flatDetails = dto.flatDetails,
+                    isRented = dto.isRented
+                )
+            }
+        } else {
+            dummyHouses
+        }
+    }
+
+    val filteredHouses = remember(allHouses, searchQuery, selectedSubCategory, selectedZilla) {
+        allHouses.filter { house ->
+            val matchesQuery = searchQuery.isBlank() ||
                     house.landlordName.contains(searchQuery, ignoreCase = true) ||
                     house.address.contains(searchQuery, ignoreCase = true) ||
                     house.details.contains(searchQuery, ignoreCase = true)
-            val matchesCategory = selectedSubCategory == "সব" || house.houseType == selectedSubCategory
-            val matchesZilla = selectedZilla == null || house.address.contains(selectedZilla!!, ignoreCase = true)
+
+            val matchesCategory = selectedSubCategory == "সব" || house.houseType.equals(selectedSubCategory, ignoreCase = true)
+            val matchesZilla = selectedZilla == null || house.zilla.equals(selectedZilla, ignoreCase = true) || house.address.contains(selectedZilla!!, ignoreCase = true)
+
             matchesQuery && matchesCategory && matchesZilla
         }
     }
@@ -128,44 +166,60 @@ fun HouseRentListScreen(onBack: () -> Unit) {
                 onBackClick = onBack,
                 actions = {
                     IconButton(onClick = { showZillaFilterDialog = true }) {
-                        Icon(androidx.compose.material.icons.Icons.Default.MoreVert, contentDescription = "Filter", tint = Color.Black)
+                        Icon(Icons.Default.MoreVert, contentDescription = "Filter", tint = Color.Black)
                     }
                 }
             )
+        },
+        floatingActionButton = {
+            ExtendedFloatingActionButton(
+                onClick = onNavigateToPostHouseRent,
+                containerColor = primaryColor,
+                contentColor = Color.White,
+                shape = RoundedCornerShape(24.dp)
+            ) {
+                Icon(Icons.Default.Add, contentDescription = "Post House Rent")
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = if (isBengali) "বাসা ভাড়া পোস্ট করুন" else "Post House Rent",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 14.sp
+                )
+            }
         }
     ) { innerPadding ->
         if (showZillaFilterDialog) {
-            com.barisal.cityservice.ui.components.CustomDialog(
+            CustomDialog(
                 onDismissRequest = { showZillaFilterDialog = false },
                 title = if (isBengali) "জেলা নির্বাচন করুন" else "Select Zilla",
                 confirmButtonText = if (isBengali) "বন্ধ করুন" else "Close",
                 onConfirm = { showZillaFilterDialog = false }
             ) {
-                androidx.compose.foundation.lazy.LazyColumn(
+                LazyColumn(
                     modifier = Modifier.fillMaxWidth().heightIn(max = 400.dp)
                 ) {
                     item {
-                        TextButton(onClick = { 
+                        TextButton(onClick = {
                             selectedZilla = null
-                            showZillaFilterDialog = false 
+                            showZillaFilterDialog = false
                         }) {
-                            Text(if (isBengali) "রিসেট" else "Reset", color = Color.Red, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
+                            Text(if (isBengali) "রিসেট" else "Reset", color = Color.Red, fontWeight = FontWeight.Bold)
                         }
                     }
-                    items(com.barisal.cityservice.core.utils.bangladeshZillas) { zilla ->
+                    items(bangladeshZillas) { zilla ->
                         TextButton(
-                            onClick = { 
+                            onClick = {
                                 selectedZilla = zilla
-                                showZillaFilterDialog = false 
+                                showZillaFilterDialog = false
                             },
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Text(
                                 text = zilla,
                                 color = if (selectedZilla == zilla) Color(0xFF1E3A8A) else Color.Black,
-                                fontWeight = if (selectedZilla == zilla) androidx.compose.ui.text.font.FontWeight.Bold else androidx.compose.ui.text.font.FontWeight.Normal,
+                                fontWeight = if (selectedZilla == zilla) FontWeight.Bold else FontWeight.Normal,
                                 modifier = Modifier.fillMaxWidth(),
-                                textAlign = androidx.compose.ui.text.style.TextAlign.Start
+                                textAlign = TextAlign.Start
                             )
                         }
                     }
@@ -177,327 +231,346 @@ fun HouseRentListScreen(onBack: () -> Unit) {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .background(Color(0xFFF3F4F6)) // Light gray background
+                .background(Color(0xFFF3F4F6))
         ) {
-            // Search Bar Area
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically
+            // 1. Sub-Categories horizontal bar
+            ScrollableTabRow(
+                selectedTabIndex = houseRentSubCategories.indexOf(selectedSubCategory).coerceAtLeast(0),
+                containerColor = Color.White,
+                edgePadding = 12.dp,
+                divider = {}
             ) {
-                OutlinedTextField(
-                    value = searchQuery,
-                    onValueChange = { searchQuery = it },
-                    placeholder = { Text(if (isBengali) "বাসা খুঁজুন..." else "Search house...") },
-                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search") },
-                    modifier = Modifier
-                        .weight(1f)
-                        .background(Color.White, RoundedCornerShape(8.dp)),
-                    shape = RoundedCornerShape(8.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        unfocusedContainerColor = Color.White,
-                        focusedContainerColor = Color.White,
-                        unfocusedBorderColor = Color.LightGray,
-                        focusedBorderColor = primaryColor
-                    ),
-                    singleLine = true
-                )
-                
-                Spacer(modifier = Modifier.width(12.dp))
-                
-                // Count Badge
-                Box(
-                    modifier = Modifier
-                        .background(Color(0xFFB2DFDB), RoundedCornerShape(8.dp))
-                        .padding(horizontal = 16.dp, vertical = 14.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "${filteredHouses.size}",
-                        color = Color.DarkGray,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            }
-
-            // Sub-category Filter Chips
-            androidx.compose.foundation.lazy.LazyRow(
-                contentPadding = PaddingValues(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                items(houseRentSubCategories) { cat ->
-                    val isSelected = cat == selectedSubCategory
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(20.dp))
-                            .background(if (isSelected) primaryColor else Color.White)
-                            .border(1.dp, if (isSelected) Color.Transparent else Color.LightGray, RoundedCornerShape(20.dp))
-                            .clickable { selectedSubCategory = cat }
-                            .padding(horizontal = 14.dp, vertical = 8.dp)
-                    ) {
-                        Text(
-                            text = cat,
-                            color = if (isSelected) Color.White else Color.DarkGray,
-                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                            fontSize = 13.sp
-                        )
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // List of Houses
-            LazyColumn(
-                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                items(filteredHouses) { house ->
-                    HouseRentCard(house = house, isBengali = isBengali, primaryColor = primaryColor)
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun HouseRentCard(house: HouseRentInfo, isBengali: Boolean, primaryColor: Color) {
-    val context = LocalContext.current
-    var showDetailsDialog by remember { mutableStateOf(false) }
-
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-    ) {
-        Column(modifier = Modifier.fillMaxWidth()) {
-            // Header
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // Icon representing building/owner
-                Box(
-                    modifier = Modifier
-                        .size(48.dp)
-                        .clip(CircleShape)
-                        .background(Color(0xFFE0F2F1)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(Icons.Default.Domain, contentDescription = null, tint = primaryColor)
-                }
-                
-                Spacer(modifier = Modifier.width(12.dp))
-                
-                Column {
-                    Text(
-                        text = house.landlordName,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 16.sp,
-                        color = Color.Black
-                    )
-                    Text(
-                        text = house.date,
-                        color = Color.Gray,
-                        fontSize = 12.sp
-                    )
-                }
-            }
-            
-            // Image Placeholder (Carousel representation)
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(180.dp)
-                    .background(Color(0xFFE5E7EB)), // Light Gray
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(Icons.Default.Image, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(48.dp))
-            }
-            
-            // Carousel Dots Mock
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp),
-                horizontalArrangement = Arrangement.Center
-            ) {
-                repeat(4) { index ->
-                    Box(
-                        modifier = Modifier
-                            .padding(horizontal = 4.dp)
-                            .size(if (index == 0) 8.dp else 6.dp)
-                            .clip(CircleShape)
-                            .background(if (index == 0) Color.Red else Color.LightGray)
-                    )
-                }
-            }
-            
-            // Details Row
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
-            ) {
-                // Left Column (Type)
-                Row(modifier = Modifier.weight(1f), verticalAlignment = Alignment.Top) {
-                    Box(
-                        modifier = Modifier
-                            .size(36.dp)
-                            .clip(CircleShape)
-                            .background(Color(0xFFF3F4F6)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(Icons.Default.House, contentDescription = null, tint = Color.Gray)
-                    }
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Column {
-                        Text(if (isBengali) "বাসার ধরণ" else "House Type", fontSize = 12.sp, color = Color.Gray)
-                        Text(house.houseType, fontSize = 14.sp, color = Color.DarkGray)
-                    }
-                }
-                
-                // Right Column (Address)
-                Row(modifier = Modifier.weight(1f), verticalAlignment = Alignment.Top) {
-                    Box(
-                        modifier = Modifier
-                            .size(36.dp)
-                            .clip(CircleShape)
-                            .background(Color(0xFFF3F4F6)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(Icons.Default.LocationOn, contentDescription = null, tint = Color.Gray)
-                    }
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Column {
-                        Text(if (isBengali) "ঠিকানা" else "Address", fontSize = 12.sp, color = Color.Gray)
-                        Text(house.address, fontSize = 14.sp, color = Color.DarkGray)
-                    }
-                }
-            }
-            
-            // Action Buttons
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Button(
-                    onClick = {
-                        val intent = Intent(Intent.ACTION_DIAL).apply {
-                            data = Uri.parse("tel:${house.contactInfo}")
+                houseRentSubCategories.forEach { category ->
+                    val isSelected = selectedSubCategory == category
+                    Tab(
+                        selected = isSelected,
+                        onClick = { selectedSubCategory = category },
+                        text = {
+                            Text(
+                                text = category,
+                                color = if (isSelected) primaryColor else Color(0xFF475569),
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                fontSize = 13.sp
+                            )
                         }
-                        context.startActivity(intent)
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = primaryColor),
-                    shape = RoundedCornerShape(8.dp),
-                    modifier = Modifier.weight(1f).height(40.dp),
-                    contentPadding = PaddingValues(0.dp)
-                ) {
-                    Text(if (isBengali) "যোগাযোগ করুন" else "Contact", fontSize = 14.sp, color = Color.White)
-                }
-                
-                Spacer(modifier = Modifier.width(12.dp))
-                
-                Button(
-                    onClick = { showDetailsDialog = true },
-                    colors = ButtonDefaults.buttonColors(containerColor = primaryColor),
-                    shape = RoundedCornerShape(8.dp),
-                    modifier = Modifier.weight(1f).height(40.dp),
-                    contentPadding = PaddingValues(0.dp)
-                ) {
-                    Text(if (isBengali) "বিস্তারিত দেখুন" else "View Details", fontSize = 14.sp, color = Color.White)
+                    )
                 }
             }
-        }
-    }
 
-    if (showDetailsDialog) {
-        CustomDialog(
-            onDismissRequest = { showDetailsDialog = false },
-            title = if (isBengali) "বিস্তারিত তথ্য" else "Details",
-            icon = Icons.Default.Info,
-            confirmButtonText = if (isBengali) "বন্ধ করুন" else "Close",
-            onConfirm = { showDetailsDialog = false }
-        ) {
-            Column(
-                modifier = Modifier.fillMaxWidth(),
+            // 2. Search & Filter Bar
+            Surface(
+                color = Color.White,
+                shadowElevation = 1.dp
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    OutlinedTextField(
+                        value = searchQuery,
+                        onValueChange = { searchQuery = it },
+                        placeholder = { Text(if (isBengali) "বাসা ভাড়া বা এলাকা খুঁজুন..." else "Search house rent or area...", fontSize = 13.sp) },
+                        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = primaryColor) },
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(48.dp),
+                        shape = RoundedCornerShape(24.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = primaryColor,
+                            unfocusedBorderColor = Color.LightGray
+                        ),
+                        singleLine = true
+                    )
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    IconButton(onClick = { showZillaFilterDialog = true }) {
+                        Box(
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(CircleShape)
+                                .background(if (selectedZilla != null) primaryColor else Color(0xFFE2E8F0)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.FilterList,
+                                contentDescription = "Filter Zilla",
+                                tint = if (selectedZilla != null) Color.White else Color(0xFF475569)
+                            )
+                        }
+                    }
+                }
+            }
+
+            // 3. Main List
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 12.dp),
+                contentPadding = PaddingValues(top = 10.dp, bottom = 80.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Text(
-                    text = house.landlordName,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp,
-                    color = Color.Black
-                )
-                
-                Text(
-                    text = if (isBengali) "ভাড়া: ${house.rentAmount}" else "Rent: ${house.rentAmount}",
-                    color = Color.Black,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold
-                )
-                
-                Text(house.details, color = Color.DarkGray, fontSize = 14.sp)
-                
-                Divider(color = Color.LightGray, thickness = 1.dp)
+                items(filteredHouses) { house ->
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                if (house.id.isNotBlank()) {
+                                    onNavigateToHouseRentDetail(house.id)
+                                }
+                            },
+                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(12.dp)
+                        ) {
+                            // Header: Landlord / Title & Rent Status / Amount Badge
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(38.dp)
+                                            .clip(CircleShape)
+                                            .background(primaryColor.copy(alpha = 0.15f)),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Home,
+                                            contentDescription = null,
+                                            tint = primaryColor,
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.width(10.dp))
 
-                // Contact Row
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .background(primaryColor.copy(alpha = 0.1f), RoundedCornerShape(8.dp))
-                        .clickable {
-                            val intent = Intent(Intent.ACTION_DIAL).apply {
-                                data = Uri.parse("tel:${house.contactInfo}")
+                                    Column {
+                                        Text(
+                                            text = house.landlordName,
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 15.sp,
+                                            color = Color(0xFF1E293B)
+                                        )
+                                        Text(
+                                            text = house.date,
+                                            fontSize = 11.sp,
+                                            color = Color(0xFF64748B)
+                                        )
+                                    }
+                                }
+
+                                Column(horizontalAlignment = Alignment.End) {
+                                    Surface(
+                                        color = if (house.isRented) Color(0xFFDC2626) else primaryColor,
+                                        shape = RoundedCornerShape(16.dp)
+                                    ) {
+                                        Text(
+                                            text = if (house.isRented) (if (isBengali) "ভাড়া হয়ে গেছে" else "RENTED") else house.rentAmount,
+                                            color = Color.White,
+                                            fontSize = 12.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                                        )
+                                    }
+                                    if (house.isRented) {
+                                        Text(
+                                            text = house.rentAmount,
+                                            fontSize = 11.sp,
+                                            color = Color.Gray,
+                                            fontWeight = FontWeight.Medium
+                                        )
+                                    }
+                                }
                             }
-                            context.startActivity(intent)
-                        }
-                        .padding(12.dp)
-                        .fillMaxWidth()
-                ) {
-                    Icon(Icons.Default.Phone, contentDescription = "Phone", tint = primaryColor)
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Text(
-                        text = if (isBengali) "যোগাযোগঃ ${house.contactInfo}" else "Contact: ${house.contactInfo}",
-                        fontWeight = FontWeight.Bold,
-                        color = primaryColor,
-                        fontSize = 16.sp
-                    )
-                }
-                
-                // Map Row
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .background(primaryColor.copy(alpha = 0.1f), RoundedCornerShape(8.dp))
-                        .clickable {
-                            val gmmIntentUri = Uri.parse("geo:${house.latLng}?q=${house.latLng}(${Uri.encode(house.landlordName)})")
-                            val mapIntent = Intent(Intent.ACTION_VIEW, gmmIntentUri)
-                            mapIntent.setPackage("com.google.android.apps.maps")
-                            if (mapIntent.resolveActivity(context.packageManager) != null) {
-                                context.startActivity(mapIntent)
-                            } else {
-                                val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://maps.google.com/?q=${house.latLng}"))
-                                context.startActivity(browserIntent)
+
+                            // Multiple Image Carousel (if present)
+                            if (house.imageUrls.isNotEmpty()) {
+                                Spacer(modifier = Modifier.height(10.dp))
+                                LazyRow(
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    items(house.imageUrls) { imgUrl ->
+                                        val coilModel = remember(imgUrl) { imgUrl.toCoilModel() }
+                                        if (coilModel != null) {
+                                            AsyncImage(
+                                                model = coilModel,
+                                                contentDescription = "House Photo",
+                                                modifier = Modifier
+                                                    .width(160.dp)
+                                                    .height(110.dp)
+                                                    .clip(RoundedCornerShape(8.dp)),
+                                                contentScale = ContentScale.Crop
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            // Sub-category badge & Flat details chips
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Surface(
+                                    color = Color(0xFFE0F2FE),
+                                    shape = RoundedCornerShape(6.dp)
+                                ) {
+                                    Text(
+                                        text = house.houseType,
+                                        color = Color(0xFF0369A1),
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                                    )
+                                }
+
+                                if (house.flatDetails.levelNo.isNotBlank()) {
+                                    Surface(color = Color(0xFFF1F5F9), shape = RoundedCornerShape(6.dp)) {
+                                        Text("🏢 ${house.flatDetails.levelNo}", fontSize = 11.sp, color = Color.DarkGray, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
+                                    }
+                                }
+                                if (house.flatDetails.flatNo.isNotBlank()) {
+                                    Surface(color = Color(0xFFF1F5F9), shape = RoundedCornerShape(6.dp)) {
+                                        Text("🔑 ${house.flatDetails.flatNo}", fontSize = 11.sp, color = Color.DarkGray, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
+                                    }
+                                }
+                                if (house.flatDetails.bedrooms.isNotBlank()) {
+                                    Surface(color = Color(0xFFF1F5F9), shape = RoundedCornerShape(6.dp)) {
+                                        Text("🛏️ ${house.flatDetails.bedrooms}", fontSize = 11.sp, color = Color.DarkGray, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
+                                    }
+                                }
+                                if (house.flatDetails.bathrooms.isNotBlank()) {
+                                    Surface(color = Color(0xFFF1F5F9), shape = RoundedCornerShape(6.dp)) {
+                                        Text("🚿 ${house.flatDetails.bathrooms}", fontSize = 11.sp, color = Color.DarkGray, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
+                                    }
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(6.dp))
+
+                            // Address
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    imageVector = Icons.Default.LocationOn,
+                                    contentDescription = null,
+                                    tint = Color.Red,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = house.address,
+                                    fontSize = 13.sp,
+                                    color = Color(0xFF334155),
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.height(6.dp))
+
+                            // Details
+                            if (house.details.isNotBlank()) {
+                                Text(
+                                    text = house.details,
+                                    fontSize = 12.sp,
+                                    color = Color(0xFF64748B),
+                                    maxLines = 2
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                            }
+
+                            Divider(color = Color(0xFFF1F5F9))
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            // Action buttons: Rent Status Toggle + Call & SMS
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                if (house.id.isNotBlank() && !house.id.startsWith("dummy")) {
+                                    TextButton(
+                                        onClick = {
+                                            coroutineScope.launch {
+                                                val newStatus = !house.isRented
+                                                val res = houseRentRepository.updateRentStatus(house.id, newStatus)
+                                                if (res.isSuccess) {
+                                                    Toast.makeText(
+                                                        context,
+                                                        if (newStatus) (if (isBengali) "বাসাটি 'ভাড়া হয়ে গেছে' মার্ক করা হলো" else "Marked as Rented")
+                                                        else (if (isBengali) "বাসাটি খালি মার্ক করা হলো" else "Marked as Available"),
+                                                        Toast.LENGTH_SHORT
+                                                    ).show()
+                                                }
+                                            }
+                                        },
+                                        contentPadding = PaddingValues(0.dp)
+                                    ) {
+                                        Text(
+                                            text = if (house.isRented) (if (isBengali) "খালি মার্ক করুন" else "Mark Available") else (if (isBengali) "ভাড়া সম্পন্ন মার্ক করুন" else "Mark Rented"),
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = if (house.isRented) primaryColor else Color(0xFFDC2626)
+                                        )
+                                    }
+                                } else {
+                                    Spacer(modifier = Modifier.width(1.dp))
+                                }
+
+                                Row {
+                                    OutlinedButton(
+                                        onClick = {
+                                            val intent = Intent(Intent.ACTION_SENDTO).apply {
+                                                data = Uri.parse("smsto:${house.contactInfo}")
+                                                putExtra("sms_body", "আসসালামু আলাইকুম, আপনার বাসা ভাড়া পোস্টটি সম্পর্কে জানতে চাই।")
+                                            }
+                                            context.startActivity(intent)
+                                        },
+                                        modifier = Modifier.height(34.dp),
+                                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp),
+                                        shape = RoundedCornerShape(8.dp),
+                                        border = androidx.compose.foundation.BorderStroke(1.dp, primaryColor)
+                                    ) {
+                                        Icon(Icons.Default.Sms, contentDescription = null, tint = primaryColor, modifier = Modifier.size(14.dp))
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Text(if (isBengali) "মেসেজ" else "SMS", fontSize = 11.sp, color = primaryColor)
+                                    }
+
+                                    Spacer(modifier = Modifier.width(8.dp))
+
+                                    Button(
+                                        onClick = {
+                                            val intent = Intent(Intent.ACTION_DIAL).apply {
+                                                data = Uri.parse("tel:${house.contactInfo}")
+                                            }
+                                            context.startActivity(intent)
+                                        },
+                                        modifier = Modifier.height(34.dp),
+                                        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 0.dp),
+                                        shape = RoundedCornerShape(8.dp),
+                                        colors = ButtonDefaults.buttonColors(containerColor = primaryColor)
+                                    ) {
+                                        Icon(Icons.Default.Phone, contentDescription = null, tint = Color.White, modifier = Modifier.size(14.dp))
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Text(if (isBengali) "কল করুন" else "Call", fontSize = 11.sp, color = Color.White, fontWeight = FontWeight.Bold)
+                                    }
+                                }
                             }
                         }
-                        .padding(12.dp)
-                        .fillMaxWidth()
-                ) {
-                    Icon(Icons.Default.Map, contentDescription = "Map", tint = primaryColor)
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Text(
-                        text = "Google Map",
-                        fontWeight = FontWeight.Bold,
-                        color = primaryColor,
-                        fontSize = 16.sp
-                    )
+                    }
                 }
             }
         }

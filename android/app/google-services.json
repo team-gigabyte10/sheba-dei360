@@ -15,6 +15,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "757090506347-nba11rlsvu72lirf130bjfrdbn3tse9b.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.barisal.cityservice",
+            "certificate_hash": "5b674f7a6d1b2ccc160331d211c916879d18fac2"
+          }
+        },
+        {
           "client_id": "757090506347-66ul54giumvf41o1ct4u2d96nhe23u1p.apps.googleusercontent.com",
           "client_type": 3
         }

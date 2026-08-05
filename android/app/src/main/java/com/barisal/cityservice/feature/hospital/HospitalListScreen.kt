@@ -17,30 +17,40 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import com.barisal.cityservice.core.language.LocalAppLanguage
 import com.barisal.cityservice.core.utils.bangladeshZillas
+import com.barisal.cityservice.core.utils.toCoilModel
+import com.barisal.cityservice.data.repository.HealthServiceRepository
 import com.barisal.cityservice.ui.components.CustomDialog
 import com.barisal.cityservice.ui.components.GlobalAppBar
 import com.barisal.cityservice.ui.components.SetStatusBarColor
 
 data class HospitalInfo(
+    val id: String = "",
     val name: String,
     val date: String,
     val type: String,
     val address: String,
     val latLng: String,
     val contactInfo: String,
-    val details: String
+    val details: String,
+    val zilla: String = "",
+    val imageUrl: String = ""
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HospitalListScreen(onBack: () -> Unit) {
+fun HospitalListScreen(
+    onBack: () -> Unit,
+    onNavigateToPostHealthService: (String) -> Unit = {}
+) {
     val languageState = LocalAppLanguage.current
     val isBengali = languageState.isBengali
     val context = LocalContext.current
@@ -52,27 +62,73 @@ fun HospitalListScreen(onBack: () -> Unit) {
     var selectedZilla by remember { mutableStateOf<String?>(null) }
     
     val primaryColor = Color(0xFF00897B)
+    val healthRepo = remember { HealthServiceRepository() }
 
-    val dummyHospitals = listOf(
-        HospitalInfo(
-            name = if (isBengali) "ফরিদপুর মেডিকেল কলেজ হাসপাতাল" else "Faridpur Medical College Hospital",
-            date = "06 Jun 2026",
-            type = if (isBengali) "সরকারি হাসপাতাল" else "Government Hospital",
-            address = if (isBengali) "ফরিদপুর সদর, ফরিদপুর" else "Faridpur Sadar, Faridpur",
-            latLng = "23.6061,89.8406",
-            contactInfo = "01711-223344",
-            details = if (isBengali) "ফরিদপুর মেডিকেল কলেজ হাসপাতাল একটি সরকারি হাসপাতাল। এখানে সকল ধরনের চিকিৎসা সুবিধা রয়েছে।" else "Faridpur Medical College Hospital is a government hospital. All kinds of medical facilities are available here."
-        ),
-        HospitalInfo(
-            name = if (isBengali) "ডায়াবেটিক হাসপাতাল" else "Diabetic Hospital",
-            date = "03 Jun 2026",
-            type = if (isBengali) "বেসরকারি হাসপাতাল" else "Private Hospital",
-            address = if (isBengali) "ঝিলটুলী, ফরিদপুর" else "Jhiltuli, Faridpur",
-            latLng = "23.6012,89.8322",
-            contactInfo = "01712-334455",
-            details = if (isBengali) "ডায়াবেটিস ও অন্যান্য রোগের উন্নত চিকিৎসা প্রদান করা হয়।" else "Advanced treatment for diabetes and other diseases is provided."
+    val firestoreHospitalsState by healthRepo.getHealthServicesByCategory("hospital")
+        .collectAsState(initial = emptyList())
+
+    val dummyHospitals = remember(isBengali) {
+        listOf(
+            HospitalInfo(
+                id = "dummy-1",
+                name = if (isBengali) "ফরিদপুর মেডিকেল কলেজ হাসপাতাল" else "Faridpur Medical College Hospital",
+                date = "06 Jun 2026",
+                type = if (isBengali) "সরকারি হাসপাতাল" else "Government Hospital",
+                address = if (isBengali) "ফরিদপুর সদর, ফরিদপুর" else "Faridpur Sadar, Faridpur",
+                latLng = "23.6061,89.8406",
+                contactInfo = "01711-223344",
+                details = if (isBengali) "ফরিদপুর মেডিকেল কলেজ হাসপাতাল একটি সরকারি হাসপাতাল। এখানে সকল ধরনের চিকিৎসা সুবিধা রয়েছে।" else "Faridpur Medical College Hospital is a government hospital. All kinds of medical facilities are available here.",
+                zilla = if (isBengali) "ফরিদপুর" else "Faridpur"
+            ),
+            HospitalInfo(
+                id = "dummy-2",
+                name = if (isBengali) "ডায়াবেটিক হাসপাতাল" else "Diabetic Hospital",
+                date = "03 Jun 2026",
+                type = if (isBengali) "বেসরকারি হাসপাতাল" else "Private Hospital",
+                address = if (isBengali) "ঝিলটুলী, ফরিদপুর" else "Jhiltuli, Faridpur",
+                latLng = "23.6012,89.8322",
+                contactInfo = "01712-334455",
+                details = if (isBengali) "ডায়াবেটিস ও অন্যান্য রোগের উন্নত চিকিৎসা প্রদান করা হয়।" else "Advanced treatment for diabetes and other diseases is provided.",
+                zilla = if (isBengali) "ফরিদপুর" else "Faridpur"
+            )
         )
-    )
+    }
+
+    val allHospitals = remember(firestoreHospitalsState, dummyHospitals) {
+        if (firestoreHospitalsState.isNotEmpty()) {
+            firestoreHospitalsState.map { dto ->
+                val dateStr = java.text.SimpleDateFormat("dd MMM yyyy", java.util.Locale.getDefault()).format(java.util.Date(dto.createdAt))
+                HospitalInfo(
+                    id = dto.id,
+                    name = dto.name,
+                    date = dateStr,
+                    type = dto.type,
+                    address = dto.address,
+                    latLng = dto.latLng,
+                    contactInfo = dto.contactInfo,
+                    details = dto.details,
+                    zilla = dto.zilla,
+                    imageUrl = dto.imageUrl
+                )
+            }
+        } else {
+            dummyHospitals
+        }
+    }
+
+    val filteredHospitals = remember(allHospitals, searchQuery, selectedZilla) {
+        allHospitals.filter { hospital ->
+            val matchesSearch = searchQuery.isBlank() ||
+                    hospital.name.contains(searchQuery, ignoreCase = true) ||
+                    hospital.type.contains(searchQuery, ignoreCase = true) ||
+                    hospital.address.contains(searchQuery, ignoreCase = true) ||
+                    hospital.details.contains(searchQuery, ignoreCase = true)
+
+            val matchesZilla = selectedZilla == null || hospital.zilla.equals(selectedZilla, ignoreCase = true) || hospital.address.contains(selectedZilla!!, ignoreCase = true)
+
+            matchesSearch && matchesZilla
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -84,6 +140,15 @@ fun HospitalListScreen(onBack: () -> Unit) {
                         Icon(Icons.Default.MoreVert, contentDescription = "Filter by Zilla", tint = Color.Black)
                     }
                 }
+            )
+        },
+        floatingActionButton = {
+            ExtendedFloatingActionButton(
+                onClick = { onNavigateToPostHealthService("hospital") },
+                containerColor = primaryColor,
+                contentColor = Color.White,
+                icon = { Icon(Icons.Default.Add, contentDescription = "Post Hospital") },
+                text = { Text(if (isBengali) "হাসপাতাল পোস্ট করুন" else "Post Hospital", fontWeight = FontWeight.Bold) }
             )
         }
     ) { innerPadding ->
@@ -130,7 +195,7 @@ fun HospitalListScreen(onBack: () -> Unit) {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .background(Color(0xFFF3F4F6)) // Light gray background
+                .background(Color(0xFFF3F4F6))
         ) {
             // Search Bar Area
             Row(
@@ -167,20 +232,35 @@ fun HospitalListScreen(onBack: () -> Unit) {
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "${dummyHospitals.size}",
+                        text = "${filteredHospitals.size}",
                         color = Color.DarkGray,
                         fontWeight = FontWeight.Bold
                     )
                 }
             }
 
-            // List of Hospitals
-            LazyColumn(
-                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                items(dummyHospitals) { hospital ->
-                    HospitalCard(hospital = hospital, isBengali = isBengali, primaryColor = primaryColor)
+            if (filteredHospitals.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(32.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = if (isBengali) "কোন হাসপাতাল পাওয়া যায়নি" else "No hospitals found",
+                        color = Color.Gray,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+            } else {
+                LazyColumn(
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    items(filteredHospitals) { hospital ->
+                        HospitalCard(hospital = hospital, isBengali = isBengali, primaryColor = primaryColor)
+                    }
                 }
             }
         }
@@ -192,6 +272,8 @@ fun HospitalCard(hospital: HospitalInfo, isBengali: Boolean, primaryColor: Color
     val context = LocalContext.current
     var showDetailsDialog by remember { mutableStateOf(false) }
 
+    val coilModel = remember(hospital.imageUrl) { hospital.imageUrl.toCoilModel() }
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
@@ -199,36 +281,31 @@ fun HospitalCard(hospital: HospitalInfo, isBengali: Boolean, primaryColor: Color
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(modifier = Modifier.fillMaxWidth().padding(12.dp)) {
-            // Left Side: Image and dots
+            // Left Side: Image
             Column(
                 modifier = Modifier.width(100.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Image Placeholder
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(100.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(Color(0xFFE5E7EB)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(Icons.Default.Image, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(32.dp))
-                }
-                
-                // Carousel Dots Mock
-                Row(
-                    modifier = Modifier.padding(top = 8.dp),
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    repeat(4) { index ->
-                        Box(
-                            modifier = Modifier
-                                .padding(horizontal = 2.dp)
-                                .size(if (index == 0) 6.dp else 4.dp)
-                                .clip(CircleShape)
-                                .background(if (index == 0) Color.Red else Color.LightGray)
-                        )
+                if (coilModel != null) {
+                    AsyncImage(
+                        model = coilModel,
+                        contentDescription = "Hospital Photo",
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(100.dp)
+                            .clip(RoundedCornerShape(8.dp)),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(100.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(Color(0xFFE5E7EB)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(Icons.Default.LocalHospital, contentDescription = null, tint = primaryColor, modifier = Modifier.size(36.dp))
                     }
                 }
             }
@@ -253,24 +330,27 @@ fun HospitalCard(hospital: HospitalInfo, isBengali: Boolean, primaryColor: Color
                 Spacer(modifier = Modifier.height(8.dp))
                 
                 // Type
-                Row(verticalAlignment = Alignment.Top) {
-                    Icon(Icons.Default.Home, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(16.dp))
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Column {
-                        Text(if (isBengali) "হাসপাতালের ধরণ" else "Hospital Type", fontSize = 10.sp, color = Color.Gray)
-                        Text(hospital.type, fontSize = 12.sp, color = Color.DarkGray)
+                if (hospital.type.isNotBlank()) {
+                    Row(verticalAlignment = Alignment.Top) {
+                        Icon(Icons.Default.Home, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Column {
+                            Text(if (isBengali) "হাসপাতালের ধরণ" else "Hospital Type", fontSize = 10.sp, color = Color.Gray)
+                            Text(hospital.type, fontSize = 12.sp, color = Color.DarkGray)
+                        }
                     }
+                    Spacer(modifier = Modifier.height(4.dp))
                 }
                 
-                Spacer(modifier = Modifier.height(4.dp))
-                
                 // Address
-                Row(verticalAlignment = Alignment.Top) {
-                    Icon(Icons.Default.LocationOn, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(16.dp))
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Column {
-                        Text(if (isBengali) "ঠিকানা" else "Address", fontSize = 10.sp, color = Color.Gray)
-                        Text(hospital.address, fontSize = 12.sp, color = Color.DarkGray)
+                if (hospital.address.isNotBlank()) {
+                    Row(verticalAlignment = Alignment.Top) {
+                        Icon(Icons.Default.LocationOn, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Column {
+                            Text(if (isBengali) "ঠিকানা" else "Address", fontSize = 10.sp, color = Color.Gray)
+                            Text(hospital.address, fontSize = 12.sp, color = Color.DarkGray)
+                        }
                     }
                 }
                 
@@ -283,13 +363,18 @@ fun HospitalCard(hospital: HospitalInfo, isBengali: Boolean, primaryColor: Color
                 ) {
                     Button(
                         onClick = {
-                            val gmmIntentUri = Uri.parse("geo:${hospital.latLng}?q=${hospital.latLng}(${Uri.encode(hospital.name)})")
-                            val mapIntent = Intent(Intent.ACTION_VIEW, gmmIntentUri)
-                            mapIntent.setPackage("com.google.android.apps.maps")
-                            if (mapIntent.resolveActivity(context.packageManager) != null) {
-                                context.startActivity(mapIntent)
+                            if (hospital.latLng.isNotBlank()) {
+                                val gmmIntentUri = Uri.parse("geo:${hospital.latLng}?q=${hospital.latLng}(${Uri.encode(hospital.name)})")
+                                val mapIntent = Intent(Intent.ACTION_VIEW, gmmIntentUri)
+                                mapIntent.setPackage("com.google.android.apps.maps")
+                                if (mapIntent.resolveActivity(context.packageManager) != null) {
+                                    context.startActivity(mapIntent)
+                                } else {
+                                    val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://maps.google.com/?q=${hospital.latLng}"))
+                                    context.startActivity(browserIntent)
+                                }
                             } else {
-                                val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://maps.google.com/?q=${hospital.latLng}"))
+                                val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://maps.google.com/?q=${Uri.encode(hospital.name)}"))
                                 context.startActivity(browserIntent)
                             }
                         },
@@ -318,46 +403,80 @@ fun HospitalCard(hospital: HospitalInfo, isBengali: Boolean, primaryColor: Color
     if (showDetailsDialog) {
         CustomDialog(
             onDismissRequest = { showDetailsDialog = false },
-            title = if (isBengali) "বিস্তারিত তথ্য" else "Details",
+            title = if (isBengali) "হাসপাতালের বিস্তারিত তথ্য" else "Hospital Details",
             icon = Icons.Default.Info,
             confirmButtonText = if (isBengali) "বন্ধ করুন" else "Close",
+            usePlatformDefaultWidth = false,
             onConfirm = { showDetailsDialog = false }
         ) {
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
+                if (coilModel != null) {
+                    AsyncImage(
+                        model = coilModel,
+                        contentDescription = "Hospital Photo",
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(160.dp)
+                            .clip(RoundedCornerShape(12.dp)),
+                        contentScale = ContentScale.Crop
+                    )
+                }
+
                 Text(
                     text = hospital.name,
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp,
                     color = Color.Black
                 )
-                Text(hospital.details, color = Color.DarkGray, fontSize = 14.sp)
-                
-                Divider(color = Color.LightGray, thickness = 1.dp)
 
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .background(primaryColor.copy(alpha = 0.1f), RoundedCornerShape(8.dp))
-                        .clickable {
-                            val intent = Intent(Intent.ACTION_DIAL).apply {
-                                data = Uri.parse("tel:${hospital.contactInfo}")
+                if (hospital.type.isNotBlank()) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.Home, contentDescription = null, tint = primaryColor, modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(hospital.type, fontSize = 14.sp, color = Color.DarkGray)
+                    }
+                }
+
+                if (hospital.address.isNotBlank()) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.LocationOn, contentDescription = null, tint = primaryColor, modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(hospital.address, fontSize = 14.sp, color = Color.DarkGray)
+                    }
+                }
+
+                if (hospital.details.isNotBlank()) {
+                    Text(hospital.details, color = Color.DarkGray, fontSize = 14.sp)
+                }
+                
+                if (hospital.contactInfo.isNotBlank()) {
+                    Divider(color = Color.LightGray, thickness = 1.dp)
+
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .background(primaryColor.copy(alpha = 0.1f), RoundedCornerShape(8.dp))
+                            .clickable {
+                                val intent = Intent(Intent.ACTION_DIAL).apply {
+                                    data = Uri.parse("tel:${hospital.contactInfo}")
+                                }
+                                context.startActivity(intent)
                             }
-                            context.startActivity(intent)
-                        }
-                        .padding(12.dp)
-                        .fillMaxWidth()
-                ) {
-                    Icon(Icons.Default.Phone, contentDescription = "Phone", tint = primaryColor)
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Text(
-                        text = if (isBengali) "যোগাযোগঃ ${hospital.contactInfo}" else "Contact: ${hospital.contactInfo}",
-                        fontWeight = FontWeight.Bold,
-                        color = primaryColor,
-                        fontSize = 16.sp
-                    )
+                            .padding(12.dp)
+                            .fillMaxWidth()
+                    ) {
+                        Icon(Icons.Default.Phone, contentDescription = "Phone", tint = primaryColor)
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(
+                            text = if (isBengali) "যোগাযোগঃ ${hospital.contactInfo}" else "Contact: ${hospital.contactInfo}",
+                            fontWeight = FontWeight.Bold,
+                            color = primaryColor,
+                            fontSize = 16.sp
+                        )
+                    }
                 }
             }
         }

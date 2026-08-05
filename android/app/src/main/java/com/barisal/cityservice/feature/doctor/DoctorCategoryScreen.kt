@@ -32,7 +32,11 @@ import com.barisal.cityservice.feature.home.CategoryItem
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DoctorCategoryScreen(onBack: () -> Unit, onCategoryClick: (String) -> Unit) {
+fun DoctorCategoryScreen(
+    onBack: () -> Unit,
+    onCategoryClick: (String) -> Unit,
+    onNavigateToPostDoctor: () -> Unit = {}
+) {
     val languageState = LocalAppLanguage.current
     val isBengali = languageState.isBengali
 
@@ -115,8 +119,7 @@ fun DoctorCategoryScreen(onBack: () -> Unit, onCategoryClick: (String) -> Unit) 
         topBar = {
             GlobalAppBar(
                 title = if (isBengali) "ডাক্তার" else "Doctors",
-                onBackClick = onBack,
-
+                onBackClick = onBack
             )
         }
     ) { innerPadding ->
