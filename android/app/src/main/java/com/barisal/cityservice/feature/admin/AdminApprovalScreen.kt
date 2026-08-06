@@ -4,6 +4,7 @@ import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -28,10 +29,12 @@ import com.barisal.cityservice.core.utils.toCoilModel
 import com.barisal.cityservice.data.model.BloodDonorDto
 import com.barisal.cityservice.data.model.BloodRequestDto
 import com.barisal.cityservice.data.model.DoctorDto
+import com.barisal.cityservice.data.model.EventProviderDto
 import com.barisal.cityservice.data.model.HealthServiceDto
 import com.barisal.cityservice.data.model.HouseRentDto
 import com.barisal.cityservice.data.repository.BloodRepository
 import com.barisal.cityservice.data.repository.DoctorRepository
+import com.barisal.cityservice.data.repository.EventRepository
 import com.barisal.cityservice.data.repository.HealthServiceRepository
 import com.barisal.cityservice.data.repository.HouseRentRepository
 import com.barisal.cityservice.ui.components.GlobalAppBar
@@ -52,12 +55,14 @@ fun AdminApprovalScreen(
     val healthRepo = remember { HealthServiceRepository() }
     val bloodRepo = remember { BloodRepository() }
     val houseRentRepo = remember { HouseRentRepository() }
+    val eventRepo = remember { EventRepository() }
 
     val pendingDoctors by doctorRepo.getPendingDoctors().collectAsState(initial = emptyList())
     val pendingHealthServices by healthRepo.getPendingHealthServices().collectAsState(initial = emptyList())
     val pendingBloodDonors by bloodRepo.getPendingBloodDonors().collectAsState(initial = emptyList())
     val pendingBloodRequests by bloodRepo.getPendingBloodRequests().collectAsState(initial = emptyList())
     val pendingHouseRents by houseRentRepo.getPendingHouseRents().collectAsState(initial = emptyList())
+    val pendingEventServices by eventRepo.getPendingEventServices().collectAsState(initial = emptyList())
 
     var selectedTab by remember { mutableStateOf(0) }
     val tealColor = Color(0xFF0F766E)
@@ -152,6 +157,18 @@ fun AdminApprovalScreen(
                             Text(
                                 text = if (isBengali) "বাসা ভাড়া (${pendingHouseRents.size})" else "House Rent (${pendingHouseRents.size})",
                                 color = if (selectedTab == 4) tealColor else Color.Gray,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 14.sp
+                            )
+                        }
+                    )
+                    Tab(
+                        selected = selectedTab == 5,
+                        onClick = { selectedTab = 5 },
+                        text = {
+                            Text(
+                                text = if (isBengali) "ইভেন্ট সার্ভিস (${pendingEventServices.size})" else "Event Services (${pendingEventServices.size})",
+                                color = if (selectedTab == 5) tealColor else Color.Gray,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 14.sp
                             )
@@ -330,6 +347,43 @@ fun AdminApprovalScreen(
                                             val res = houseRentRepo.rejectHouseRent(house.id)
                                             if (res.isSuccess) {
                                                 Toast.makeText(context, if (isBengali) "পোস্টটি বাতিল করা হয়েছে" else "Rejected/Deleted", Toast.LENGTH_SHORT).show()
+                                            }
+                                        }
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
+                5 -> {
+                    if (pendingEventServices.isEmpty()) {
+                        EmptyPendingBox(if (isBengali) "কোনো অপেক্ষমাণ ইভেন্ট সার্ভিসের পোস্ট নেই" else "No pending event service posts")
+                    } else {
+                        LazyColumn(
+                            verticalArrangement = Arrangement.spacedBy(12.dp),
+                            modifier = Modifier.fillMaxSize()
+                        ) {
+                            items(pendingEventServices) { service ->
+                                PendingEventServiceCard(
+                                    eventProvider = service,
+                                    isBengali = isBengali,
+                                    onApprove = {
+                                        coroutineScope.launch {
+                                            val res = eventRepo.approveEventService(service.id)
+                                            if (res.isSuccess) {
+                                                Toast.makeText(context, if (isBengali) "ইভেন্ট সার্ভিসের পোস্টটি অনুমোদিত হয়েছে!" else "Approved successfully!", Toast.LENGTH_SHORT).show()
+                                            } else {
+                                                Toast.makeText(context, "ত্রুটি: ${res.exceptionOrNull()?.message}", Toast.LENGTH_LONG).show()
+                                            }
+                                        }
+                                    },
+                                    onReject = {
+                                        coroutineScope.launch {
+                                            val res = eventRepo.rejectEventService(service.id)
+                                            if (res.isSuccess) {
+                                                Toast.makeText(context, if (isBengali) "পোস্টটি বাতিল করা হয়েছে" else "Rejected/Deleted", Toast.LENGTH_SHORT).show()
+                                            } else {
+                                                Toast.makeText(context, "ত্রুটি: ${res.exceptionOrNull()?.message}", Toast.LENGTH_LONG).show()
                                             }
                                         }
                                     }
@@ -587,6 +641,136 @@ fun PendingHouseRentCard(house: HouseRentDto, isBengali: Boolean, onApprove: () 
             }
 
             Spacer(modifier = Modifier.height(10.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
+                Button(
+                    onClick = onApprove,
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF16A34A)),
+                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(if (isBengali) "অনুমোদন করুন" else "Approve", color = Color.White, fontWeight = FontWeight.Bold)
+                }
+                OutlinedButton(
+                    onClick = onReject,
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFDC2626)),
+                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(if (isBengali) "বাতিল করুন" else "Reject", fontWeight = FontWeight.Bold)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun PendingEventServiceCard(
+    eventProvider: EventProviderDto,
+    isBengali: Boolean,
+    onApprove: () -> Unit,
+    onReject: () -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Column(modifier = Modifier.padding(14.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = Color(0xFF1E3A8A).copy(alpha = 0.1f)
+                ) {
+                    Text(
+                        text = eventProvider.categoryName.ifBlank { "ইভেন্ট সার্ভিস" },
+                        color = Color(0xFF1E3A8A),
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                    )
+                }
+
+                Text(
+                    text = if (eventProvider.startingPackage > 0) "${eventProvider.startingPackage} ৳ / ${eventProvider.priceUnit}" else "আলোচনা সাপেক্ষে",
+                    color = Color(0xFF16A34A),
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = eventProvider.name.ifBlank { "Un-named Vendor" },
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF0F172A)
+            )
+
+            if (eventProvider.ownerName.isNotBlank()) {
+                Text(
+                    text = "মালিক/প্রতিনিধি: ${eventProvider.ownerName}",
+                    fontSize = 13.sp,
+                    color = Color(0xFF475569)
+                )
+            }
+
+            Text(
+                text = "ফোন: ${eventProvider.phone} ${if (eventProvider.whatsappPhone.isNotBlank()) "• WA: ${eventProvider.whatsappPhone}" else ""}",
+                fontSize = 13.sp,
+                color = Color(0xFF0284C7),
+                fontWeight = FontWeight.Medium
+            )
+
+            Text(
+                text = "ঠিকানা: ${eventProvider.zilla}${if (eventProvider.thana.isNotBlank()) ", ${eventProvider.thana}" else ""}${if (eventProvider.addressBn.isNotBlank()) " (${eventProvider.addressBn})" else ""}",
+                fontSize = 12.sp,
+                color = Color.Gray
+            )
+
+            if (eventProvider.categoryDetails.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(4.dp))
+                val detailsText = eventProvider.categoryDetails.entries.joinToString(" • ") { "${it.key}: ${it.value}" }
+                Text(
+                    text = "বিশেষত্ব: $detailsText",
+                    fontSize = 12.sp,
+                    color = Color(0xFF334155),
+                    fontWeight = FontWeight.Medium
+                )
+            }
+
+            if (eventProvider.imageUrls.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(8.dp))
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    items(eventProvider.imageUrls) { imgUrl ->
+                        val coilModel = remember(imgUrl) { imgUrl.toCoilModel() }
+                        if (coilModel != null) {
+                            AsyncImage(
+                                model = coilModel,
+                                contentDescription = "Event Image",
+                                modifier = Modifier
+                                    .size(70.dp)
+                                    .clip(RoundedCornerShape(8.dp)),
+                                contentScale = ContentScale.Crop
+                            )
+                        }
+                    }
+                }
+            }
+
+            val postedBy = eventProvider.userEmail.ifEmpty { eventProvider.userPhone.ifEmpty { eventProvider.userId } }
+            if (postedBy.isNotBlank()) {
+                Spacer(modifier = Modifier.height(4.dp))
+                Text("👤 পোস্টকারী: $postedBy", fontSize = 11.sp, color = Color(0xFF64748B))
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
                 Button(
                     onClick = onApprove,

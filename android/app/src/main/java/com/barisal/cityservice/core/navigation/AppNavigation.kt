@@ -347,7 +347,13 @@ fun AppNavigation() {
         }
         composable("event_service") {
             com.barisal.cityservice.feature.event.EventServiceScreen(
-                onNavigateBack = { navController.popBackStack() }
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToPostEvent = { navigateWithAuthCheck("post_event_service") }
+            )
+        }
+        composable("post_event_service") {
+            com.barisal.cityservice.feature.event.PostEventServiceScreen(
+                onBack = { navController.popBackStack() }
             )
         }
         composable("house_rent_list") {

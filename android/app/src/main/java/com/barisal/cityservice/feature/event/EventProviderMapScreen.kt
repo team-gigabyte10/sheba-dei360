@@ -151,10 +151,38 @@ fun EventProviderMapScreen(
         }
     }
 
-    val filteredProviders = remember(category, selectedZilla) {
-        sampleEventProviders.filter { 
-            it.categoryName == category.title || category.title == "ইভেন্ট ম্যানেজমেন্ট"
-        }.ifEmpty { sampleEventProviders }
+    val repository = remember { com.barisal.cityservice.data.repository.EventRepository() }
+    val firestoreProvidersDto by repository.getEventServicesFlow().collectAsState(initial = emptyList())
+
+    val allEventProviders = remember(firestoreProvidersDto) {
+        val converted = firestoreProvidersDto.map { dto ->
+            val parts = dto.latLng.split(",")
+            val lat = parts.getOrNull(0)?.toDoubleOrNull() ?: 23.8103
+            val lng = parts.getOrNull(1)?.toDoubleOrNull() ?: 90.4125
+            EventProvider(
+                id = dto.id,
+                name = dto.name,
+                phone = dto.phone,
+                categoryName = dto.categoryName,
+                rating = dto.rating,
+                reviewCount = dto.reviewCount,
+                experienceYears = dto.experienceYears,
+                distanceKm = 1.5,
+                addressBn = "${dto.zilla}${if (dto.thana.isNotBlank()) ", ${dto.thana}" else ""}${if (dto.addressBn.isNotBlank()) " (${dto.addressBn})" else ""}",
+                addressEn = "${dto.zilla}${if (dto.thana.isNotBlank()) ", ${dto.thana}" else ""}",
+                location = LatLng(lat, lng),
+                startingPackage = dto.startingPackage
+            )
+        }
+        (converted + sampleEventProviders).distinctBy { it.id }
+    }
+
+    val filteredProviders = remember(category, selectedZilla, allEventProviders) {
+        allEventProviders.filter { provider ->
+            val matchesCategory = category.title == "ইভেন্ট ম্যানেজমেন্ট" || provider.categoryName == category.title
+            val matchesZilla = selectedZilla == null || provider.addressBn.contains(selectedZilla) || provider.addressEn.contains(selectedZilla)
+            matchesCategory && matchesZilla
+        }.ifEmpty { allEventProviders }
     }
 
     Scaffold(

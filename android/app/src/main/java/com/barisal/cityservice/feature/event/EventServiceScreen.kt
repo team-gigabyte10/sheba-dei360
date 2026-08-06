@@ -36,7 +36,8 @@ import com.barisal.cityservice.ui.components.SetStatusBarColor
 
 @Composable
 fun EventServiceScreen(
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
+    onNavigateToPostEvent: () -> Unit = {}
 ) {
     SetStatusBarColor()
     val context = LocalContext.current
@@ -69,6 +70,15 @@ fun EventServiceScreen(
                             Icon(Icons.Default.MoreVert, contentDescription = "More", tint = Color.Black)
                         }
                     }
+                )
+            },
+            floatingActionButton = {
+                ExtendedFloatingActionButton(
+                    onClick = onNavigateToPostEvent,
+                    containerColor = Color(0xFF1E3A8A),
+                    contentColor = Color.White,
+                    icon = { Icon(Icons.Default.Add, contentDescription = "Post Service") },
+                    text = { Text(if (isBengali) "পোস্ট করুন" else "Post Service", fontWeight = FontWeight.Bold) }
                 )
             }
         ) { innerPadding ->
