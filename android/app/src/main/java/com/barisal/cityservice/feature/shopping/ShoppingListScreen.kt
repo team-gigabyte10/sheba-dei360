@@ -28,8 +28,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.layout.ContentScale
+import coil.compose.AsyncImage
 import com.barisal.cityservice.core.language.LocalAppLanguage
 import com.barisal.cityservice.core.utils.bangladeshZillas
+import com.barisal.cityservice.core.utils.toCoilModel
+import com.barisal.cityservice.data.repository.ShoppingRepository
 import com.barisal.cityservice.ui.components.CustomDialog
 import com.barisal.cityservice.ui.components.GlobalAppBar
 import com.barisal.cityservice.ui.components.SetStatusBarColor
@@ -44,7 +48,8 @@ data class ProductInfo(
     val latLng: String,
     val contactInfo: String,
     val description: String,
-    val condition: String = "Used"
+    val condition: String = "Used",
+    val imageUrls: List<String> = emptyList()
 )
 
 data class ShoppingCategory(
@@ -146,6 +151,28 @@ fun ShoppingListScreen(
     val primaryColor = Color(0xFF059669) // Green theme accent
 
     val context = LocalContext.current
+    val shoppingRepo = remember { ShoppingRepository() }
+    val firestoreProductsDto by shoppingRepo.getApprovedProducts().collectAsState(initial = emptyList())
+
+    val firestoreProducts = remember(firestoreProductsDto) {
+        firestoreProductsDto.map { dto ->
+            val dateStr = java.text.SimpleDateFormat("dd MMM yyyy", java.util.Locale.getDefault()).format(java.util.Date(dto.createdAt))
+            val priceStr = if (dto.price.startsWith("BDT") || dto.price.contains("টাকা")) dto.price else "BDT ${dto.price}"
+            ProductInfo(
+                id = dto.id,
+                productName = dto.productName,
+                shopName = if (dto.userDisplayName.isNotBlank()) dto.userDisplayName else "Seller",
+                date = dateStr,
+                price = priceStr,
+                address = dto.address.ifBlank { "Barisal" },
+                latLng = dto.latLng,
+                contactInfo = dto.contactInfo,
+                description = dto.description,
+                condition = dto.condition,
+                imageUrls = dto.imageUrls
+            )
+        }
+    }
 
     val totalCartCount = cartItems.values.sum()
 
@@ -159,7 +186,7 @@ fun ShoppingListScreen(
                     .padding(bottom = 10.dp)
             ) {
                 GlobalAppBar(
-                    title = if (isBengali) "কেনা-কাটা" else "Shopping",
+                    title = if (isBengali) "বেচা-কেনা" else "Shopping",
                     onBackClick = onBack,
                     containerColor = Color.White,
                     contentColor = Color.Black,
@@ -422,10 +449,12 @@ fun ShoppingListScreen(
             }
 
             // Shopping Cards Grid (2 items per row)
-            val filteredProducts = dummyProducts.filter { product ->
+            val combinedProducts = firestoreProducts + dummyProducts
+            val filteredProducts = combinedProducts.filter { product ->
                 (selectedZilla == null || product.address.contains(selectedZilla!!, ignoreCase = true)) &&
                 (searchQuery.isEmpty() || product.productName.contains(searchQuery, ignoreCase = true) || product.address.contains(searchQuery, ignoreCase = true)) &&
-                (selectedCondition == "All" || product.condition.equals(selectedCondition, ignoreCase = true)) &&
+                (selectedCategory == null || product.productName.contains(selectedCategory!!, ignoreCase = true) || product.description.contains(selectedCategory!!, ignoreCase = true)) &&
+                (selectedCondition == "All" || product.condition.equals(selectedCondition, ignoreCase = true) || (selectedCondition == "New" && product.condition.equals("নতুন", ignoreCase = true)) || (selectedCondition == "Used" && product.condition.equals("পুরাতন", ignoreCase = true))) &&
                 (!showWishlistOnly || favoriteProductIds.contains(product.id))
             }
 
@@ -465,11 +494,6 @@ fun ShoppingListScreen(
                                             favoriteProductIds + product.id
                                         }
                                     },
-                                    onAddToCart = {
-                                        val currentQty = cartItems[product] ?: 0
-                                        cartItems = cartItems + (product to (currentQty + 1))
-                                        Toast.makeText(context, if (isBengali) "${product.productName} কার্টে যুক্ত হয়েছে" else "Added to cart", Toast.LENGTH_SHORT).show()
-                                    },
                                     modifier = Modifier.weight(1f),
                                     onNavigateToDetails = { onNavigateToDetails(product.id) }
                                 )
@@ -493,11 +517,6 @@ fun ShoppingListScreen(
                                 } else {
                                     favoriteProductIds + product.id
                                 }
-                            },
-                            onAddToCart = {
-                                val currentQty = cartItems[product] ?: 0
-                                cartItems = cartItems + (product to (currentQty + 1))
-                                Toast.makeText(context, if (isBengali) "${product.productName} কার্টে যুক্ত হয়েছে" else "Added to cart", Toast.LENGTH_SHORT).show()
                             },
                             onNavigateToDetails = { onNavigateToDetails(product.id) }
                         )
@@ -573,7 +592,6 @@ fun ShoppingGridCard(
     isBengali: Boolean,
     isFavorite: Boolean = false,
     onFavoriteToggle: () -> Unit = {},
-    onAddToCart: () -> Unit = {},
     modifier: Modifier = Modifier,
     onNavigateToDetails: () -> Unit
 ) {
@@ -593,21 +611,19 @@ fun ShoppingGridCard(
                     .background(Color(0xFFF1F5F9)),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(
-                    imageVector = Icons.Default.Smartphone,
-                    contentDescription = null,
-                    tint = Color(0xFF94A3B8),
-                    modifier = Modifier.size(48.dp)
-                )
-
-                IconButton(
-                    onClick = onFavoriteToggle,
-                    modifier = Modifier.align(Alignment.TopEnd)
-                ) {
+                if (product.imageUrls.isNotEmpty()) {
+                    AsyncImage(
+                        model = product.imageUrls.first().toCoilModel(),
+                        contentDescription = product.productName,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                } else {
                     Icon(
-                        imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                        contentDescription = "Bookmark",
-                        tint = if (isFavorite) Color(0xFFE11D48) else Color.DarkGray
+                        imageVector = Icons.Default.Smartphone,
+                        contentDescription = null,
+                        tint = Color(0xFF94A3B8),
+                        modifier = Modifier.size(48.dp)
                     )
                 }
 
@@ -635,14 +651,14 @@ fun ShoppingGridCard(
                         fontWeight = FontWeight.Bold
                     )
                     IconButton(
-                        onClick = onAddToCart,
+                        onClick = onFavoriteToggle,
                         modifier = Modifier.size(28.dp)
                     ) {
                         Icon(
-                            imageVector = Icons.Default.AddShoppingCart,
-                            contentDescription = "Add to Cart",
-                            tint = Color(0xFF059669),
-                            modifier = Modifier.size(18.dp)
+                            imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                            contentDescription = "Favorite",
+                            tint = if (isFavorite) Color(0xFFE11D48) else Color.DarkGray,
+                            modifier = Modifier.size(20.dp)
                         )
                     }
                 }
@@ -676,7 +692,6 @@ fun ShoppingListCardItem(
     isBengali: Boolean,
     isFavorite: Boolean = false,
     onFavoriteToggle: () -> Unit = {},
-    onAddToCart: () -> Unit = {},
     onNavigateToDetails: () -> Unit
 ) {
     Card(
@@ -700,12 +715,21 @@ fun ShoppingListCardItem(
                     .background(Color(0xFFF1F5F9)),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(
-                    imageVector = Icons.Default.Smartphone,
-                    contentDescription = null,
-                    tint = Color(0xFF94A3B8),
-                    modifier = Modifier.size(36.dp)
-                )
+                if (product.imageUrls.isNotEmpty()) {
+                    AsyncImage(
+                        model = product.imageUrls.first().toCoilModel(),
+                        contentDescription = product.productName,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                } else {
+                    Icon(
+                        imageVector = Icons.Default.Smartphone,
+                        contentDescription = null,
+                        tint = Color(0xFF94A3B8),
+                        modifier = Modifier.size(36.dp)
+                    )
+                }
             }
             Spacer(modifier = Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
@@ -720,23 +744,13 @@ fun ShoppingListCardItem(
                         fontSize = 15.sp,
                         fontWeight = FontWeight.Bold
                     )
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        IconButton(onClick = onFavoriteToggle, modifier = Modifier.size(28.dp)) {
-                            Icon(
-                                imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                                contentDescription = "Bookmark",
-                                tint = if (isFavorite) Color(0xFFE11D48) else Color.DarkGray,
-                                modifier = Modifier.size(18.dp)
-                            )
-                        }
-                        IconButton(onClick = onAddToCart, modifier = Modifier.size(28.dp)) {
-                            Icon(
-                                imageVector = Icons.Default.AddShoppingCart,
-                                contentDescription = "Add to Cart",
-                                tint = Color(0xFF059669),
-                                modifier = Modifier.size(18.dp)
-                            )
-                        }
+                    IconButton(onClick = onFavoriteToggle, modifier = Modifier.size(28.dp)) {
+                        Icon(
+                            imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                            contentDescription = "Favorite",
+                            tint = if (isFavorite) Color(0xFFE11D48) else Color.DarkGray,
+                            modifier = Modifier.size(20.dp)
+                        )
                     }
                 }
                 Spacer(modifier = Modifier.height(2.dp))

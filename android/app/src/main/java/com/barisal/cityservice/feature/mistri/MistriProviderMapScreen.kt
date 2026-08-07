@@ -55,7 +55,7 @@ data class MistriProvider(
     val addressEn: String,
     val location: LatLng,
     val isAvailable: Boolean = true,
-    val minCharge: Int = 300
+    val minCharge: Int = 0
 )
 
 val sampleMistriProviders = listOf(
@@ -165,10 +165,37 @@ fun MistriProviderMapScreen(
         }
     }
 
-    val filteredProviders = remember(category, selectedZilla) {
-        sampleMistriProviders.filter { 
+    val mistriRepo = remember { com.barisal.cityservice.data.repository.MistriRepository() }
+    val firestoreProvidersDto by mistriRepo.getApprovedMistriProviders(category.name, selectedZilla).collectAsState(initial = emptyList())
+
+    val firestoreProviders = remember(firestoreProvidersDto) {
+        firestoreProvidersDto.map { dto ->
+            val parts = dto.latLng.split(",")
+            val lat = parts.getOrNull(0)?.toDoubleOrNull() ?: 23.8103
+            val lng = parts.getOrNull(1)?.toDoubleOrNull() ?: 90.4125
+            MistriProvider(
+                id = dto.id,
+                name = dto.name,
+                phone = dto.phone,
+                categoryName = dto.categoryName,
+                rating = dto.rating,
+                reviewCount = dto.reviewCount,
+                experienceYears = dto.experienceYears,
+                distanceKm = 1.0,
+                addressBn = dto.addressBn,
+                addressEn = dto.addressEn.ifBlank { dto.addressBn },
+                location = LatLng(lat, lng),
+                isAvailable = dto.isAvailable,
+                minCharge = dto.minCharge
+            )
+        }
+    }
+
+    val filteredProviders = remember(category, selectedZilla, firestoreProviders) {
+        val combined = firestoreProviders + sampleMistriProviders
+        combined.filter { 
             it.categoryName == category.name || category.name == "অন্যান্য মিস্ত্রি" 
-        }.ifEmpty { sampleMistriProviders }
+        }
     }
 
     Scaffold(

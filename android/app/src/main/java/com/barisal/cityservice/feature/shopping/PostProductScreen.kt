@@ -43,6 +43,11 @@ import com.barisal.cityservice.core.language.LocalAppLanguage
 import com.barisal.cityservice.ui.components.GlobalAppBar
 import com.barisal.cityservice.ui.components.SetStatusBarColor
 
+import android.widget.Toast
+import com.barisal.cityservice.data.model.ProductDto
+import com.barisal.cityservice.data.repository.ShoppingRepository
+import kotlinx.coroutines.launch
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PostProductScreen(
@@ -51,10 +56,13 @@ fun PostProductScreen(
     val languageState = LocalAppLanguage.current
     val isBengali = languageState.isBengali
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+    val shoppingRepo = remember { ShoppingRepository() }
 
     SetStatusBarColor()
 
     var selectedCategory by remember { mutableStateOf("") }
+    var selectedCondition by remember { mutableStateOf(if (isBengali) "পুরাতন" else "Used") }
     var productName by remember { mutableStateOf("") }
     var price by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
@@ -63,6 +71,7 @@ fun PostProductScreen(
     
     var categoryDropdownExpanded by remember { mutableStateOf(false) }
     var selectedImages by remember { mutableStateOf<List<Uri>>(emptyList()) }
+    var isSubmitting by remember { mutableStateOf(false) }
     
     var selectedLocation by remember { mutableStateOf(LatLng(23.8103, 90.4125)) } // Default to Dhaka
     val cameraPositionState = rememberCameraPositionState {
@@ -82,9 +91,39 @@ fun PostProductScreen(
     val primaryColor = Color(0xFFE65100) // Orange theme for shopping
 
     val categories = if (isBengali) {
-        listOf("ইলেকট্রনিক্স", "গাড়ী", "বাড়ি", "অন্যান্য")
+        listOf(
+            "মোবাইল ও ইলেকট্রনিক্স",
+            "গাড়ি ও প্রপার্টি",
+            "হোম ও লিভিং",
+            "সার্ভিসেস",
+            "রিপেয়ার ও কনস্ট্রাকশন",
+            "কমার্শিয়াল ইকুইপমেন্ট",
+            "বিনোদন ও স্পোর্টস",
+            "শিশু ও কিডস",
+            "খাবার ও কৃষি",
+            "পশুপাখি ও পেটস",
+            "অন্যান্য"
+        )
     } else {
-        listOf("Electronics", "Vehicles", "Properties", "Others")
+        listOf(
+            "Mobiles & Electronics",
+            "Vehicles & Property",
+            "Home & Living",
+            "Services",
+            "Repair & Construction",
+            "Commercial Equipment & Tools",
+            "Leisure & Activities",
+            "Babies & Kids",
+            "Food, Agriculture & Farming",
+            "Animals & Pets",
+            "Others"
+        )
+    }
+
+    val conditionOptions = if (isBengali) {
+        listOf("পুরাতন", "নতুন")
+    } else {
+        listOf("Used", "New")
     }
 
     Scaffold(
@@ -129,7 +168,7 @@ fun PostProductScreen(
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = if (isBengali) "ছবি আপলোড করুন" else "Upload Images",
+                            text = if (isBengali) "ছবি আপলোড করুন (সর্বোচ্চ ৫টি)" else "Upload Images (Max 5)",
                             color = Color.Gray,
                             fontSize = 14.sp
                         )
@@ -178,20 +217,22 @@ fun PostProductScreen(
                         }
                     }
                     
-                    item {
-                        Box(
-                            modifier = Modifier
-                                .size(80.dp)
-                                .background(Color.White, RoundedCornerShape(12.dp))
-                                .border(1.dp, Color.LightGray, RoundedCornerShape(12.dp))
-                                .clickable { 
-                                    multiplePhotoPickerLauncher.launch(
-                                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
-                                    )
-                                },
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(Icons.Default.AddPhotoAlternate, contentDescription = "Add More", tint = Color.Gray)
+                    if (selectedImages.size < 5) {
+                        item {
+                            Box(
+                                modifier = Modifier
+                                    .size(80.dp)
+                                    .background(Color.White, RoundedCornerShape(12.dp))
+                                    .border(1.dp, Color.LightGray, RoundedCornerShape(12.dp))
+                                    .clickable { 
+                                        multiplePhotoPickerLauncher.launch(
+                                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                                        )
+                                    },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(Icons.Default.AddPhotoAlternate, contentDescription = "Add More", tint = Color.Gray)
+                            }
                         }
                     }
                 }
@@ -206,7 +247,7 @@ fun PostProductScreen(
                     value = selectedCategory,
                     onValueChange = {},
                     readOnly = true,
-                    label = { Text(if (isBengali) "ক্যাটাগরি" else "Category") },
+                    label = { Text(if (isBengali) "ক্যাটাগরি *" else "Category *") },
                     trailingIcon = {
                         ExposedDropdownMenuDefaults.TrailingIcon(expanded = categoryDropdownExpanded)
                     },
@@ -236,11 +277,43 @@ fun PostProductScreen(
                 }
             }
 
+            // Product Condition Selector (New vs Used)
+            Column {
+                Text(
+                    text = if (isBengali) "পণ্যের অবস্থা *" else "Product Condition *",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 14.sp,
+                    color = Color.DarkGray,
+                    modifier = Modifier.padding(bottom = 6.dp)
+                )
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    conditionOptions.forEach { condition ->
+                        val isSelected = selectedCondition.equals(condition, ignoreCase = true)
+                        FilterChip(
+                            selected = isSelected,
+                            onClick = { selectedCondition = condition },
+                            label = {
+                                Text(
+                                    text = condition,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                                )
+                            },
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = primaryColor,
+                                selectedLabelColor = Color.White
+                            )
+                        )
+                    }
+                }
+            }
+
             // Product Name
             OutlinedTextField(
                 value = productName,
                 onValueChange = { productName = it },
-                label = { Text(if (isBengali) "পণ্যের নাম" else "Product Name") },
+                label = { Text(if (isBengali) "পণ্যের নাম *" else "Product Name *") },
                 modifier = Modifier.fillMaxWidth(),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = primaryColor,
@@ -254,7 +327,7 @@ fun PostProductScreen(
             OutlinedTextField(
                 value = price,
                 onValueChange = { price = it },
-                label = { Text(if (isBengali) "দাম" else "Price") },
+                label = { Text(if (isBengali) "দাম (টাকা) *" else "Price (BDT) *") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 modifier = Modifier.fillMaxWidth(),
                 colors = OutlinedTextFieldDefaults.colors(
@@ -286,7 +359,7 @@ fun PostProductScreen(
             OutlinedTextField(
                 value = address,
                 onValueChange = { address = it },
-                label = { Text(if (isBengali) "ঠিকানা" else "Address") },
+                label = { Text(if (isBengali) "ঠিকানা / এলাকা" else "Address / Location") },
                 modifier = Modifier.fillMaxWidth(),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = primaryColor,
@@ -306,7 +379,7 @@ fun PostProductScreen(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(350.dp)
+                    .height(280.dp)
                     .clip(RoundedCornerShape(8.dp))
                     .border(1.dp, Color.LightGray, RoundedCornerShape(8.dp))
             ) {
@@ -330,7 +403,7 @@ fun PostProductScreen(
             OutlinedTextField(
                 value = contactInfo,
                 onValueChange = { contactInfo = it },
-                label = { Text(if (isBengali) "যোগাযোগের নম্বর" else "Contact Number") },
+                label = { Text(if (isBengali) "যোগাযোগের নম্বর *" else "Contact Number *") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                 modifier = Modifier.fillMaxWidth(),
                 colors = OutlinedTextFieldDefaults.colors(
@@ -345,20 +418,77 @@ fun PostProductScreen(
 
             // Submit Button
             Button(
-                onClick = { /* TODO: Handle submission */ },
+                onClick = {
+                    if (productName.isBlank()) {
+                        Toast.makeText(context, if (isBengali) "অনুগ্রহ করে পণ্যের নাম দিন" else "Please enter product name", Toast.LENGTH_SHORT).show()
+                        return@Button
+                    }
+                    if (selectedCategory.isBlank()) {
+                        Toast.makeText(context, if (isBengali) "অনুগ্রহ করে ক্যাটাগরি নির্বাচন করুন" else "Please select category", Toast.LENGTH_SHORT).show()
+                        return@Button
+                    }
+                    if (price.isBlank()) {
+                        Toast.makeText(context, if (isBengali) "অনুগ্রহ করে দাম দিন" else "Please enter price", Toast.LENGTH_SHORT).show()
+                        return@Button
+                    }
+                    if (contactInfo.isBlank()) {
+                        Toast.makeText(context, if (isBengali) "অনুগ্রহ করে যোগাযোগের নম্বর দিন" else "Please enter contact number", Toast.LENGTH_SHORT).show()
+                        return@Button
+                    }
+
+                    isSubmitting = true
+                    coroutineScope.launch {
+                        val base64Images = shoppingRepo.compressMultipleImages(context, selectedImages)
+                        val product = ProductDto(
+                            productName = productName.trim(),
+                            category = selectedCategory,
+                            condition = selectedCondition,
+                            price = price.trim(),
+                            description = description.trim(),
+                            address = address.trim(),
+                            contactInfo = contactInfo.trim(),
+                            latLng = "${selectedLocation.latitude},${selectedLocation.longitude}",
+                            imageUrls = base64Images
+                        )
+
+                        val result = shoppingRepo.saveProductToFirestore(product)
+                        isSubmitting = false
+
+                        if (result.isSuccess) {
+                            Toast.makeText(
+                                context,
+                                if (isBengali) "পোস্টটি সফলভাবে জমা দেওয়া হয়েছে! অনুমোদনের পর প্রদর্শিত হবে।" else "Post submitted successfully! It will appear after admin approval.",
+                                Toast.LENGTH_LONG
+                            ).show()
+                            onBack()
+                        } else {
+                            Toast.makeText(
+                                context,
+                                if (isBengali) "পোস্ট জমা দিতে ব্যর্থ হয়েছে: ${result.exceptionOrNull()?.localizedMessage}" else "Failed to submit post: ${result.exceptionOrNull()?.localizedMessage}",
+                                Toast.LENGTH_LONG
+                            ).show()
+                        }
+                    }
+                },
+                enabled = !isSubmitting,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = primaryColor),
                 shape = RoundedCornerShape(8.dp)
             ) {
-                Text(
-                    text = if (isBengali) "পোস্ট করুন" else "Post Product",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
-                )
+                if (isSubmitting) {
+                    CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
+                } else {
+                    Text(
+                        text = if (isBengali) "পোস্ট করুন" else "Post Product",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                }
             }
         }
     }
 }
+

@@ -41,6 +41,7 @@ fun MistriServiceScreen(
     var showZillaFilterDialog by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
     var selectedZilla by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<String?>(null) }
     var selectedCategoryForMap by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<MistriCategory?>(null) }
+    var showPostScreen by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
 
     val categories = listOf(
         MistriCategory("রাজ মিস্ত্রি", Icons.Default.Construction),
@@ -65,7 +66,14 @@ fun MistriServiceScreen(
         MistriCategory("অন্যান্য মিস্ত্রি", Icons.Default.MoreHoriz)
     )
 
-    if (selectedCategoryForMap != null) {
+    if (showPostScreen) {
+        androidx.activity.compose.BackHandler {
+            showPostScreen = false
+        }
+        PostMistriServiceScreen(
+            onBack = { showPostScreen = false }
+        )
+    } else if (selectedCategoryForMap != null) {
         androidx.activity.compose.BackHandler {
             selectedCategoryForMap = null
         }
@@ -86,6 +94,22 @@ fun MistriServiceScreen(
                         }
                     }
                 )
+            },
+            floatingActionButton = {
+                FloatingActionButton(
+                    onClick = { showPostScreen = true },
+                    containerColor = Color(0xFF2563EB),
+                    contentColor = Color.White
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 14.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(Icons.Default.Add, contentDescription = "Post Service")
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("সার্ভিস যোগ করুন", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                    }
+                }
             }
         ) { innerPadding ->
             if (showZillaFilterDialog) {
@@ -141,6 +165,7 @@ fun MistriServiceScreen(
                         .height(130.dp)
                         .clip(RoundedCornerShape(12.dp))
                         .background(Color(0xFF2563EB)) // Blue Banner similar to image
+                        .clickable { showPostScreen = true }
                         .padding(16.dp)
                 ) {
                     // Banner text content
@@ -152,9 +177,10 @@ fun MistriServiceScreen(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(20.dp))
                                 .background(Color(0xFF10B981))
+                                .clickable { showPostScreen = true }
                                 .padding(horizontal = 12.dp, vertical = 4.dp)
                         ) {
-                            Text("আজই বিজ্ঞাপন দিন", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                            Text("আজই সার্ভিস যোগ করুন", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                         }
                     }
                 }

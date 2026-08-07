@@ -432,7 +432,7 @@ fun HomeScreen(
                                                 "ডাক্তার", "Doctor" -> onNavigateToDoctor()
                                                 "হাসপাতাল", "Hospital" -> onNavigateToHospital()
                                                 "বাসা ভাড়া", "House Rent" -> onNavigateToHouseRent()
-                                                "কেনা-কাটা", "Shopping" -> onNavigateToShopping()
+                                                "বেচা-কেনা", "Shopping" -> onNavigateToShopping()
                                                 "পাত্র-পাত্রী", "Matrimony" -> onNavigateToMatrimony()
                                                 "রাইড", "Ride" -> onNavigateToRide()
                                                 "কুরিয়ার", "Courier" -> onNavigateToCourier()
