@@ -22,6 +22,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.core.view.WindowCompat
 
 @Composable
@@ -83,22 +84,33 @@ fun CustomDialog(
     iconBackgroundColor: Color = Color(0xFFEFF6FF),
     confirmButtonText: String = "OK",
     onConfirm: () -> Unit = onDismissRequest,
+    usePlatformDefaultWidth: Boolean = false,
     content: @Composable () -> Unit
 ) {
-    Dialog(onDismissRequest = onDismissRequest) {
+    Dialog(
+        onDismissRequest = onDismissRequest,
+        properties = DialogProperties(usePlatformDefaultWidth = usePlatformDefaultWidth)
+    ) {
         Card(
-            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 8.dp, vertical = 16.dp),
             shape = RoundedCornerShape(24.dp),
             colors = CardDefaults.cardColors(containerColor = Color.White),
             elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
         ) {
             Column(
-                modifier = Modifier.fillMaxWidth().padding(24.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(20.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 if (icon != null) {
                     Box(
-                        modifier = Modifier.size(64.dp).clip(CircleShape).background(iconBackgroundColor),
+                        modifier = Modifier
+                            .size(64.dp)
+                            .clip(CircleShape)
+                            .background(iconBackgroundColor),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(imageVector = icon, contentDescription = "Dialog Icon", tint = iconTint, modifier = Modifier.size(32.dp))
@@ -124,7 +136,9 @@ fun CustomDialog(
                     onClick = onConfirm,
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1E3A8A), contentColor = Color.White),
-                    modifier = Modifier.fillMaxWidth().height(48.dp)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp)
                 ) {
                     Text(confirmButtonText, fontWeight = FontWeight.Bold, fontSize = 16.sp)
                 }

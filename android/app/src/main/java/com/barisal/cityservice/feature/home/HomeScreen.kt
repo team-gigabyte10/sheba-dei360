@@ -69,9 +69,12 @@ fun HomeScreen(
     onNavigateToEmergencyService: () -> Unit = {},
     onNavigateToProfile: () -> Unit = {},
     onNavigateToAddCategory: () -> Unit = {},
-    onNavigateToAddSubCategory: () -> Unit = {}
+    onNavigateToAddSubCategory: () -> Unit = {},
+    onNavigateToAdminApproval: () -> Unit = {},
+    onLogout: () -> Unit = {}
 ) {
     var searchQuery by remember { mutableStateOf("") }
+    var showMenu by remember { mutableStateOf(false) }
     
     var showExitDialog by remember { mutableStateOf(false) }
     val activity = LocalContext.current as? Activity
@@ -232,27 +235,12 @@ fun HomeScreen(
                     onClick = { coroutineScope.launch { drawerState.close() } }
                 )
                 DrawerMenuItem(
-                    icon = Icons.Default.AccountBalanceWallet,
-                    text = if (isBengali) "ওয়ালেট" else "Wallet",
-                    isSelected = false,
-                    onClick = { coroutineScope.launch { drawerState.close() } }
-                )
-                DrawerMenuItem(
-                    icon = Icons.Default.Category,
-                    text = if (isBengali) "ক্যাটাগরি এন্ট্রি (City_Service)" else "Category Entry (City_Service)",
+                    icon = Icons.Default.AdminPanelSettings,
+                    text = if (isBengali) "পোস্ট অনুমোদন প্যানেল" else "Post Approval Panel",
                     isSelected = false,
                     onClick = {
                         coroutineScope.launch { drawerState.close() }
-                        onNavigateToAddCategory()
-                    }
-                )
-                DrawerMenuItem(
-                    icon = Icons.Default.FormatListBulleted,
-                    text = if (isBengali) "সাব-ক্যাটাগরি এন্ট্রি (City_Service)" else "Sub-Category Entry (City_Service)",
-                    isSelected = false,
-                    onClick = {
-                        coroutineScope.launch { drawerState.close() }
-                        onNavigateToAddSubCategory()
+                        onNavigateToAdminApproval()
                     }
                 )
                 DrawerMenuItem(
@@ -283,61 +271,41 @@ fun HomeScreen(
                         }
                     },
                     actions = {
-                        // District Location Selector Badge
-                        Row(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(16.dp))
-                                .background(Color(0xFFF1F5F9))
-                                .clickable { showZillaFilterDialog = true }
-                                .padding(horizontal = 10.dp, vertical = 6.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.LocationOn,
-                                contentDescription = "Select District",
-                                modifier = Modifier.size(16.dp),
-                                tint = Color(0xFF0F766E)
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(
-                                text = selectedZilla ?: (if (isBengali) "সকল জেলা" else "All Districts"),
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = Color(0xFF0F766E)
-                            )
-                            Icon(
-                                imageVector = Icons.Default.ArrowDropDown,
-                                contentDescription = null,
-                                modifier = Modifier.size(16.dp),
-                                tint = Color(0xFF0F766E)
-                            )
-                        }
-                        Spacer(modifier = Modifier.width(8.dp))
-                        // Language Switcher
-                        Row(
-                            modifier = Modifier
-                                .padding(end = 12.dp)
-                                .clip(RoundedCornerShape(16.dp))
-                                .background(Color.LightGray.copy(alpha = 0.3f))
-                                .clickable {
-                                    languageState.currentLanguage = if (isBengali) AppLanguage.ENGLISH else AppLanguage.BENGALI
-                                }
-                                .padding(horizontal = 8.dp, vertical = 4.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Language,
-                                contentDescription = "Change Language",
-                                modifier = Modifier.size(16.dp),
-                                tint = Color.Black
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(
-                                text = if (isBengali) "ENG" else "BAN",
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = Color.Black
-                            )
+                        Box {
+                            IconButton(onClick = { showMenu = true }) {
+                                Icon(
+                                    imageVector = Icons.Default.MoreVert,
+                                    contentDescription = "Options",
+                                    tint = Color.Black
+                                )
+                            }
+                            DropdownMenu(
+                                expanded = showMenu,
+                                onDismissRequest = { showMenu = false }
+                            ) {
+                                DropdownMenuItem(
+                                    text = { Text(if (isBengali) "সেটিংস" else "Settings") },
+                                    leadingIcon = {
+                                        Icon(Icons.Default.Settings, contentDescription = null, tint = Color(0xFF0F766E))
+                                    },
+                                    onClick = {
+                                        showMenu = false
+                                        onNavigateToSettings()
+                                    }
+                                )
+                                DropdownMenuItem(
+                                    text = { Text(if (isBengali) "লগআউট" else "Logout") },
+                                    leadingIcon = {
+                                        Icon(Icons.Default.ExitToApp, contentDescription = null, tint = Color.Red)
+                                    },
+                                    onClick = {
+                                        showMenu = false
+                                        com.google.firebase.auth.FirebaseAuth.getInstance().signOut()
+                                        com.barisal.cityservice.core.utils.UserPreferences.setOtpVerified(context, false)
+                                        onLogout()
+                                    }
+                                )
+                            }
                         }
                     }
                 )

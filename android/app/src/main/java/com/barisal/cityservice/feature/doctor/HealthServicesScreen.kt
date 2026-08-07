@@ -42,7 +42,8 @@ fun HealthServicesScreen(
     onNavigateToDoctor: () -> Unit,
     onNavigateToHospital: () -> Unit,
     onNavigateToBloodDonor: () -> Unit,
-    onNavigateToCategoryMap: (String) -> Unit
+    onNavigateToCategoryMap: (String) -> Unit,
+    onNavigateToPostHealthService: (String) -> Unit = {}
 ) {
     val languageState = LocalAppLanguage.current
     val isBengali = languageState.isBengali
@@ -74,11 +75,7 @@ fun HealthServicesScreen(
                 .padding(innerPadding)
                 .padding(16.dp)
         ) {
-            // 1. Auto Slider Image Banner
-            com.barisal.cityservice.feature.home.AutoSliderBanner()
-
-            Spacer(modifier = Modifier.height(14.dp))
-
+            
             // 2. Health Special Banner Ads Carousel
             LazyRow(
                 horizontalArrangement = Arrangement.spacedBy(14.dp),
@@ -197,15 +194,43 @@ fun HealthServicesScreen(
                                 )
                             }
 
-                            Spacer(modifier = Modifier.height(12.dp))
+                            Spacer(modifier = Modifier.height(10.dp))
 
                             Text(
                                 text = if (isBengali) cat.titleBan else cat.titleEng,
                                 fontWeight = FontWeight.Bold,
-                                fontSize = 15.sp,
+                                fontSize = 14.sp,
                                 color = Color.Black,
                                 textAlign = TextAlign.Center
                             )
+
+                            if (cat.id != "doctor" && cat.id != "blood" && cat.id != "hospital") {
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Surface(
+                                    onClick = { onNavigateToPostHealthService(cat.id) },
+                                    shape = RoundedCornerShape(12.dp),
+                                    color = cat.color.copy(alpha = 0.1f)
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Add,
+                                            contentDescription = null,
+                                            tint = cat.color,
+                                            modifier = Modifier.size(14.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Text(
+                                            text = if (isBengali) "পোস্ট করুন" else "Post Info",
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = cat.color
+                                        )
+                                    }
+                                }
+                            }
                         }
                     }
                 }

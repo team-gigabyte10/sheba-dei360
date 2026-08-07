@@ -15,12 +15,34 @@ import com.barisal.cityservice.feature.splash.SplashScreen
 @Composable
 fun AppNavigation() {
     val navController = rememberNavController()
+    val context = androidx.compose.ui.platform.LocalContext.current
+
+    fun navigateWithAuthCheck(targetRoute: String) {
+        val currentUser = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser
+        if (currentUser != null) {
+            com.barisal.cityservice.core.utils.UserPreferences.setOtpVerified(context, true)
+            navController.navigate(targetRoute)
+        } else {
+            android.widget.Toast.makeText(
+                context,
+                "পোস্ট করতে হলে আপনাকে অবশ্যই ইমেইল বা ফোন নম্বর দিয়ে লগইন করতে হবে।",
+                android.widget.Toast.LENGTH_LONG
+            ).show()
+            val encodedTarget = try { java.net.URLEncoder.encode(targetRoute, "UTF-8") } catch (e: Exception) { targetRoute }
+            navController.navigate("login?redirectRoute=$encodedTarget")
+        }
+    }
 
     NavHost(navController = navController, startDestination = "splash") {
         composable("splash") {
             SplashScreen(
                 onNavigateToHome = {
                     navController.navigate("home") {
+                        popUpTo("splash") { inclusive = true }
+                    }
+                },
+                onNavigateToLogin = {
+                    navController.navigate("login") {
                         popUpTo("splash") { inclusive = true }
                     }
                 },
@@ -38,18 +60,35 @@ fun AppNavigation() {
                 }
             })
         }
-        composable("login") {
+        composable(
+            route = "login?redirectRoute={redirectRoute}",
+            arguments = listOf(
+                androidx.navigation.navArgument("redirectRoute") {
+                    type = androidx.navigation.NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                }
+            )
+        ) { backStackEntry ->
+            val redirectRoute = backStackEntry.arguments?.getString("redirectRoute")
             LoginScreen(
+                redirectRoute = redirectRoute,
                 onNavigateToHome = {
                     navController.navigate("home") {
+                        popUpTo("login") { inclusive = true }
+                    }
+                },
+                onNavigateToRedirectTarget = { target ->
+                    val decoded = try { java.net.URLDecoder.decode(target, "UTF-8") } catch (e: Exception) { target }
+                    navController.navigate(decoded) {
                         popUpTo("login") { inclusive = true }
                     }
                 },
                 onNavigateToRegister = {
                     navController.navigate("register")
                 },
-                onNavigateToOtp = {
-                    navController.navigate("otp")
+                onNavigateToOtp = { target, verificationId, isEmailMode ->
+                    navController.navigate("otp?target=$target&verificationId=$verificationId&isEmailMode=$isEmailMode")
                 },
                 onNavigateToVendorDashboard = {
                     navController.navigate("vendor_dashboard") {
@@ -65,21 +104,46 @@ fun AppNavigation() {
                 },
                 onNavigateToHome = {
                     navController.navigate("home") {
-                        popUpTo("login") { inclusive = true } // Clear up to login
-                    }
-                }
-            )
-        }
-        composable("otp") {
-            OtpScreen(
-                onVerifySuccess = {
-                    navController.navigate("home") {
                         popUpTo("login") { inclusive = true }
                     }
                 },
-                onBack = {
-                    navController.popBackStack()
+                onNavigateToOtp = { target, verificationId, isEmailMode ->
+                    navController.navigate("otp?target=$target&verificationId=$verificationId&isEmailMode=$isEmailMode")
                 }
+            )
+        }
+        composable(
+            route = "otp?target={target}&verificationId={verificationId}&isEmailMode={isEmailMode}",
+            arguments = listOf(
+                androidx.navigation.navArgument("target") {
+                    type = androidx.navigation.NavType.StringType
+                    defaultValue = ""
+                },
+                androidx.navigation.navArgument("verificationId") {
+                    type = androidx.navigation.NavType.StringType
+                    defaultValue = ""
+                },
+                androidx.navigation.navArgument("isEmailMode") {
+                    type = androidx.navigation.NavType.BoolType
+                    defaultValue = false
+                }
+            )
+        ) { backStackEntry ->
+            val target = backStackEntry.arguments?.getString("target") ?: ""
+            val verificationId = backStackEntry.arguments?.getString("verificationId") ?: ""
+            val isEmailMode = backStackEntry.arguments?.getBoolean("isEmailMode") ?: false
+
+            OtpScreen(
+                target = target,
+                verificationId = verificationId,
+                isEmailMode = isEmailMode,
+                onVerifySuccess = {
+                    navController.navigate("home") {
+                        popUpTo("otp") { inclusive = true }
+                        popUpTo("login") { inclusive = true }
+                    }
+                },
+                onBack = { navController.popBackStack() }
             )
         }
         composable("home") {
@@ -158,6 +222,16 @@ fun AppNavigation() {
                 },
                 onNavigateToAddSubCategory = {
                     navController.navigate("add_subcategory")
+                },
+                onNavigateToAdminApproval = {
+                    navController.navigate("admin_approval")
+                },
+                onLogout = {
+                    com.google.firebase.auth.FirebaseAuth.getInstance().signOut()
+                    com.barisal.cityservice.core.utils.UserPreferences.setOtpVerified(context, false)
+                    navController.navigate("login") {
+                        popUpTo("home") { inclusive = true }
+                    }
                 }
             )
         }
@@ -251,16 +325,55 @@ fun AppNavigation() {
         }
         composable("blood_donor") {
             com.barisal.cityservice.feature.blood.BloodDonationScreen(
-                onNavigateBack = { navController.popBackStack() }
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToPostDonor = { navigateWithAuthCheck("post_blood_donor") },
+                onNavigateToPostRequest = { navigateWithAuthCheck("post_blood_request") }
+            )
+        }
+        composable("post_blood_donor") {
+            com.barisal.cityservice.feature.blood.PostBloodDonorScreen(
+                onBack = { navController.popBackStack() }
+            )
+        }
+        composable("post_blood_request") {
+            com.barisal.cityservice.feature.blood.PostBloodRequestScreen(
+                onBack = { navController.popBackStack() }
+            )
+        }
+        composable("admin_approval") {
+            com.barisal.cityservice.feature.admin.AdminApprovalScreen(
+                onBack = { navController.popBackStack() }
             )
         }
         composable("event_service") {
             com.barisal.cityservice.feature.event.EventServiceScreen(
-                onNavigateBack = { navController.popBackStack() }
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToPostEvent = { navigateWithAuthCheck("post_event_service") }
+            )
+        }
+        composable("post_event_service") {
+            com.barisal.cityservice.feature.event.PostEventServiceScreen(
+                onBack = { navController.popBackStack() }
             )
         }
         composable("house_rent_list") {
             com.barisal.cityservice.feature.houserent.HouseRentListScreen(
+                onBack = { navController.popBackStack() },
+                onNavigateToPostHouseRent = { navigateWithAuthCheck("post_house_rent") },
+                onNavigateToHouseRentDetail = { houseId ->
+                    navController.navigate("house_rent_detail/$houseId")
+                }
+            )
+        }
+        composable("house_rent_detail/{houseId}") { backStackEntry ->
+            val houseId = backStackEntry.arguments?.getString("houseId") ?: ""
+            com.barisal.cityservice.feature.houserent.HouseRentDetailScreen(
+                houseId = houseId,
+                onBack = { navController.popBackStack() }
+            )
+        }
+        composable("post_house_rent") {
+            com.barisal.cityservice.feature.houserent.PostHouseRentScreen(
                 onBack = { navController.popBackStack() }
             )
         }
@@ -296,7 +409,7 @@ fun AppNavigation() {
                     navController.navigate("shopping_details/$productId")
                 },
                 onNavigateToPostProduct = {
-                    navController.navigate("post_product")
+                    navigateWithAuthCheck("post_product")
                 }
             )
         }
@@ -321,11 +434,32 @@ fun AppNavigation() {
                 onNavigateToDoctor = { navController.navigate("doctor_category") },
                 onNavigateToHospital = { navController.navigate("hospital_list") },
                 onNavigateToBloodDonor = { navController.navigate("blood_donor") },
-                onNavigateToCategoryMap = { categoryKey -> navController.navigate("category_map/$categoryKey") }
+                onNavigateToCategoryMap = { categoryKey -> navController.navigate("category_map/$categoryKey") },
+                onNavigateToPostHealthService = { cat ->
+                    navigateWithAuthCheck("post_health_service?category=$cat")
+                }
             )
         }
         composable("hospital_list") {
             com.barisal.cityservice.feature.hospital.HospitalListScreen(
+                onBack = { navController.popBackStack() },
+                onNavigateToPostHealthService = { cat ->
+                    navigateWithAuthCheck("post_health_service?category=$cat")
+                }
+            )
+        }
+        composable(
+            route = "post_health_service?category={categoryKey}",
+            arguments = listOf(
+                androidx.navigation.navArgument("categoryKey") {
+                    type = androidx.navigation.NavType.StringType
+                    defaultValue = "hospital"
+                }
+            )
+        ) { backStackEntry ->
+            val initialCategory = backStackEntry.arguments?.getString("categoryKey") ?: "hospital"
+            com.barisal.cityservice.feature.doctor.PostHealthServiceScreen(
+                initialCategory = initialCategory,
                 onBack = { navController.popBackStack() }
             )
         }
@@ -334,6 +468,9 @@ fun AppNavigation() {
                 onBack = { navController.popBackStack() },
                 onCategoryClick = { categoryName ->
                     navController.navigate("doctor_list/$categoryName")
+                },
+                onNavigateToPostDoctor = {
+                    navigateWithAuthCheck("post_doctor")
                 }
             )
         }
@@ -341,6 +478,24 @@ fun AppNavigation() {
             val categoryName = backStackEntry.arguments?.getString("categoryName") ?: ""
             com.barisal.cityservice.feature.doctor.DoctorListScreen(
                 categoryName = categoryName,
+                onBack = { navController.popBackStack() },
+                onNavigateToPostDoctor = { cat ->
+                    navigateWithAuthCheck("post_doctor?category=$cat")
+                }
+            )
+        }
+        composable(
+            route = "post_doctor?category={categoryName}",
+            arguments = listOf(
+                androidx.navigation.navArgument("categoryName") {
+                    type = androidx.navigation.NavType.StringType
+                    defaultValue = ""
+                }
+            )
+        ) { backStackEntry ->
+            val initialCategory = backStackEntry.arguments?.getString("categoryName") ?: ""
+            com.barisal.cityservice.feature.doctor.PostDoctorScreen(
+                initialCategory = initialCategory,
                 onBack = { navController.popBackStack() }
             )
         }
