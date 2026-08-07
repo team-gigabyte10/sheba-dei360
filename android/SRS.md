@@ -249,7 +249,7 @@ const categories = [
   { id: 'health_services', nameEn: 'Health Services', nameBn: 'স্বাস্থ্য সেবা', route: 'health', order: 1, driveFileId: 'GOOGLE_DRIVE_FILE_ID_HEALTH' },
   { id: 'transport_services', nameEn: 'Transport Services', nameBn: 'যাতায়াত সেবা', route: 'transport', order: 2, driveFileId: 'GOOGLE_DRIVE_FILE_ID_TRANSPORT' },
   { id: 'house_rent', nameEn: 'House Rent', nameBn: 'বাসা ভাড়া', route: 'houserent', order: 3, driveFileId: 'GOOGLE_DRIVE_FILE_ID_HOUSERENT' },
-  { id: 'shopping', nameEn: 'Shopping', nameBn: 'কেনা-কাটা', route: 'shopping', order: 4, driveFileId: 'GOOGLE_DRIVE_FILE_ID_SHOPPING' },
+  { id: 'shopping', nameEn: 'Shopping', nameBn: 'বেচা-কেনা', route: 'shopping', order: 4, driveFileId: 'GOOGLE_DRIVE_FILE_ID_SHOPPING' },
   { id: 'matrimony', nameEn: 'Matrimony', nameBn: 'পাত্র-পাত্রী', route: 'matrimony', order: 5, driveFileId: 'GOOGLE_DRIVE_FILE_ID_MATRIMONY' },
   { id: 'event_service', nameEn: 'Event Service', nameBn: 'ইভেন্ট সার্ভিস', route: 'event', order: 6, driveFileId: 'GOOGLE_DRIVE_FILE_ID_EVENT' },
   { id: 'ride', nameEn: 'Ride', nameBn: 'রাইড', route: 'ride', order: 7, driveFileId: 'GOOGLE_DRIVE_FILE_ID_RIDE' },

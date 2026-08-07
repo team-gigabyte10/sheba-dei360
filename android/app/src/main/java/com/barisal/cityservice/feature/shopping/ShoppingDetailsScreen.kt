@@ -47,6 +47,10 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.layout.ContentScale
+import coil.compose.AsyncImage
+import com.barisal.cityservice.core.utils.toCoilModel
+import com.barisal.cityservice.data.repository.ShoppingRepository
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -63,8 +67,31 @@ fun ShoppingDetailsScreen(
     
     val primaryColor = Color(0xFFE65100) // Orange theme
     
-    // Fetch product using productId. Mocking here.
-    val product = dummyProducts.find { it.id == productId } ?: dummyProducts.first()
+    val shoppingRepo = remember { ShoppingRepository() }
+    val firestoreProductDto by shoppingRepo.getProductById(productId).collectAsState(initial = null)
+
+    val product = remember(firestoreProductDto, productId) {
+        if (firestoreProductDto != null) {
+            val dto = firestoreProductDto!!
+            val dateStr = java.text.SimpleDateFormat("dd MMM yyyy", java.util.Locale.getDefault()).format(java.util.Date(dto.createdAt))
+            val priceStr = if (dto.price.startsWith("BDT") || dto.price.contains("টাকা")) dto.price else "BDT ${dto.price}"
+            ProductInfo(
+                id = dto.id,
+                productName = dto.productName,
+                shopName = if (dto.userDisplayName.isNotBlank()) dto.userDisplayName else "Seller",
+                date = dateStr,
+                price = priceStr,
+                address = dto.address.ifBlank { "Barisal" },
+                latLng = dto.latLng.ifBlank { "23.8103,90.4125" },
+                contactInfo = dto.contactInfo,
+                description = dto.description,
+                condition = dto.condition,
+                imageUrls = dto.imageUrls
+            )
+        } else {
+            dummyProducts.find { it.id == productId } ?: dummyProducts.first()
+        }
+    }
 
     val hasLocationPermission = com.barisal.cityservice.core.utils.rememberLocationPermissionState()
 
@@ -196,7 +223,16 @@ fun ShoppingDetailsScreen(
                     .background(Color(0xFFE5E7EB)),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(Icons.Default.Image, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(80.dp))
+                if (product.imageUrls.isNotEmpty()) {
+                    AsyncImage(
+                        model = product.imageUrls.first().toCoilModel(),
+                        contentDescription = product.productName,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                } else {
+                    Icon(Icons.Default.Image, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(80.dp))
+                }
                 
                 // Carousel Dots Mock inside image
                 Row(

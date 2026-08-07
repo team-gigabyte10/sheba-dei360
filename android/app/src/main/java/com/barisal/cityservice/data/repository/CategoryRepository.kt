@@ -158,7 +158,7 @@ class CategoryRepository {
             CategoryItem(1, "Health Services", "স্বাস্থ্য সেবা", fallbackIcon = Icons.Default.MedicalServices, route = "health"),
             CategoryItem(2, "Transport Services", "যাতায়াত সেবা", fallbackIcon = Icons.Default.Commute, route = "transport"),
             CategoryItem(3, "House Rent", "বাসা ভাড়া", fallbackIcon = Icons.Default.House, route = "houserent"),
-            CategoryItem(4, "Shopping", "কেনা-কাটা", fallbackIcon = Icons.Default.ShoppingCart, route = "shopping"),
+            CategoryItem(4, "Shopping", "বেচা-কেনা", fallbackIcon = Icons.Default.ShoppingCart, route = "shopping"),
             CategoryItem(5, "Matrimony", "পাত্র-পাত্রী", fallbackIcon = Icons.Default.People, route = "matrimony"),
             CategoryItem(6, "Event Service", "ইভেন্ট সার্ভিস", fallbackIcon = Icons.Default.Event, route = "event"),
             CategoryItem(7, "Ride", "রাইড", fallbackIcon = Icons.Default.TwoWheeler, route = "ride"),

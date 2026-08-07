@@ -2,10 +2,13 @@ package com.barisal.cityservice.feature.admin
 
 import android.widget.Toast
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -32,11 +35,15 @@ import com.barisal.cityservice.data.model.DoctorDto
 import com.barisal.cityservice.data.model.EventProviderDto
 import com.barisal.cityservice.data.model.HealthServiceDto
 import com.barisal.cityservice.data.model.HouseRentDto
+import com.barisal.cityservice.data.model.MistriProviderDto
+import com.barisal.cityservice.data.model.ProductDto
 import com.barisal.cityservice.data.repository.BloodRepository
 import com.barisal.cityservice.data.repository.DoctorRepository
 import com.barisal.cityservice.data.repository.EventRepository
 import com.barisal.cityservice.data.repository.HealthServiceRepository
 import com.barisal.cityservice.data.repository.HouseRentRepository
+import com.barisal.cityservice.data.repository.MistriRepository
+import com.barisal.cityservice.data.repository.ShoppingRepository
 import com.barisal.cityservice.ui.components.GlobalAppBar
 import com.barisal.cityservice.ui.components.SetStatusBarColor
 import kotlinx.coroutines.launch
@@ -56,6 +63,8 @@ fun AdminApprovalScreen(
     val bloodRepo = remember { BloodRepository() }
     val houseRentRepo = remember { HouseRentRepository() }
     val eventRepo = remember { EventRepository() }
+    val shoppingRepo = remember { ShoppingRepository() }
+    val mistriRepo = remember { MistriRepository() }
 
     val pendingDoctors by doctorRepo.getPendingDoctors().collectAsState(initial = emptyList())
     val pendingHealthServices by healthRepo.getPendingHealthServices().collectAsState(initial = emptyList())
@@ -63,8 +72,11 @@ fun AdminApprovalScreen(
     val pendingBloodRequests by bloodRepo.getPendingBloodRequests().collectAsState(initial = emptyList())
     val pendingHouseRents by houseRentRepo.getPendingHouseRents().collectAsState(initial = emptyList())
     val pendingEventServices by eventRepo.getPendingEventServices().collectAsState(initial = emptyList())
+    val pendingProducts by shoppingRepo.getPendingProducts().collectAsState(initial = emptyList())
+    val pendingMistriProviders by mistriRepo.getPendingMistriProviders().collectAsState(initial = emptyList())
 
     var selectedTab by remember { mutableStateOf(0) }
+    var selectedItemForDetail by remember { mutableStateOf<Any?>(null) }
     val tealColor = Color(0xFF0F766E)
 
     SetStatusBarColor()
@@ -174,6 +186,30 @@ fun AdminApprovalScreen(
                             )
                         }
                     )
+                    Tab(
+                        selected = selectedTab == 6,
+                        onClick = { selectedTab = 6 },
+                        text = {
+                            Text(
+                                text = if (isBengali) "পণ্য সমূহ (${pendingProducts.size})" else "Products (${pendingProducts.size})",
+                                color = if (selectedTab == 6) tealColor else Color.Gray,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 14.sp
+                            )
+                        }
+                    )
+                    Tab(
+                        selected = selectedTab == 7,
+                        onClick = { selectedTab = 7 },
+                        text = {
+                            Text(
+                                text = if (isBengali) "মিস্ত্রি সার্ভিস (${pendingMistriProviders.size})" else "Mistri Services (${pendingMistriProviders.size})",
+                                color = if (selectedTab == 7) tealColor else Color.Gray,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 14.sp
+                            )
+                        }
+                    )
                 }
             }
         },
@@ -198,6 +234,7 @@ fun AdminApprovalScreen(
                                 PendingDoctorCard(
                                     doctor = doctor,
                                     isBengali = isBengali,
+                                    onItemClick = { selectedItemForDetail = doctor },
                                     onApprove = {
                                         coroutineScope.launch {
                                             val res = doctorRepo.approveDoctor(doctor.categoryName, doctor.id)
@@ -235,6 +272,7 @@ fun AdminApprovalScreen(
                                 PendingHealthServiceCard(
                                     service = service,
                                     isBengali = isBengali,
+                                    onItemClick = { selectedItemForDetail = service },
                                     onApprove = {
                                         coroutineScope.launch {
                                             val res = healthRepo.approveHealthService(service.categoryKey, service.id)
@@ -268,6 +306,7 @@ fun AdminApprovalScreen(
                                 PendingBloodDonorCard(
                                     donor = donor,
                                     isBengali = isBengali,
+                                    onItemClick = { selectedItemForDetail = donor },
                                     onApprove = {
                                         coroutineScope.launch {
                                             val res = bloodRepo.approveBloodDonor(donor.id)
@@ -301,6 +340,7 @@ fun AdminApprovalScreen(
                                 PendingBloodRequestCard(
                                     request = req,
                                     isBengali = isBengali,
+                                    onItemClick = { selectedItemForDetail = req },
                                     onApprove = {
                                         coroutineScope.launch {
                                             val res = bloodRepo.approveBloodRequest(req.id)
@@ -330,13 +370,14 @@ fun AdminApprovalScreen(
                             verticalArrangement = Arrangement.spacedBy(12.dp),
                             modifier = Modifier.fillMaxSize()
                         ) {
-                            items(pendingHouseRents) { house ->
+                            items(pendingHouseRents) { rent ->
                                 PendingHouseRentCard(
-                                    house = house,
+                                    houseRent = rent,
                                     isBengali = isBengali,
+                                    onItemClick = { selectedItemForDetail = rent },
                                     onApprove = {
                                         coroutineScope.launch {
-                                            val res = houseRentRepo.approveHouseRent(house.id)
+                                            val res = houseRentRepo.approveHouseRent(rent.id)
                                             if (res.isSuccess) {
                                                 Toast.makeText(context, if (isBengali) "বাসা ভাড়ার পোস্টটি অনুমোদিত হয়েছে!" else "Approved successfully!", Toast.LENGTH_SHORT).show()
                                             }
@@ -344,7 +385,7 @@ fun AdminApprovalScreen(
                                     },
                                     onReject = {
                                         coroutineScope.launch {
-                                            val res = houseRentRepo.rejectHouseRent(house.id)
+                                            val res = houseRentRepo.rejectHouseRent(rent.id)
                                             if (res.isSuccess) {
                                                 Toast.makeText(context, if (isBengali) "পোস্টটি বাতিল করা হয়েছে" else "Rejected/Deleted", Toast.LENGTH_SHORT).show()
                                             }
@@ -364,9 +405,10 @@ fun AdminApprovalScreen(
                             modifier = Modifier.fillMaxSize()
                         ) {
                             items(pendingEventServices) { service ->
-                                PendingEventServiceCard(
+                                PendingEventCard(
                                     eventProvider = service,
                                     isBengali = isBengali,
+                                    onItemClick = { selectedItemForDetail = service },
                                     onApprove = {
                                         coroutineScope.launch {
                                             val res = eventRepo.approveEventService(service.id)
@@ -382,6 +424,82 @@ fun AdminApprovalScreen(
                                             val res = eventRepo.rejectEventService(service.id)
                                             if (res.isSuccess) {
                                                 Toast.makeText(context, if (isBengali) "পোস্টটি বাতিল করা হয়েছে" else "Rejected/Deleted", Toast.LENGTH_SHORT).show()
+                                            } else {
+                                                Toast.makeText(context, "ত্রুটি: ${res.exceptionOrNull()?.message}", Toast.LENGTH_LONG).show()
+                                            }
+                                        }
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
+                6 -> {
+                    if (pendingProducts.isEmpty()) {
+                        EmptyPendingBox(if (isBengali) "কোনো অপেক্ষমাণ পণ্যের পোস্ট নেই" else "No pending product posts")
+                    } else {
+                        LazyColumn(
+                            verticalArrangement = Arrangement.spacedBy(12.dp),
+                            modifier = Modifier.fillMaxSize()
+                        ) {
+                            items(pendingProducts) { product ->
+                                PendingProductCard(
+                                    product = product,
+                                    isBengali = isBengali,
+                                    onItemClick = { selectedItemForDetail = product },
+                                    onApprove = {
+                                        coroutineScope.launch {
+                                            val res = shoppingRepo.approveProduct(product.id)
+                                            if (res.isSuccess) {
+                                                Toast.makeText(context, if (isBengali) "পণ্য পোস্টটি অনুমোদিত হয়েছে!" else "Approved successfully!", Toast.LENGTH_SHORT).show()
+                                            } else {
+                                                Toast.makeText(context, "ত্রুটি: ${res.exceptionOrNull()?.message}", Toast.LENGTH_LONG).show()
+                                            }
+                                        }
+                                    },
+                                    onReject = {
+                                        coroutineScope.launch {
+                                            val res = shoppingRepo.rejectProduct(product.id)
+                                            if (res.isSuccess) {
+                                                Toast.makeText(context, if (isBengali) "পোস্টটি বাতিল করা হয়েছে" else "Rejected/Deleted", Toast.LENGTH_SHORT).show()
+                                            } else {
+                                                Toast.makeText(context, "ত্রুটি: ${res.exceptionOrNull()?.message}", Toast.LENGTH_LONG).show()
+                                            }
+                                        }
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
+                7 -> {
+                    if (pendingMistriProviders.isEmpty()) {
+                        EmptyPendingBox(if (isBengali) "কোনো অপেক্ষমাণ মিস্ত্রি সেবার পোস্ট নেই" else "No pending mistri service posts")
+                    } else {
+                        LazyColumn(
+                            verticalArrangement = Arrangement.spacedBy(12.dp),
+                            modifier = Modifier.fillMaxSize()
+                        ) {
+                            items(pendingMistriProviders) { mistri ->
+                                PendingMistriCard(
+                                    mistri = mistri,
+                                    isBengali = isBengali,
+                                    onItemClick = { selectedItemForDetail = mistri },
+                                    onApprove = {
+                                        coroutineScope.launch {
+                                            val res = mistriRepo.approveMistriProvider(mistri.id)
+                                            if (res.isSuccess) {
+                                                Toast.makeText(context, if (isBengali) "মিস্ত্রি সার্ভিস অনুমোদিত হয়েছে!" else "Mistri service approved successfully!", Toast.LENGTH_SHORT).show()
+                                            } else {
+                                                Toast.makeText(context, "ত্রুটি: ${res.exceptionOrNull()?.message}", Toast.LENGTH_LONG).show()
+                                            }
+                                        }
+                                    },
+                                    onReject = {
+                                        coroutineScope.launch {
+                                            val res = mistriRepo.rejectMistriProvider(mistri.id)
+                                            if (res.isSuccess) {
+                                                Toast.makeText(context, if (isBengali) "মিস্ত্রি সার্ভিস বাতিল করা হয়েছে" else "Mistri service rejected", Toast.LENGTH_SHORT).show()
                                             } else {
                                                 Toast.makeText(context, "ত্রুটি: ${res.exceptionOrNull()?.message}", Toast.LENGTH_LONG).show()
                                             }
@@ -412,9 +530,9 @@ fun EmptyPendingBox(text: String) {
 }
 
 @Composable
-fun PendingDoctorCard(doctor: DoctorDto, isBengali: Boolean, onApprove: () -> Unit, onReject: () -> Unit) {
+fun PendingDoctorCard(doctor: DoctorDto, isBengali: Boolean, onItemClick: () -> Unit = {}, onApprove: () -> Unit, onReject: () -> Unit) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().clickable { onItemClick() },
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
@@ -442,6 +560,9 @@ fun PendingDoctorCard(doctor: DoctorDto, isBengali: Boolean, onApprove: () -> Un
                 }
             }
 
+            Spacer(modifier = Modifier.height(6.dp))
+            Text("👆 বিস্তারিত দেখতে ট্যাপ করুন", fontSize = 11.sp, color = Color(0xFF2563EB), fontWeight = FontWeight.Bold)
+
             Spacer(modifier = Modifier.height(10.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
                 Button(
@@ -466,9 +587,9 @@ fun PendingDoctorCard(doctor: DoctorDto, isBengali: Boolean, onApprove: () -> Un
 }
 
 @Composable
-fun PendingHealthServiceCard(service: HealthServiceDto, isBengali: Boolean, onApprove: () -> Unit, onReject: () -> Unit) {
+fun PendingHealthServiceCard(service: HealthServiceDto, isBengali: Boolean, onItemClick: () -> Unit = {}, onApprove: () -> Unit, onReject: () -> Unit) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().clickable { onItemClick() },
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
@@ -483,6 +604,9 @@ fun PendingHealthServiceCard(service: HealthServiceDto, isBengali: Boolean, onAp
                 Text("👤 পোস্টকারী: $servicePostedBy", fontSize = 11.sp, color = Color(0xFF64748B))
             }
 
+            Spacer(modifier = Modifier.height(6.dp))
+            Text("👆 বিস্তারিত দেখতে ট্যাপ করুন", fontSize = 11.sp, color = Color(0xFF2563EB), fontWeight = FontWeight.Bold)
+
             Spacer(modifier = Modifier.height(10.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
                 Button(
@@ -507,9 +631,9 @@ fun PendingHealthServiceCard(service: HealthServiceDto, isBengali: Boolean, onAp
 }
 
 @Composable
-fun PendingBloodDonorCard(donor: BloodDonorDto, isBengali: Boolean, onApprove: () -> Unit, onReject: () -> Unit) {
+fun PendingBloodDonorCard(donor: BloodDonorDto, isBengali: Boolean, onItemClick: () -> Unit = {}, onApprove: () -> Unit, onReject: () -> Unit) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().clickable { onItemClick() },
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
@@ -534,6 +658,9 @@ fun PendingBloodDonorCard(donor: BloodDonorDto, isBengali: Boolean, onApprove: (
                 }
             }
 
+            Spacer(modifier = Modifier.height(6.dp))
+            Text("👆 বিস্তারিত দেখতে ট্যাপ করুন", fontSize = 11.sp, color = Color(0xFF2563EB), fontWeight = FontWeight.Bold)
+
             Spacer(modifier = Modifier.height(10.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
                 Button(
@@ -558,9 +685,9 @@ fun PendingBloodDonorCard(donor: BloodDonorDto, isBengali: Boolean, onApprove: (
 }
 
 @Composable
-fun PendingBloodRequestCard(request: BloodRequestDto, isBengali: Boolean, onApprove: () -> Unit, onReject: () -> Unit) {
+fun PendingBloodRequestCard(request: BloodRequestDto, isBengali: Boolean, onItemClick: () -> Unit = {}, onApprove: () -> Unit, onReject: () -> Unit) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().clickable { onItemClick() },
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
@@ -581,6 +708,9 @@ fun PendingBloodRequestCard(request: BloodRequestDto, isBengali: Boolean, onAppr
                 }
             }
 
+            Spacer(modifier = Modifier.height(6.dp))
+            Text("👆 বিস্তারিত দেখতে ট্যাপ করুন", fontSize = 11.sp, color = Color(0xFF2563EB), fontWeight = FontWeight.Bold)
+
             Spacer(modifier = Modifier.height(10.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
                 Button(
@@ -605,16 +735,16 @@ fun PendingBloodRequestCard(request: BloodRequestDto, isBengali: Boolean, onAppr
 }
 
 @Composable
-fun PendingHouseRentCard(house: HouseRentDto, isBengali: Boolean, onApprove: () -> Unit, onReject: () -> Unit) {
+fun PendingHouseRentCard(houseRent: HouseRentDto, isBengali: Boolean, onItemClick: () -> Unit = {}, onApprove: () -> Unit, onReject: () -> Unit) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().clickable { onItemClick() },
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                val firstPhoto = house.imageUrls.firstOrNull() ?: ""
+                val firstPhoto = houseRent.imageUrls.firstOrNull() ?: ""
                 val coilModel = remember(firstPhoto) { firstPhoto.toCoilModel() }
                 if (coilModel != null) {
                     AsyncImage(
@@ -626,19 +756,22 @@ fun PendingHouseRentCard(house: HouseRentDto, isBengali: Boolean, onApprove: () 
                     Spacer(modifier = Modifier.width(12.dp))
                 }
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(house.title, fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Color.Black)
-                    Text("${house.houseType} - ${house.rentAmount}", fontSize = 13.sp, color = Color(0xFF00897B), fontWeight = FontWeight.Bold)
-                    Text("📍 ${house.address}, ${house.zilla}", fontSize = 12.sp, color = Color.DarkGray)
-                    if (house.flatDetails.levelNo.isNotBlank() || house.flatDetails.flatNo.isNotBlank()) {
-                        Text("🏢 ${house.flatDetails.levelNo} ${house.flatDetails.flatNo} | 🛏️ ${house.flatDetails.bedrooms}", fontSize = 11.sp, color = Color(0xFF0369A1))
+                    Text(houseRent.title, fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Color.Black)
+                    Text("${houseRent.houseType} - ${houseRent.rentAmount}", fontSize = 13.sp, color = Color(0xFF00897B), fontWeight = FontWeight.Bold)
+                    Text("📍 ${houseRent.address}, ${houseRent.zilla}", fontSize = 12.sp, color = Color.DarkGray)
+                    if (houseRent.flatDetails.levelNo.isNotBlank() || houseRent.flatDetails.flatNo.isNotBlank()) {
+                        Text("🏢 ${houseRent.flatDetails.levelNo} ${houseRent.flatDetails.flatNo} | 🛏️ ${houseRent.flatDetails.bedrooms}", fontSize = 11.sp, color = Color(0xFF0369A1))
                     }
-                    Text("📞 ${house.contactInfo} | ⏱️ ${house.validityDays} ${if (isBengali) "দিন মেয়াদ" else "Days Validity"}", fontSize = 12.sp, color = Color.DarkGray)
-                    val housePostedBy = house.userEmail.ifEmpty { house.userPhone.ifEmpty { house.userId } }
+                    Text("📞 ${houseRent.contactInfo} | ⏱️ ${houseRent.validityDays} ${if (isBengali) "দিন মেয়াদ" else "Days Validity"}", fontSize = 12.sp, color = Color.DarkGray)
+                    val housePostedBy = houseRent.userEmail.ifEmpty { houseRent.userPhone.ifEmpty { houseRent.userId } }
                     if (housePostedBy.isNotBlank()) {
                         Text("👤 পোস্টকারী: $housePostedBy", fontSize = 11.sp, color = Color(0xFF64748B))
                     }
                 }
             }
+
+            Spacer(modifier = Modifier.height(6.dp))
+            Text("👆 বিস্তারিত দেখতে ট্যাপ করুন", fontSize = 11.sp, color = Color(0xFF2563EB), fontWeight = FontWeight.Bold)
 
             Spacer(modifier = Modifier.height(10.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
@@ -664,14 +797,15 @@ fun PendingHouseRentCard(house: HouseRentDto, isBengali: Boolean, onApprove: () 
 }
 
 @Composable
-fun PendingEventServiceCard(
+fun PendingEventCard(
     eventProvider: EventProviderDto,
     isBengali: Boolean,
+    onItemClick: () -> Unit = {},
     onApprove: () -> Unit,
     onReject: () -> Unit
 ) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().clickable { onItemClick() },
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
@@ -769,6 +903,9 @@ fun PendingEventServiceCard(
                 Text("👤 পোস্টকারী: $postedBy", fontSize = 11.sp, color = Color(0xFF64748B))
             }
 
+            Spacer(modifier = Modifier.height(6.dp))
+            Text("👆 বিস্তারিত দেখতে ট্যাপ করুন", fontSize = 11.sp, color = Color(0xFF2563EB), fontWeight = FontWeight.Bold)
+
             Spacer(modifier = Modifier.height(12.dp))
 
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
@@ -790,5 +927,426 @@ fun PendingEventServiceCard(
                 }
             }
         }
+    }
+}
+
+@Composable
+fun PendingProductCard(product: ProductDto, isBengali: Boolean, onItemClick: () -> Unit = {}, onApprove: () -> Unit, onReject: () -> Unit) {
+    Card(
+        modifier = Modifier.fillMaxWidth().clickable { onItemClick() },
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Column(modifier = Modifier.padding(14.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    modifier = Modifier.size(44.dp).clip(RoundedCornerShape(8.dp)).background(Color(0xFFFFEDD5)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(Icons.Default.ShoppingBag, contentDescription = null, tint = Color(0xFFE65100), modifier = Modifier.size(24.dp))
+                }
+                Spacer(modifier = Modifier.width(12.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(product.productName, fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Color.Black, modifier = Modifier.weight(1f))
+                        Surface(
+                            color = Color(0xFFE0F2FE),
+                            shape = RoundedCornerShape(6.dp)
+                        ) {
+                            Text(
+                                text = product.condition,
+                                color = Color(0xFF0369A1),
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                            )
+                        }
+                    }
+                    Text("💰 ৳${product.price} | 🏷️ ${product.category}", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFFE65100))
+                    if (product.address.isNotBlank()) {
+                        Text("📍 ${product.address}", fontSize = 12.sp, color = Color.DarkGray)
+                    }
+                    Text("📞 ${product.contactInfo}", fontSize = 12.sp, color = Color.Gray)
+                }
+            }
+
+            if (product.description.isNotBlank()) {
+                Spacer(modifier = Modifier.height(6.dp))
+                Text("📝 ${product.description}", fontSize = 12.sp, color = Color.DarkGray, maxLines = 2)
+            }
+
+            if (product.imageUrls.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(8.dp))
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    items(product.imageUrls) { imgUrl ->
+                        val coilModel = remember(imgUrl) { imgUrl.toCoilModel() }
+                        if (coilModel != null) {
+                            AsyncImage(
+                                model = coilModel,
+                                contentDescription = "Product Image",
+                                modifier = Modifier
+                                    .size(70.dp)
+                                    .clip(RoundedCornerShape(8.dp)),
+                                contentScale = ContentScale.Crop
+                            )
+                        }
+                    }
+                }
+            }
+
+            val postedBy = product.userEmail.ifEmpty { product.userPhone.ifEmpty { product.userId } }
+            if (postedBy.isNotBlank()) {
+                Spacer(modifier = Modifier.height(4.dp))
+                Text("👤 পোস্টকারী: $postedBy", fontSize = 11.sp, color = Color(0xFF64748B))
+            }
+
+            Spacer(modifier = Modifier.height(6.dp))
+            Text("👆 বিস্তারিত দেখতে ট্যাপ করুন", fontSize = 11.sp, color = Color(0xFF2563EB), fontWeight = FontWeight.Bold)
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
+                Button(
+                    onClick = onApprove,
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF16A34A)),
+                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(if (isBengali) "অনুমোদন করুন" else "Approve", color = Color.White, fontWeight = FontWeight.Bold)
+                }
+                OutlinedButton(
+                    onClick = onReject,
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFDC2626)),
+                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(if (isBengali) "বাতিল করুন" else "Reject", fontWeight = FontWeight.Bold)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun PendingMistriCard(mistri: MistriProviderDto, isBengali: Boolean, onItemClick: () -> Unit = {}, onApprove: () -> Unit, onReject: () -> Unit) {
+    Card(
+        modifier = Modifier.fillMaxWidth().clickable { onItemClick() },
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Column(modifier = Modifier.padding(14.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    modifier = Modifier.size(54.dp).clip(RoundedCornerShape(8.dp)).background(Color(0xFFDBEAFE)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    val coilModel = remember(mistri.profileImageUrl) { mistri.profileImageUrl.toCoilModel() }
+                    if (coilModel != null) {
+                        AsyncImage(
+                            model = coilModel,
+                            contentDescription = "Profile Photo",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
+                    } else {
+                        Icon(Icons.Default.Construction, contentDescription = null, tint = Color(0xFF2563EB), modifier = Modifier.size(28.dp))
+                    }
+                }
+                Spacer(modifier = Modifier.width(12.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(mistri.name, fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Color.Black, modifier = Modifier.weight(1f))
+                        Surface(
+                            color = Color(0xFFEFF6FF),
+                            shape = RoundedCornerShape(6.dp)
+                        ) {
+                            Text(
+                                text = mistri.categoryName,
+                                color = Color(0xFF1D4ED8),
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                            )
+                        }
+                    }
+                    val chargeText = if (mistri.minCharge > 0) " | 💰 ৳${mistri.minCharge} (${mistri.pricingUnit})" else ""
+                    val expText = if (mistri.experienceYears > 0) "⭐ ${mistri.experienceYears} বছর অভিজ্ঞতা" else "⭐ মিস্ত্রি সার্ভিস"
+                    Text("$expText$chargeText", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF2563EB))
+                    if (mistri.addressBn.isNotBlank()) {
+                        Text("📍 ${mistri.addressBn} (${mistri.zilla})", fontSize = 12.sp, color = Color.DarkGray)
+                    }
+                    Text("📞 ${mistri.phone}" + if (mistri.whatsapp.isNotBlank()) " | 💬 WA: ${mistri.whatsapp}" else "", fontSize = 12.sp, color = Color.Gray)
+                }
+            }
+
+            if (mistri.description.isNotBlank()) {
+                Spacer(modifier = Modifier.height(6.dp))
+                Text("📝 ${mistri.description}", fontSize = 12.sp, color = Color.DarkGray, maxLines = 3)
+            }
+
+            if (mistri.categorySpecificFields.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(6.dp))
+                val detailsStr = mistri.categorySpecificFields.entries.joinToString(" • ") { "${it.key}: ${it.value}" }
+                Text("⚙️ $detailsStr", fontSize = 11.sp, color = Color(0xFF0F766E), fontWeight = FontWeight.Medium)
+            }
+
+            val postedBy = mistri.userEmail.ifEmpty { mistri.userPhone.ifEmpty { mistri.userId } }
+            if (postedBy.isNotBlank()) {
+                Spacer(modifier = Modifier.height(4.dp))
+                Text("👤 পোস্টকারী: $postedBy", fontSize = 11.sp, color = Color(0xFF64748B))
+            }
+
+            Spacer(modifier = Modifier.height(6.dp))
+            Text("👆 বিস্তারিত দেখতে ট্যাপ করুন", fontSize = 11.sp, color = Color(0xFF2563EB), fontWeight = FontWeight.Bold)
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
+                Button(
+                    onClick = onApprove,
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF16A34A)),
+                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(if (isBengali) "অনুমোদন করুন" else "Approve", color = Color.White, fontWeight = FontWeight.Bold)
+                }
+                OutlinedButton(
+                    onClick = onReject,
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFDC2626)),
+                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(if (isBengali) "বাতিল করুন" else "Reject", fontWeight = FontWeight.Bold)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun AdminPostDetailModal(
+    item: Any,
+    isBengali: Boolean,
+    onDismiss: () -> Unit,
+    onApprove: () -> Unit,
+    onReject: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = if (isBengali) "পোস্টের বিস্তারিত তথ্য" else "Post Details",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp,
+                    color = Color(0xFF0F766E)
+                )
+                IconButton(onClick = onDismiss) {
+                    Icon(Icons.Default.Close, contentDescription = "Close", tint = Color.Gray)
+                }
+            }
+        },
+        text = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = 480.dp)
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                when (item) {
+                    is MistriProviderDto -> {
+                        Text(item.name, fontWeight = FontWeight.Bold, fontSize = 18.sp, color = Color.Black)
+                        Surface(color = Color(0xFFDBEAFE), shape = RoundedCornerShape(6.dp)) {
+                            Text(item.categoryName, color = Color(0xFF1D4ED8), fontSize = 12.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp))
+                        }
+                        
+                        val profileModel = remember(item.profileImageUrl) { item.profileImageUrl.toCoilModel() }
+                        if (profileModel != null) {
+                            AsyncImage(
+                                model = profileModel,
+                                contentDescription = "Profile Photo",
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(180.dp)
+                                    .clip(RoundedCornerShape(10.dp)),
+                                contentScale = ContentScale.Crop
+                            )
+                        }
+
+                        DetailRow(if (isBengali) "অভিজ্ঞতা" else "Experience", if (item.experienceYears > 0) "${item.experienceYears} বছর" else "উল্লেখ নেই")
+                        DetailRow(if (isBengali) "চার্জ / ফি" else "Visiting Fee", if (item.minCharge > 0) "৳${item.minCharge} (${item.pricingUnit})" else "আলোচনা সাপেক্ষে")
+                        DetailRow(if (isBengali) "মোবাইল" else "Phone", item.phone)
+                        if (item.whatsapp.isNotBlank()) DetailRow("WhatsApp", item.whatsapp)
+                        DetailRow(if (isBengali) "জেলা" else "Zilla", item.zilla)
+                        DetailRow(if (isBengali) "ঠিকানা" else "Address", item.addressBn)
+                        if (item.latLng.isNotBlank()) DetailRow(if (isBengali) "জিপিএস স্থানাঙ্ক" else "GPS LatLng", item.latLng)
+                        if (item.description.isNotBlank()) DetailRow(if (isBengali) "বিস্তারিত বিবরণ" else "Description", item.description)
+
+                        if (item.categorySpecificFields.isNotEmpty()) {
+                            HorizontalDivider(color = Color(0xFFE2E8F0), modifier = Modifier.padding(vertical = 4.dp))
+                            Text(if (isBengali) "ক্যাটাগরি অনুযায়ী বিশেষ তথ্য:" else "Category Specific Details:", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = Color(0xFF0F766E))
+                            item.categorySpecificFields.forEach { (key, value) ->
+                                DetailRow(key, value)
+                            }
+                        }
+
+                        val postedBy = item.userEmail.ifEmpty { item.userPhone.ifEmpty { item.userId } }
+                        if (postedBy.isNotBlank()) DetailRow(if (isBengali) "পোস্টকারী" else "Posted By", postedBy)
+                    }
+
+                    is ProductDto -> {
+                        Text(item.productName, fontWeight = FontWeight.Bold, fontSize = 18.sp, color = Color.Black)
+                        DetailRow(if (isBengali) "মূল্য" else "Price", "৳${item.price}")
+                        DetailRow(if (isBengali) "ক্যাটাগরি" else "Category", item.category)
+                        DetailRow(if (isBengali) "অবস্থা" else "Condition", item.condition)
+                        DetailRow(if (isBengali) "যোগাযোগ" else "Contact", item.contactInfo)
+                        DetailRow(if (isBengali) "ঠিকানা" else "Address", item.address)
+                        if (item.description.isNotBlank()) DetailRow(if (isBengali) "বিবরণ" else "Description", item.description)
+
+                        if (item.imageUrls.isNotEmpty()) {
+                            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                items(item.imageUrls) { img ->
+                                    val coilModel = remember(img) { img.toCoilModel() }
+                                    if (coilModel != null) {
+                                        AsyncImage(model = coilModel, contentDescription = null, modifier = Modifier.size(100.dp).clip(RoundedCornerShape(8.dp)), contentScale = ContentScale.Crop)
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    is HouseRentDto -> {
+                        Text(item.title, fontWeight = FontWeight.Bold, fontSize = 18.sp, color = Color.Black)
+                        DetailRow(if (isBengali) "ভাড়া" else "Rent", "৳${item.rentAmount}")
+                        DetailRow(if (isBengali) "ধরনের" else "Type", item.houseType)
+                        DetailRow(if (isBengali) "ঠিকানা" else "Address", "${item.address}, ${item.thana}, ${item.zilla}")
+                        DetailRow(if (isBengali) "যোগাযোগ" else "Contact", item.contactInfo)
+                        if (item.flatDetails.bedrooms.isNotBlank()) DetailRow("বেডরুম", item.flatDetails.bedrooms)
+                        if (item.flatDetails.bathrooms.isNotBlank()) DetailRow("বাথরুম", item.flatDetails.bathrooms)
+                        if (item.flatDetails.balconies.isNotBlank()) DetailRow("বারান্দা", item.flatDetails.balconies)
+                        if (item.flatDetails.levelNo.isNotBlank()) DetailRow("তলা/লেভেল", item.flatDetails.levelNo)
+                        if (item.details.isNotBlank()) DetailRow(if (isBengali) "বিবরণ" else "Details", item.details)
+
+                        if (item.imageUrls.isNotEmpty()) {
+                            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                items(item.imageUrls) { img ->
+                                    val coilModel = remember(img) { img.toCoilModel() }
+                                    if (coilModel != null) {
+                                        AsyncImage(model = coilModel, contentDescription = null, modifier = Modifier.size(100.dp).clip(RoundedCornerShape(8.dp)), contentScale = ContentScale.Crop)
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    is DoctorDto -> {
+                        Text(item.name, fontWeight = FontWeight.Bold, fontSize = 18.sp, color = Color.Black)
+                        DetailRow(if (isBengali) "বিশেষজ্ঞতা" else "Specialty", "${item.specialization} (${item.categoryName})")
+                        if (item.education.isNotBlank()) DetailRow(if (isBengali) "ডিগ্রি/শিক্ষা" else "Education", item.education)
+                        DetailRow(if (isBengali) "যোগাযোগ" else "Contact", item.contactInfo)
+                        if (item.zilla.isNotBlank()) DetailRow(if (isBengali) "জেলা" else "Zilla", item.zilla)
+                        if (item.treatments.isNotBlank()) DetailRow(if (isBengali) "চিকিৎসা সমূহ" else "Treatments", item.treatments)
+                        if (item.chambers.isNotEmpty()) {
+                            item.chambers.forEach { chamber ->
+                                if (chamber.chamberName.isNotBlank()) {
+                                    DetailRow(if (isBengali) "চেম্বার" else "Chamber", "${chamber.chamberName} - ${chamber.address} (${chamber.visitingTime})")
+                                }
+                            }
+                        }
+                    }
+
+                    is HealthServiceDto -> {
+                        Text(item.name, fontWeight = FontWeight.Bold, fontSize = 18.sp, color = Color.Black)
+                        DetailRow(if (isBengali) "ধরন" else "Type", "${item.type} (${item.categoryKey})")
+                        DetailRow(if (isBengali) "ঠিকানা" else "Address", "${item.address}, ${item.zilla}")
+                        DetailRow(if (isBengali) "যোগাযোগ" else "Contact", item.contactInfo)
+                        if (item.details.isNotBlank()) DetailRow(if (isBengali) "বিবরণ" else "Details", item.details)
+                    }
+
+                    is BloodDonorDto -> {
+                        Text(item.name, fontWeight = FontWeight.Bold, fontSize = 18.sp, color = Color.Black)
+                        DetailRow(if (isBengali) "রক্তের গ্রুপ" else "Blood Group", item.bloodGroup)
+                        DetailRow(if (isBengali) "যোগাযোগ" else "Contact", item.contactInfo)
+                        DetailRow(if (isBengali) "জেলা" else "Zilla", item.zilla)
+                        if (item.address.isNotBlank() || item.thana.isNotBlank()) DetailRow(if (isBengali) "ঠিকানা" else "Address", "${item.address} ${item.thana}".trim())
+                        DetailRow(if (isBengali) "সর্বশেষ রক্তদান" else "Last Donation", item.lastDonation.ifEmpty { "কখনো দেননি / জানা নেই" })
+                        if (item.details.isNotBlank()) DetailRow(if (isBengali) "বিবরণ" else "Details", item.details)
+                    }
+
+                    is BloodRequestDto -> {
+                        Text(item.patientName, fontWeight = FontWeight.Bold, fontSize = 18.sp, color = Color.Black)
+                        DetailRow(if (isBengali) "রক্তের গ্রুপ" else "Blood Group", item.bloodGroup)
+                        DetailRow(if (isBengali) "ব্যাগের সংখ্যা" else "Bags Needed", "${item.bagsNeeded} ব্যাগ")
+                        if (item.requiredDate.isNotBlank()) DetailRow(if (isBengali) "প্রয়োজনের তারিখ" else "Required Date", item.requiredDate)
+                        DetailRow(if (isBengali) "হাসপাতাল" else "Hospital", item.hospitalName)
+                        if (item.zilla.isNotBlank() || item.thana.isNotBlank()) DetailRow(if (isBengali) "ঠিকানা" else "Address", "${item.thana}, ${item.zilla}")
+                        DetailRow(if (isBengali) "যোগাযোগ" else "Contact", item.contactInfo)
+                        if (item.details.isNotBlank()) DetailRow(if (isBengali) "বিবরণ/সমস্যা" else "Details", item.details)
+                    }
+
+                    is EventProviderDto -> {
+                        Text(item.name, fontWeight = FontWeight.Bold, fontSize = 18.sp, color = Color.Black)
+                        DetailRow(if (isBengali) "সার্ভিস ক্যাটাগরি" else "Category", item.categoryName)
+                        DetailRow(if (isBengali) "শুরুর প্যাকেজ" else "Starting Package", "৳${item.startingPackage} / ${item.priceUnit}")
+                        DetailRow(if (isBengali) "যোগাযোগ" else "Contact", "${item.phone} ${if (item.whatsappPhone.isNotBlank()) "• WA: ${item.whatsappPhone}" else ""}")
+                        DetailRow(if (isBengali) "ঠিকানা" else "Address", "${item.addressBn}, ${item.zilla}")
+                        if (item.details.isNotBlank()) DetailRow(if (isBengali) "বিবরণ" else "Details", item.details)
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    onApprove()
+                    onDismiss()
+                },
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF16A34A))
+            ) {
+                Text(if (isBengali) "অনুমোদন করুন" else "Approve", color = Color.White, fontWeight = FontWeight.Bold)
+            }
+        },
+        dismissButton = {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedButton(
+                    onClick = {
+                        onReject()
+                        onDismiss()
+                    },
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFDC2626))
+                ) {
+                    Text(if (isBengali) "বাতিল করুন" else "Reject", fontWeight = FontWeight.Bold)
+                }
+                TextButton(onClick = onDismiss) {
+                    Text(if (isBengali) "বন্ধ করুন" else "Close", color = Color.Gray)
+                }
+            }
+        }
+    )
+}
+
+@Composable
+fun DetailRow(label: String, value: String) {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(text = "$label:", fontSize = 12.sp, color = Color.Gray, fontWeight = FontWeight.Medium, modifier = Modifier.weight(0.4f))
+        Text(text = value, fontSize = 13.sp, color = Color.Black, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(0.6f))
     }
 }
