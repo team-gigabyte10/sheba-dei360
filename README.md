@@ -15,6 +15,4 @@ Super Admin	admin@servenear.com	Any text
 
 
 
-আমার android project ready আছে, এখন Laravel Inertia.js ব্যবহার করে Web + API করার জন্য একটি prompt লিখে দাও
-
 
