@@ -1,22 +1,22 @@
 package com.barisal.cityservice.ui.components
 
 import android.app.Activity
-import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalView
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -24,9 +24,13 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.view.WindowCompat
+import com.barisal.cityservice.core.theme.LocalAppTheme
 
 @Composable
-fun SetStatusBarColor(colorString: String = "#FFFFFF", isLightIcons: Boolean = false) {
+fun SetStatusBarColor(
+    color: Color = MaterialTheme.colorScheme.background,
+    isDarkTheme: Boolean = LocalAppTheme.current.isDarkMode
+) {
     val view = LocalView.current
     if (!view.isInEditMode) {
         SideEffect {
@@ -37,7 +41,31 @@ fun SetStatusBarColor(colorString: String = "#FFFFFF", isLightIcons: Boolean = f
             }
             if (ctx is Activity) {
                 val window = ctx.window
-                window.statusBarColor = android.graphics.Color.parseColor(colorString)
+                window.statusBarColor = color.toArgb()
+                WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !isDarkTheme
+            }
+        }
+    }
+}
+
+@Composable
+fun SetStatusBarColor(colorString: String, isLightIcons: Boolean = false) {
+    val parsedColor = try {
+        Color(android.graphics.Color.parseColor(colorString))
+    } catch (e: Exception) {
+        MaterialTheme.colorScheme.background
+    }
+    val view = LocalView.current
+    if (!view.isInEditMode) {
+        SideEffect {
+            var ctx = view.context
+            while (ctx is android.content.ContextWrapper) {
+                if (ctx is Activity) break
+                ctx = ctx.baseContext
+            }
+            if (ctx is Activity) {
+                val window = ctx.window
+                window.statusBarColor = parsedColor.toArgb()
                 WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !isLightIcons
             }
         }
@@ -51,8 +79,8 @@ fun GlobalAppBar(
     onBackClick: (() -> Unit)? = null,
     navigationIcon: (@Composable () -> Unit)? = null,
     actions: @Composable RowScope.() -> Unit = {},
-    containerColor: Color = Color.White,
-    contentColor: Color = Color.Black
+    containerColor: Color = MaterialTheme.colorScheme.surface,
+    contentColor: Color = MaterialTheme.colorScheme.onSurface
 ) {
     TopAppBar(
         title = { Text(title) },
@@ -80,8 +108,8 @@ fun CustomDialog(
     onDismissRequest: () -> Unit,
     title: String,
     icon: ImageVector? = null,
-    iconTint: Color = Color(0xFF1E3A8A),
-    iconBackgroundColor: Color = Color(0xFFEFF6FF),
+    iconTint: Color = MaterialTheme.colorScheme.primary,
+    iconBackgroundColor: Color = MaterialTheme.colorScheme.primaryContainer,
     confirmButtonText: String = "OK",
     onConfirm: () -> Unit = onDismissRequest,
     usePlatformDefaultWidth: Boolean = false,
@@ -96,7 +124,7 @@ fun CustomDialog(
                 .fillMaxWidth()
                 .padding(horizontal = 8.dp, vertical = 16.dp),
             shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
             elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
         ) {
             Column(
@@ -122,7 +150,7 @@ fun CustomDialog(
                     text = title,
                     fontSize = 20.sp,
                     fontWeight = FontWeight.ExtraBold,
-                    color = Color(0xFF1E3A8A),
+                    color = MaterialTheme.colorScheme.onSurface,
                     textAlign = TextAlign.Center
                 )
                 
@@ -135,7 +163,7 @@ fun CustomDialog(
                 Button(
                     onClick = onConfirm,
                     shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1E3A8A), contentColor = Color.White),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary, contentColor = MaterialTheme.colorScheme.onPrimary),
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(48.dp)

@@ -10,6 +10,8 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddPhotoAlternate
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Map
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -41,6 +43,7 @@ import android.content.pm.PackageManager
 import androidx.compose.ui.platform.LocalContext
 import com.barisal.cityservice.core.language.LocalAppLanguage
 import com.barisal.cityservice.ui.components.GlobalAppBar
+import com.barisal.cityservice.ui.components.LocationPickerMapScreen
 import com.barisal.cityservice.ui.components.SetStatusBarColor
 
 import android.widget.Toast
@@ -71,11 +74,21 @@ fun PostProductScreen(
     
     var categoryDropdownExpanded by remember { mutableStateOf(false) }
     var selectedImages by remember { mutableStateOf<List<Uri>>(emptyList()) }
+    var selectedLocation by remember { mutableStateOf(LatLng(22.7010, 90.3535)) }
+    var showLocationPickerMap by remember { mutableStateOf(false) }
     var isSubmitting by remember { mutableStateOf(false) }
-    
-    var selectedLocation by remember { mutableStateOf(LatLng(23.8103, 90.4125)) } // Default to Dhaka
-    val cameraPositionState = rememberCameraPositionState {
-        position = CameraPosition.fromLatLngZoom(selectedLocation, 10f)
+
+    if (showLocationPickerMap) {
+        LocationPickerMapScreen(
+            initialLat = selectedLocation.latitude,
+            initialLng = selectedLocation.longitude,
+            onLocationSelected = { selectedLat, selectedLng ->
+                selectedLocation = LatLng(selectedLat, selectedLng)
+                showLocationPickerMap = false
+            },
+            onBack = { showLocationPickerMap = false }
+        )
+        return
     }
 
     val hasLocationPermission = com.barisal.cityservice.core.utils.rememberLocationPermissionState()
@@ -138,7 +151,7 @@ fun PostProductScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .verticalScroll(rememberScrollState(), enabled = !cameraPositionState.isMoving)
+                .verticalScroll(rememberScrollState())
                 .background(Color(0xFFF3F4F6))
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -369,32 +382,39 @@ fun PostProductScreen(
                 )
             )
 
-            // Location Map
-            Text(
-                text = if (isBengali) "ম্যাপে অবস্থান নির্বাচন করুন" else "Select Location on Map",
-                fontWeight = FontWeight.Bold,
-                fontSize = 14.sp,
-                color = Color.DarkGray
-            )
-            Box(
+            Button(
+                onClick = { showLocationPickerMap = true },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(280.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .border(1.dp, Color.LightGray, RoundedCornerShape(8.dp))
+                    .height(48.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = primaryColor),
+                shape = RoundedCornerShape(10.dp)
             ) {
-                GoogleMap(
-                    modifier = Modifier.fillMaxSize(),
-                    cameraPositionState = cameraPositionState,
-                    properties = MapProperties(isMyLocationEnabled = hasLocationPermission),
-                    uiSettings = MapUiSettings(myLocationButtonEnabled = true),
-                    onMapClick = { latLng ->
-                        selectedLocation = latLng
-                    }
+                Icon(Icons.Default.Map, contentDescription = null, modifier = Modifier.size(18.dp))
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = if (isBengali) "আপনার লোকেশন ম্যাপ থেকে সেট করুন" else "Set your location from map",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+
+            Surface(
+                shape = RoundedCornerShape(8.dp),
+                color = Color(0xFFDCFCE7),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(
+                    modifier = Modifier.padding(10.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Marker(
-                        state = MarkerState(position = selectedLocation),
-                        title = if (isBengali) "পণ্যের অবস্থান" else "Product Location"
+                    Icon(Icons.Default.Check, contentDescription = null, tint = Color(0xFF16A34A), modifier = Modifier.size(18.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = String.format("লোকেশন সেট করা হয়েছে: %.5f, %.5f", selectedLocation.latitude, selectedLocation.longitude),
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color(0xFF15803D)
                     )
                 }
             }

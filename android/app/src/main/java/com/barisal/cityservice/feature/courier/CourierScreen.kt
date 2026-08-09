@@ -1,19 +1,13 @@
 package com.barisal.cityservice.feature.courier
 
 import android.content.Intent
+import android.net.Uri
 import android.widget.Toast
-import androidx.compose.animation.*
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -25,55 +19,140 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.barisal.cityservice.core.language.LocalAppLanguage
 import com.barisal.cityservice.ui.components.GlobalAppBar
 import com.barisal.cityservice.ui.components.SetStatusBarColor
 
-data class ParcelType(
-    val id: String,
-    val nameBn: String,
-    val nameEn: String,
-    val icon: ImageVector,
-    val basePrice: Int,
-    val description: String
-)
-
-data class DeliverySpeed(
+data class BdCourier(
     val id: String,
     val titleBn: String,
     val titleEn: String,
-    val timeBn: String,
-    val timeEn: String,
-    val extraFee: Int,
-    val color: Color
+    val descBn: String,
+    val descEn: String,
+    val websiteUrl: String,
+    val trackingUrl: String,
+    val hotlinePhone: String,
+    val badgeTextBn: String,
+    val badgeTextEn: String,
+    val accentColor: Color,
+    val icon: ImageVector
 )
 
-data class ParcelTrackingStep(
-    val stepNumber: Int,
-    val titleBn: String,
-    val titleEn: String,
-    val subtitleBn: String,
-    val subtitleEn: String,
-    val time: String,
-    val isCompleted: Boolean,
-    val isCurrent: Boolean
-)
-
-val sampleParcelTypes = listOf(
-    ParcelType("doc", "ডকুমেন্ট / কাগজপত্র", "Documents", Icons.Default.Description, 60, "চিঠিপত্র, ফাইল ও অফিসিয়াল কাগজ"),
-    ParcelType("small", "স্মল পার্সেল (< ২ কেজী)", "Small (< 2kg)", Icons.Default.Inventory2, 80, "পোশাক, গ্যাজেট ও ছোট গিফট"),
-    ParcelType("medium", "মিডিয়াম পার্সেল (২-৫ কেজী)", "Medium (2-5kg)", Icons.Default.LocalMall, 120, "ইলেকট্রনিক্স ও জুতা/বক্স"),
-    ParcelType("heavy", "হেভি কার্গো (> ৫ কেজী)", "Heavy Cargo (> 5kg)", Icons.Default.LocalShipping, 250, "ভারী পণ্য, পার্সেল ও ফাস্ট ডেলিভারি")
-)
-
-val sampleSpeedTiers = listOf(
-    DeliverySpeed("regular", "রেগুলার ডেলিভারি", "Standard", "২৪-৪৮ ঘণ্টা", "24-48 Hours", 0, Color(0xFF2563EB)),
-    DeliverySpeed("sameday", "সেম-ডে ডেলিভারি", "Same Day", "৬ ঘণ্টার মধ্যে", "Within 6 Hours", 50, Color(0xFFD97706)),
-    DeliverySpeed("express", "ইনস্ট্যান্ট এক্সপ্রেস", "Instant Express", "১-২ ঘণ্টা (রাইডার)", "1-2 Hours", 120, Color(0xFFDC2626))
+val popularBdCouriers = listOf(
+    BdCourier(
+        id = "steadfast",
+        titleBn = "স্টেডফাস্ট কুরিয়ার (Steadfast)",
+        titleEn = "Steadfast Courier",
+        descBn = "৬৪ জেলায় দ্রুত ই-কমার্স হোম ডেলিভারি ও দ্রুত পেমেন্ট সুবিধা।",
+        descEn = "Fast e-commerce home delivery and quick payment across 64 districts.",
+        websiteUrl = "https://steadfast.com.bd",
+        trackingUrl = "https://steadfast.com.bd/tracking",
+        hotlinePhone = "09678045045",
+        badgeTextBn = "ই-কমার্স পার্সেল",
+        badgeTextEn = "E-Commerce Parcel",
+        accentColor = Color(0xFF0F766E),
+        icon = Icons.Default.LocalShipping
+    ),
+    BdCourier(
+        id = "sundarban",
+        titleBn = "সুন্দরবন কুরিয়ার সার্ভিস",
+        titleEn = "Sundarban Courier Service",
+        descBn = "বাংলাদেশের সবচেয়ে বিস্তৃত ও বৃহত্তম কুরিয়ার ও ডক্যুমেন্ট নেটওয়ার্ক।",
+        descEn = "Largest traditional courier & parcel network across Bangladesh.",
+        websiteUrl = "https://sundarbancourier.com.bd",
+        trackingUrl = "https://sundarbancourier.com.bd",
+        hotlinePhone = "09612007007",
+        badgeTextBn = "জাতীয় কুরিয়ার",
+        badgeTextEn = "National Courier",
+        accentColor = Color(0xFF16A34A),
+        icon = Icons.Default.MarkunreadMailbox
+    ),
+    BdCourier(
+        id = "redx",
+        titleBn = "রেডএক্স লজিস্টিকস (RedX)",
+        titleEn = "RedX Logistics",
+        descBn = "সারাদেশে ডোরস্টেপ ই-কমার্স পার্সেল ডেলিভারি ও ক্যাশ অন ডেলিভারি।",
+        descEn = "Doorstep e-commerce parcel delivery & COD services nationwide.",
+        websiteUrl = "https://redx.com.bd",
+        trackingUrl = "https://redx.com.bd/track-parcel",
+        hotlinePhone = "09610007339",
+        badgeTextBn = "ডোরস্টেপ সিওডি",
+        badgeTextEn = "Doorstep COD",
+        accentColor = Color(0xFFDC2626),
+        icon = Icons.Default.AirportShuttle
+    ),
+    BdCourier(
+        id = "paperfly",
+        titleBn = "পেপারফ্লাই (Paperfly)",
+        titleEn = "Paperfly Logistics",
+        descBn = "উপজেলা পর্যন্ত ডোরস্টেপ পার্সেল পিকআপ ও স্মার্ট অনলাইন ট্র্যাকিং।",
+        descEn = "Doorstep parcel pickup & smart tracking down to Upazila level.",
+        websiteUrl = "https://www.paperfly.com.bd",
+        trackingUrl = "https://www.paperfly.com.bd/tracking.php",
+        hotlinePhone = "09604040404",
+        badgeTextBn = "স্মার্ট ট্র্যাকিং",
+        badgeTextEn = "Smart Tracking",
+        accentColor = Color(0xFFD97706),
+        icon = Icons.Default.FlightTakeoff
+    ),
+    BdCourier(
+        id = "pathao",
+        titleBn = "পাঠাও কুরিয়ার (Pathao)",
+        titleEn = "Pathao Courier",
+        descBn = "মার্চেন্ট ও অনলাইন শপের জন্য দ্রুততম মার্চেন্ট ডেলিভারি সেবা।",
+        descEn = "Fast merchant parcel delivery & instant tracking for businesses.",
+        websiteUrl = "https://pathao.com/courier",
+        trackingUrl = "https://pathao.com/courier",
+        hotlinePhone = "09610007284",
+        badgeTextBn = "ইনস্ট্যান্ট মার্চেন্ট",
+        badgeTextEn = "Instant Merchant",
+        accentColor = Color(0xFF2563EB),
+        icon = Icons.Default.Moped
+    ),
+    BdCourier(
+        id = "saparibahan",
+        titleBn = "এস এ পরিবহন (SA Paribahan)",
+        titleEn = "SA Paribahan Courier",
+        descBn = "পরিবহন ও নির্ভরযোগ্য পার্সেল এবং মানি ট্রান্সফার সুবিধা।",
+        descEn = "Trusted parcel transport & money transfer services nationwide.",
+        websiteUrl = "https://saparibahan.com",
+        trackingUrl = "https://saparibahan.com",
+        hotlinePhone = "09611115555",
+        badgeTextBn = "পরিবহন ও পার্সেল",
+        badgeTextEn = "Transport & Parcel",
+        accentColor = Color(0xFF7C3AED),
+        icon = Icons.Default.DirectionsBus
+    ),
+    BdCourier(
+        id = "ecourier",
+        titleBn = "ই-কুরিয়ার (eCourier)",
+        titleEn = "eCourier Logistics",
+        descBn = "ডিজিটাল ই-কমার্স লজিস্টিকস, এক্সপ্রেস ডেলিভারি ও রিয়েলটাইম ট্র্যাকিং।",
+        descEn = "Digital e-commerce logistics, express delivery & live tracking.",
+        websiteUrl = "https://ecourier.com.bd",
+        trackingUrl = "https://ecourier.com.bd/track-parcel/",
+        hotlinePhone = "09612500500",
+        badgeTextBn = "ডিজিটাল লজিস্টিকস",
+        badgeTextEn = "Digital Logistics",
+        accentColor = Color(0xFF0284C7),
+        icon = Icons.Default.LocalShipping
+    ),
+    BdCourier(
+        id = "korotoa",
+        titleBn = "করোতোয়া কুরিয়ার",
+        titleEn = "Korotoa Courier",
+        descBn = "উত্তরবঙ্গসহ সারাদেশে দ্রুত বুকিং ও এক্সপ্রেস পার্সেল সেবা।",
+        descEn = "Express booking & parcel handling service across Bangladesh.",
+        websiteUrl = "https://korotoacourier.com",
+        trackingUrl = "https://korotoacourier.com",
+        hotlinePhone = "09613222333",
+        badgeTextBn = "এক্সপ্রেস বুকিং",
+        badgeTextEn = "Express Booking",
+        accentColor = Color(0xFF059669),
+        icon = Icons.Default.Inventory2
+    )
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -87,44 +166,37 @@ fun CourierScreen(
 
     SetStatusBarColor()
 
-    var selectedTab by remember { mutableStateOf(0) } // 0: Send Parcel, 1: Track Parcel
+    var searchQuery by remember { mutableStateOf("") }
 
-    // Send Parcel Form State
-    var selectedParcelType by remember { mutableStateOf(sampleParcelTypes.first()) }
-    var selectedSpeed by remember { mutableStateOf(sampleSpeedTiers.first()) }
-    
-    var senderName by remember { mutableStateOf("") }
-    var senderPhone by remember { mutableStateOf("") }
-    var senderAddress by remember { mutableStateOf("") }
+    fun openWebUrl(url: String) {
+        try {
+            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+            context.startActivity(intent)
+        } catch (e: Exception) {
+            Toast.makeText(context, if (isBengali) "লিঙ্কটি খোলা যাচ্ছে না" else "Could not open link", Toast.LENGTH_SHORT).show()
+        }
+    }
 
-    var receiverName by remember { mutableStateOf("") }
-    var receiverPhone by remember { mutableStateOf("") }
-    var receiverAddress by remember { mutableStateOf("") }
-    var codAmount by remember { mutableStateOf("") }
+    fun makePhoneCall(phone: String) {
+        try {
+            val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:$phone"))
+            context.startActivity(intent)
+        } catch (e: Exception) {
+            Toast.makeText(context, if (isBengali) "কল করা যাচ্ছে না" else "Could not initiate call", Toast.LENGTH_SHORT).show()
+        }
+    }
 
-    var promoCode by remember { mutableStateOf("") }
-    var discountAmount by remember { mutableStateOf(0) }
-
-    var createdWaybillId by remember { mutableStateOf<String?>(null) }
-    var showWaybillDialog by remember { mutableStateOf(false) }
-
-    // Track Parcel State
-    var searchTrackingCode by remember { mutableStateOf("SB-994812") }
-    var searchedResultId by remember { mutableStateOf<String?>(null) }
-
-    val codVal = codAmount.toIntOrNull() ?: 0
-    val codFee = (codVal * 0.01).toInt() // 1% COD fee
-    val deliveryFee = selectedParcelType.basePrice + selectedSpeed.extraFee
-    val grossTotal = deliveryFee + codFee
-    val finalTotal = (grossTotal - discountAmount).coerceAtLeast(0)
-
-    val trackingSteps = listOf(
-        ParcelTrackingStep(1, "অর্ডার কনফার্মড", "Order Placed", "পার্সেল বুকিং সম্পন্ন হয়েছে", "Parcel booked", "আজ ১০:১৫ AM", true, false),
-        ParcelTrackingStep(2, "রাইডার পার্সেল পিক করেছে", "Picked Up", "রাইডার মোঃ সুমন পার্সেল গ্রহণ করেছে", "Rider picked up parcel", "আজ ১১:৩০ AM", true, false),
-        ParcelTrackingStep(3, "সর্টিং হাবে প্রক্রিয়াজাত", "At Sorting Hub", "ঢাকা সেন্ট্রাল হাবে প্রসেসিং চলছে", "Processing at sorting hub", "আজ ০২:00 PM", true, true),
-        ParcelTrackingStep(4, "ডেলিভারির জন্য রওয়ানা", "Out for Delivery", "গন্তব্যের নিকটস্থ রাইডারের হাতে", "Assigned to last-mile rider", "আসন্ন", false, false),
-        ParcelTrackingStep(5, "সফলভাবে ডেলিভারড", "Delivered", "প্রাপকের নিকট পার্সেল হস্তান্তরিত", "Handed over to receiver", "আসন্ন", false, false)
-    )
+    val filteredCouriers = remember(searchQuery) {
+        if (searchQuery.isBlank()) {
+            popularBdCouriers
+        } else {
+            popularBdCouriers.filter {
+                it.titleBn.contains(searchQuery, ignoreCase = true) ||
+                        it.titleEn.contains(searchQuery, ignoreCase = true) ||
+                        it.descBn.contains(searchQuery, ignoreCase = true)
+            }
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -139,457 +211,145 @@ fun CourierScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            // Tab Switcher (Send Parcel vs Track Parcel)
-            TabRow(
-                selectedTabIndex = selectedTab,
-                containerColor = Color.White,
-                contentColor = Color(0xFF2563EB)
+            // Search Bar
+            OutlinedTextField(
+                value = searchQuery,
+                onValueChange = { searchQuery = it },
+                modifier = Modifier.fillMaxWidth(),
+                placeholder = { Text(if (isBengali) "কুরিয়ার বা সেবার নাম লিখুন..." else "Search courier service...") },
+                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = Color.Gray) },
+                singleLine = true,
+                shape = RoundedCornerShape(12.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedContainerColor = Color.White,
+                    unfocusedContainerColor = Color.White
+                )
+            )
+
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
-                Tab(
-                    selected = selectedTab == 0,
-                    onClick = { selectedTab = 0 },
-                    text = {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.Send, contentDescription = null, modifier = Modifier.size(18.dp))
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text(if (isBengali) "পার্সেল পাঠান" else "Send Parcel", fontWeight = FontWeight.Bold)
-                        }
-                    }
-                )
-                Tab(
-                    selected = selectedTab == 1,
-                    onClick = { selectedTab = 1 },
-                    text = {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.ManageSearch, contentDescription = null, modifier = Modifier.size(18.dp))
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text(if (isBengali) "পার্সেল ট্র্যাকিং" else "Track Parcel", fontWeight = FontWeight.Bold)
-                        }
-                    }
-                )
-            }
-
-            if (selectedTab == 0) {
-                // SEND PARCEL FORM
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .verticalScroll(rememberScrollState())
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    // 1. Parcel Type Category Selector
-                    Text(if (isBengali) "১. পার্সেলের ধরন ও ওজন নির্বাচন করুন:" else "1. Select Parcel Type & Weight:", fontWeight = FontWeight.Bold, fontSize = 15.sp)
-                    LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        items(sampleParcelTypes) { item ->
-                            val isSelected = item.id == selectedParcelType.id
-                            Card(
-                                modifier = Modifier
-                                    .width(140.dp)
-                                    .clickable { selectedParcelType = item },
-                                shape = RoundedCornerShape(14.dp),
-                                colors = CardDefaults.cardColors(containerColor = if (isSelected) Color(0xFFEFF6FF) else Color.White),
-                                border = androidx.compose.foundation.BorderStroke(
-                                    width = if (isSelected) 2.dp else 1.dp,
-                                    color = if (isSelected) Color(0xFF2563EB) else Color(0xFFE2E8F0)
-                                )
-                            ) {
-                                Column(modifier = Modifier.padding(12.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                                    Icon(item.icon, contentDescription = null, tint = Color(0xFF2563EB), modifier = Modifier.size(32.dp))
-                                    Spacer(modifier = Modifier.height(6.dp))
-                                    Text(if (isBengali) item.nameBn else item.nameEn, fontSize = 12.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, maxLines = 1)
-                                    Text(item.description, fontSize = 10.sp, color = Color.Gray, textAlign = TextAlign.Center, maxLines = 2)
-                                    Spacer(modifier = Modifier.height(6.dp))
-                                    Text("৳ ${item.basePrice}", fontSize = 14.sp, fontWeight = FontWeight.ExtraBold, color = Color(0xFF2563EB))
-                                }
-                            }
-                        }
-                    }
-
-                    // 2. Delivery Speed Tiers
-                    Text(if (isBengali) "২. ডেলিভারির গতি ও সময়সীমা:" else "2. Select Delivery Speed:", fontWeight = FontWeight.Bold, fontSize = 15.sp)
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        sampleSpeedTiers.forEach { speed ->
-                            val isSelected = speed.id == selectedSpeed.id
-                            Surface(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .clickable { selectedSpeed = speed },
-                                shape = RoundedCornerShape(12.dp),
-                                color = if (isSelected) speed.color.copy(alpha = 0.12f) else Color.White,
-                                border = androidx.compose.foundation.BorderStroke(
-                                    width = if (isSelected) 2.dp else 1.dp,
-                                    color = if (isSelected) speed.color else Color(0xFFE2E8F0)
-                                )
-                            ) {
-                                Column(modifier = Modifier.padding(10.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                                    Text(if (isBengali) speed.titleBn else speed.titleEn, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = speed.color, maxLines = 1)
-                                    Spacer(modifier = Modifier.height(2.dp))
-                                    Text(if (isBengali) speed.timeBn else speed.timeEn, fontSize = 10.sp, color = Color.DarkGray)
-                                    if (speed.extraFee > 0) {
-                                        Text("+৳ ${speed.extraFee}", fontSize = 11.sp, fontWeight = FontWeight.ExtraBold, color = speed.color)
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    // 3. Sender Details Card
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(16.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color.White),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-                    ) {
-                        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(Icons.Default.Person, contentDescription = null, tint = Color(0xFF2563EB))
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(if (isBengali) "প্রেরকের তথ্য (Sender Info)" else "Sender Information", fontWeight = FontWeight.Bold, fontSize = 15.sp)
-                            }
-                            OutlinedTextField(
-                                value = senderName,
-                                onValueChange = { senderName = it },
-                                label = { Text(if (isBengali) "প্রেরকের নাম *" else "Sender Name *") },
-                                modifier = Modifier.fillMaxWidth(),
-                                singleLine = true
-                            )
-                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                OutlinedTextField(
-                                    value = senderPhone,
-                                    onValueChange = { senderPhone = it },
-                                    label = { Text(if (isBengali) "ফোন নম্বর *" else "Phone *") },
-                                    modifier = Modifier.weight(1f),
-                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
-                                    singleLine = true
-                                )
-                                OutlinedTextField(
-                                    value = senderAddress,
-                                    onValueChange = { senderAddress = it },
-                                    label = { Text(if (isBengali) "পিকআপ ঠিকানা *" else "Pickup Address *") },
-                                    modifier = Modifier.weight(1f),
-                                    singleLine = true
-                                )
-                            }
-                        }
-                    }
-
-                    // 4. Receiver Details Card
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(16.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color.White),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-                    ) {
-                        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(Icons.Default.LocationOn, contentDescription = null, tint = Color(0xFFDC2626))
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(if (isBengali) "প্রাপকের তথ্য (Receiver Info)" else "Receiver Information", fontWeight = FontWeight.Bold, fontSize = 15.sp)
-                            }
-                            OutlinedTextField(
-                                value = receiverName,
-                                onValueChange = { receiverName = it },
-                                label = { Text(if (isBengali) "প্রাপকের নাম *" else "Receiver Name *") },
-                                modifier = Modifier.fillMaxWidth(),
-                                singleLine = true
-                            )
-                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                OutlinedTextField(
-                                    value = receiverPhone,
-                                    onValueChange = { receiverPhone = it },
-                                    label = { Text(if (isBengali) "ফোন নম্বর *" else "Phone *") },
-                                    modifier = Modifier.weight(1f),
-                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
-                                    singleLine = true
-                                )
-                                OutlinedTextField(
-                                    value = receiverAddress,
-                                    onValueChange = { receiverAddress = it },
-                                    label = { Text(if (isBengali) "ডেলিভারি ঠিকানা *" else "Delivery Address *") },
-                                    modifier = Modifier.weight(1f),
-                                    singleLine = true
-                                )
-                            }
-                            OutlinedTextField(
-                                value = codAmount,
-                                onValueChange = { codAmount = it },
-                                label = { Text(if (isBengali) "ক্যাশ অন ডেলিভারি (COD ৳ টাকা)" else "COD Amount (BDT)") },
-                                modifier = Modifier.fillMaxWidth(),
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                singleLine = true
-                            )
-                        }
-                    }
-
-                    // 5. Promo Code & Pricing Summary
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        OutlinedTextField(
-                            value = promoCode,
-                            onValueChange = { promoCode = it },
-                            label = { Text(if (isBengali) "কুপন কোড (COURIER50)" else "Promo Coupon") },
-                            modifier = Modifier.weight(1f),
-                            singleLine = true
-                        )
-                        Button(
-                            onClick = {
-                                if (promoCode.trim().uppercase() == "COURIER50") {
-                                    discountAmount = 50
-                                    Toast.makeText(context, "৫০ টাকা ডিসকাউন্ট যুক্ত হয়েছে!", Toast.LENGTH_SHORT).show()
-                                } else {
-                                    Toast.makeText(context, "অকার্যকর কুপন", Toast.LENGTH_SHORT).show()
-                                }
-                            },
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2563EB)),
-                            shape = RoundedCornerShape(10.dp)
-                        ) {
-                            Text(if (isBengali) "প্রয়োগ" else "Apply")
-                        }
-                    }
-
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(containerColor = Color(0xFFEFF6FF)),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFBFDBFE)),
-                        shape = RoundedCornerShape(14.dp)
-                    ) {
-                        Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                Text("ডেলিভারি চার্জ (${selectedParcelType.nameBn}):", fontSize = 13.sp, color = Color.DarkGray)
-                                Text("৳ ${selectedParcelType.basePrice}", fontSize = 13.sp, fontWeight = FontWeight.Bold)
-                            }
-                            if (selectedSpeed.extraFee > 0) {
-                                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                    Text("গতি চার্জ (${selectedSpeed.titleBn}):", fontSize = 13.sp, color = Color.DarkGray)
-                                    Text("৳ ${selectedSpeed.extraFee}", fontSize = 13.sp, fontWeight = FontWeight.Bold)
-                                }
-                            }
-                            if (codFee > 0) {
-                                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                    Text("COD হ্যান্ডলিং ফি (১%):", fontSize = 13.sp, color = Color.DarkGray)
-                                    Text("৳ $codFee", fontSize = 13.sp, fontWeight = FontWeight.Bold)
-                                }
-                            }
-                            if (discountAmount > 0) {
-                                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                    Text("কুপন ছাড় (COURIER50):", fontSize = 13.sp, color = Color(0xFF16A34A))
-                                    Text("-৳ $discountAmount", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = Color(0xFF16A34A))
-                                }
-                            }
-                            Divider(modifier = Modifier.padding(vertical = 4.dp), color = Color(0xFF93C5FD))
-                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                Text("মোট পরিশোধযোগ্য চার্জ:", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1E3A8A))
-                                Text("৳ $finalTotal", fontSize = 18.sp, fontWeight = FontWeight.ExtraBold, color = Color(0xFF1E3A8A))
-                            }
-                        }
-                    }
-
-                    // SUBMIT BUTTON
-                    Button(
-                        onClick = {
-                            if (senderName.isBlank() || receiverName.isBlank() || receiverAddress.isBlank()) {
-                                Toast.makeText(context, if (isBengali) "অনুগ্রহ করে আবশ্যক তথ্যসমূহ পূরণ করুন" else "Please fill required fields", Toast.LENGTH_SHORT).show()
-                            } else {
-                                createdWaybillId = "SB-" + (100000..999999).random()
-                                showWaybillDialog = true
-                            }
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(52.dp),
-                        shape = RoundedCornerShape(14.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2563EB))
-                    ) {
-                        Icon(Icons.Default.LocalShipping, contentDescription = null, tint = Color.White)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(if (isBengali) "পার্সেল বুকিং সম্পন্ন করুন" else "Confirm Parcel Booking", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Color.White)
-                    }
-                }
-            } else {
-                // TRACK PARCEL VIEW
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .verticalScroll(rememberScrollState())
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    // Search Bar
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(16.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color.White),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-                    ) {
-                        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                            Text(if (isBengali) "ওয়েবিল বা ট্র্যাকিং নম্বর লিখুন:" else "Enter Waybill / Tracking Code:", fontWeight = FontWeight.Bold, fontSize = 15.sp)
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                OutlinedTextField(
-                                    value = searchTrackingCode,
-                                    onValueChange = { searchTrackingCode = it },
-                                    modifier = Modifier.weight(1f),
-                                    placeholder = { Text("উদা: SB-994812") },
-                                    singleLine = true
-                                )
-                                Button(
-                                    onClick = {
-                                        searchedResultId = searchTrackingCode.trim().uppercase()
-                                        Toast.makeText(context, if (isBengali) "ট্র্যাকিং স্ট্যাটাস আপডেট হয়েছে!" else "Tracking status updated!", Toast.LENGTH_SHORT).show()
-                                    },
-                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2563EB)),
-                                    shape = RoundedCornerShape(10.dp)
-                                ) {
-                                    Icon(Icons.Default.Search, contentDescription = null, tint = Color.White)
-                                }
-                            }
-                        }
-                    }
-
-                    // Live Status Card
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(16.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color.White),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-                    ) {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Column {
-                                    Text("ট্র্যাকিং আইডি: ${searchedResultId ?: searchTrackingCode}", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Color(0xFF2563EB))
-                                    Text("স্মল পার্সেল | এক্সপ্রেস ডেলিভারি", fontSize = 12.sp, color = Color.Gray)
-                                }
-                                Surface(
-                                    color = Color(0xFFFEF3C7),
-                                    shape = RoundedCornerShape(8.dp)
-                                ) {
-                                    Text("প্রসেসিং চলছে", modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp), fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color(0xFFD97706))
-                                }
-                            }
-
-                            Divider(modifier = Modifier.padding(vertical = 14.dp), color = Color(0xFFF1F5F9))
-
-                            // 5-Step Timeline Stepper
-                            Text(if (isBengali) "ডেলিভারি স্ট্যাটাস টাইমলাইন:" else "Delivery Progress Timeline:", fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                            Spacer(modifier = Modifier.height(12.dp))
-
-                            trackingSteps.forEachIndexed { index, step ->
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    verticalAlignment = Alignment.Top
-                                ) {
-                                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                        Box(
-                                            modifier = Modifier
-                                                .size(24.dp)
-                                                .clip(CircleShape)
-                                                .background(
-                                                    if (step.isCompleted) Color(0xFF16A34A)
-                                                    else if (step.isCurrent) Color(0xFFD97706)
-                                                    else Color.LightGray
-                                                ),
-                                            contentAlignment = Alignment.Center
-                                        ) {
-                                            if (step.isCompleted) {
-                                                Icon(Icons.Default.Check, contentDescription = null, tint = Color.White, modifier = Modifier.size(14.dp))
-                                            } else {
-                                                Text("${step.stepNumber}", color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                                            }
-                                        }
-                                        if (index < trackingSteps.size - 1) {
-                                            Box(
-                                                modifier = Modifier
-                                                    .width(2.dp)
-                                                    .height(36.dp)
-                                                    .background(if (step.isCompleted) Color(0xFF16A34A) else Color.LightGray)
-                                            )
-                                        }
-                                    }
-
-                                    Spacer(modifier = Modifier.width(12.dp))
-
-                                    Column {
-                                        Text(
-                                            text = if (isBengali) step.titleBn else step.titleEn,
-                                            fontWeight = if (step.isCurrent || step.isCompleted) FontWeight.Bold else FontWeight.Normal,
-                                            fontSize = 14.sp,
-                                            color = if (step.isCurrent) Color(0xFFD97706) else if (step.isCompleted) Color.Black else Color.Gray
-                                        )
-                                        Text(
-                                            text = if (isBengali) step.subtitleBn else step.subtitleEn,
-                                            fontSize = 12.sp,
-                                            color = Color.Gray
-                                        )
-                                        Text(step.time, fontSize = 10.sp, color = Color.LightGray)
-                                        Spacer(modifier = Modifier.height(8.dp))
-                                    }
-                                }
-                            }
-                        }
-                    }
+                items(filteredCouriers) { courier ->
+                    BdCourierCard(
+                        courier = courier,
+                        isBengali = isBengali,
+                        onWebsiteClick = { openWebUrl(courier.websiteUrl) },
+                        onTrackingClick = { openWebUrl(courier.trackingUrl) },
+                        onCallClick = { makePhoneCall(courier.hotlinePhone) }
+                    )
                 }
             }
         }
     }
+}
 
-    // WAYBILL RECEIPT DIALOG
-    if (showWaybillDialog && createdWaybillId != null) {
-        AlertDialog(
-            onDismissRequest = { showWaybillDialog = false },
-            title = {
-                Text(
-                    text = if (isBengali) "পার্সেল বুকিং সফল হয়েছে!" else "Booking Confirmed!",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp,
-                    color = Color(0xFF16A34A)
-                )
-            },
-            text = {
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+@Composable
+fun BdCourierCard(
+    courier: BdCourier,
+    isBengali: Boolean,
+    onWebsiteClick: () -> Unit,
+    onTrackingClick: () -> Unit,
+    onCallClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(14.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(courier.accentColor.copy(alpha = 0.12f)),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Text("ওয়েবিল ট্র্যাকিং আইডি:", fontSize = 12.sp, color = Color.Gray)
-                    Text(createdWaybillId!!, fontSize = 22.sp, fontWeight = FontWeight.ExtraBold, color = Color(0xFF2563EB))
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text("প্রেরক: $senderName ($senderPhone)")
-                    Text("প্রাপক: $receiverName ($receiverPhone)")
-                    Text("গন্তব্য: $receiverAddress")
-                    Text("মোট চার্জ: ৳ $finalTotal")
-                    if (codVal > 0) {
-                        Text("ক্যাশ অন ডেলিভারি (COD): ৳ $codVal", fontWeight = FontWeight.Bold, color = Color(0xFFD97706))
-                    }
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text("নিকটস্থ রাইডার আপনার ঠিকানায় পার্সেল পিকআপের জন্য রওয়ানা হয়েছে।", fontSize = 12.sp, color = Color.DarkGray)
+                    Icon(courier.icon, contentDescription = null, tint = courier.accentColor, modifier = Modifier.size(26.dp))
                 }
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        showWaybillDialog = false
-                        selectedTab = 1
-                        searchTrackingCode = createdWaybillId!!
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2563EB))
-                ) {
-                    Text(if (isBengali) "ট্র্যাকিং দেখুন" else "Track Parcel", color = Color.White)
+                Spacer(modifier = Modifier.width(12.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = if (isBengali) courier.titleBn else courier.titleEn,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 16.sp,
+                            color = Color.Black,
+                            modifier = Modifier.weight(1f)
+                        )
+                        Surface(
+                            color = courier.accentColor.copy(alpha = 0.1f),
+                            shape = RoundedCornerShape(6.dp)
+                        ) {
+                            Text(
+                                text = if (isBengali) courier.badgeTextBn else courier.badgeTextEn,
+                                color = courier.accentColor,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                            )
+                        }
+                    }
+                    Text(
+                        text = if (isBengali) courier.descBn else courier.descEn,
+                        fontSize = 12.sp,
+                        color = Color.DarkGray,
+                        modifier = Modifier.padding(top = 2.dp)
+                    )
                 }
             }
-        )
+
+            Spacer(modifier = Modifier.height(10.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Default.Phone, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(14.dp))
+                Spacer(modifier = Modifier.width(4.dp))
+                Text("হটলাইন: ${courier.hotlinePhone}", fontSize = 12.sp, color = Color(0xFF475569), fontWeight = FontWeight.Medium)
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                Button(
+                    onClick = onWebsiteClick,
+                    modifier = Modifier.weight(1f),
+                    colors = ButtonDefaults.buttonColors(containerColor = courier.accentColor),
+                    shape = RoundedCornerShape(8.dp),
+                    contentPadding = PaddingValues(vertical = 8.dp)
+                ) {
+                    Icon(Icons.Default.Language, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(if (isBengali) "ওয়েবসাইট" else "Website", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                }
+
+                OutlinedButton(
+                    onClick = onTrackingClick,
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(8.dp),
+                    contentPadding = PaddingValues(vertical = 8.dp)
+                ) {
+                    Icon(Icons.Default.LocationOn, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(if (isBengali) "ট্র্যাকিং" else "Tracking", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                }
+
+                IconButton(
+                    onClick = onCallClick,
+                    modifier = Modifier
+                        .size(36.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(Color(0xFFF1F5F9))
+                ) {
+                    Icon(Icons.Default.Call, contentDescription = "Call", tint = Color(0xFF16A34A), modifier = Modifier.size(18.dp))
+                }
+            }
+        }
     }
 }

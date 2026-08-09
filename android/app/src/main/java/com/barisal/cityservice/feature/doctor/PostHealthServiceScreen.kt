@@ -34,6 +34,7 @@ import com.barisal.cityservice.core.utils.rememberLocationPermissionState
 import com.barisal.cityservice.data.model.HealthServiceDto
 import com.barisal.cityservice.data.repository.HealthServiceRepository
 import com.barisal.cityservice.ui.components.GlobalAppBar
+import com.barisal.cityservice.ui.components.LocationPickerMapScreen
 import com.barisal.cityservice.ui.components.SetStatusBarColor
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
@@ -95,6 +96,23 @@ fun PostHealthServiceScreen(
     var zillaDropdownExpanded by remember { mutableStateOf(false) }
 
     var isSubmitting by remember { mutableStateOf(false) }
+    var showLocationPickerMap by remember { mutableStateOf(false) }
+
+    if (showLocationPickerMap) {
+        val latLngParts = latLng.split(",")
+        val pLat = latLngParts.getOrNull(0)?.trim()?.toDoubleOrNull()
+        val pLng = latLngParts.getOrNull(1)?.trim()?.toDoubleOrNull()
+        LocationPickerMapScreen(
+            initialLat = pLat,
+            initialLng = pLng,
+            onLocationSelected = { selectedLat, selectedLng ->
+                latLng = String.format("%.5f,%.5f", selectedLat, selectedLng)
+                showLocationPickerMap = false
+            },
+            onBack = { showLocationPickerMap = false }
+        )
+        return
+    }
 
     SetStatusBarColor()
 
@@ -322,54 +340,44 @@ fun PostHealthServiceScreen(
                     modifier = Modifier.fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Text(
-                        text = if (isBengali) "📍 ম্যাপে ট্যাপ করে অথবা পিন ড্র্যাগ-ড্রপ করে অবস্থান সিলেক্ট করুন" else "📍 Tap on map or drag & drop pin to select location",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 13.sp,
-                        color = primaryColor
-                    )
-
-                    Box(
+                    Button(
+                        onClick = { showLocationPickerMap = true },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(290.dp)
-                            .clip(RoundedCornerShape(12.dp))
-                            .border(1.dp, Color.LightGray, RoundedCornerShape(12.dp))
+                            .height(48.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = primaryColor),
+                        shape = RoundedCornerShape(10.dp)
                     ) {
-                        GoogleMap(
-                            modifier = Modifier.fillMaxSize(),
-                            cameraPositionState = cameraPositionState,
-                            properties = MapProperties(isMyLocationEnabled = hasLocationPermission),
-                            uiSettings = MapUiSettings(
-                                myLocationButtonEnabled = true,
-                                zoomControlsEnabled = true,
-                                compassEnabled = true
-                            ),
-                            onMapClick = { latLngPoint ->
-                                markerState.position = latLngPoint
-                            }
-                        ) {
-                            Marker(
-                                state = markerState,
-                                draggable = true,
-                                title = serviceName.ifEmpty { if (isBengali) "স্বাস্থ্য সেবা অবস্থান" else "Healthcare Location" },
-                                snippet = if (isBengali) "পিন ড্র্যাগ করে সঠিক স্থান সিলেক্ট করুন" else "Drag pin to select exact location"
-                            )
-                        }
+                        Icon(Icons.Default.Map, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = if (isBengali) "আপনার লোকেশন ম্যাপ থেকে সেট করুন" else "Set your location from map",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold
+                        )
                     }
 
-                    OutlinedTextField(
-                        value = latLng,
-                        onValueChange = { latLng = it },
-                        label = { Text(if (isBengali) "ম্যাপ কো-অর্ডিনেট (LatLng)" else "Map Coordinates (LatLng)") },
-                        placeholder = { Text("22.7010,90.3535") },
-                        leadingIcon = { Icon(Icons.Default.Map, contentDescription = null, tint = primaryColor) },
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = primaryColor,
-                            unfocusedBorderColor = Color.LightGray
-                        )
-                    )
+                    if (latLng.isNotBlank()) {
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = Color(0xFFDCFCE7),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(10.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(Icons.Default.Check, contentDescription = null, tint = Color(0xFF16A34A), modifier = Modifier.size(18.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = if (isBengali) "লোকেশন সেট করা হয়েছে: $latLng" else "Location Set: $latLng",
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = Color(0xFF15803D)
+                                )
+                            }
+                        }
+                    }
                 }
             }
 

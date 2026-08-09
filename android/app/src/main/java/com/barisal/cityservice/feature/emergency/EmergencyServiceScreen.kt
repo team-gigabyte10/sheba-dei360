@@ -40,15 +40,6 @@ data class EmergencyHotline(
     val color: Color
 )
 
-data class EmergencySubCategory(
-    val titleBn: String,
-    val titleEn: String,
-    val icon: ImageVector,
-    val descriptionBn: String,
-    val descriptionEn: String,
-    val color: Color
-)
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EmergencyServiceScreen(
@@ -70,12 +61,6 @@ fun EmergencyServiceScreen(
         EmergencyHotline("বিদ্যুৎ জরুরি অভিযোগ", "Electricity Helpline", "16999", "বিদ্যুৎ বিভ্রাট ও জরুরি মেরামত", "Power Outage & Line Repair", Icons.Default.ElectricBolt, Color(0xFFD97706)),
         EmergencyHotline("নারী ও শিশু সহায়তা", "Women & Child Help", "109", "নির্যাতন প্রতিরোধ ও সহায়তা", "Abuse Prevention & Support", Icons.Default.Shield, Color(0xFF7C3AED)),
         EmergencyHotline("দুর্যোগের আগাম বার্তা", "Disaster Alert", "1090", "আবহাওয়া ও দুর্যোগ সতর্কবার্তা", "Weather & Disaster Warnings", Icons.Default.Warning, Color(0xFFEA580C))
-    )
-
-    val subCategories = listOf(
-        EmergencySubCategory("বিদ্যুৎ সেবা", "Electricity Services", Icons.Default.ElectricBolt, "জরুরি বিদ্যুৎ মেরামত, লাইন অভিযোগ ও টেকনিশিয়ান", "Urgent repairs & electricians", Color(0xFFF59E0B)),
-        EmergencySubCategory("চাকরি", "Job Services", Icons.Default.Work, "জরুরি নিয়োগ বিজ্ঞপ্তি, ক্যারিয়ার ও কর্মসংস্থান", "Urgent circulars & employment", Color(0xFF2563EB)),
-        EmergencySubCategory("উদ্যোক্তা", "Entrepreneur", Icons.Default.BusinessCenter, "উদ্যোক্তা সহায়তা, ঋণ সুবিধা ও নতুন ব্যবসা", "SME guidance & startup support", Color(0xFF10B981))
     )
 
     Scaffold(
@@ -129,64 +114,6 @@ fun EmergencyServiceScreen(
                                 color = Color.White.copy(alpha = 0.9f),
                                 fontSize = 12.sp
                             )
-                        }
-                    }
-                }
-            }
-
-            // Sub Categories Section
-            item {
-                Text(
-                    text = if (isBengali) "জরুরী সেবাসমূহ (Sub-Categories)" else "Emergency Sub-Categories",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Black
-                )
-            }
-
-            item {
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    subCategories.forEach { subCat ->
-                        Surface(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable {
-                                    onNavigateToCategoryMap(subCat.titleBn)
-                                },
-                            shape = RoundedCornerShape(14.dp),
-                            color = Color.White,
-                            shadowElevation = 2.dp,
-                            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE2E8F0))
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(16.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(44.dp)
-                                        .clip(CircleShape)
-                                        .background(subCat.color.copy(alpha = 0.15f)),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(subCat.icon, contentDescription = null, tint = subCat.color, modifier = Modifier.size(24.dp))
-                                }
-                                Spacer(modifier = Modifier.width(14.dp))
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        text = if (isBengali) subCat.titleBn else subCat.titleEn,
-                                        fontSize = 16.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = Color.Black
-                                    )
-                                    Text(
-                                        text = if (isBengali) subCat.descriptionBn else subCat.descriptionEn,
-                                        fontSize = 12.sp,
-                                        color = Color.Gray
-                                    )
-                                }
-                                Icon(Icons.Default.ChevronRight, contentDescription = null, tint = Color.Gray)
-                            }
                         }
                     }
                 }
