@@ -37,6 +37,7 @@ import com.barisal.cityservice.core.utils.rememberLocationPermissionState
 import com.barisal.cityservice.data.model.EventProviderDto
 import com.barisal.cityservice.data.repository.EventRepository
 import com.barisal.cityservice.ui.components.GlobalAppBar
+import com.barisal.cityservice.ui.components.LocationPickerMapScreen
 import com.barisal.cityservice.ui.components.SetStatusBarColor
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
@@ -142,6 +143,23 @@ fun PostEventServiceScreen(
     var details by remember { mutableStateOf("") }
 
     var isSubmitting by remember { mutableStateOf(false) }
+    var showLocationPickerMap by remember { mutableStateOf(false) }
+
+    if (showLocationPickerMap) {
+        val latLngParts = latLng.split(",")
+        val pLat = latLngParts.getOrNull(0)?.trim()?.toDoubleOrNull()
+        val pLng = latLngParts.getOrNull(1)?.trim()?.toDoubleOrNull()
+        LocationPickerMapScreen(
+            initialLat = pLat,
+            initialLng = pLng,
+            onLocationSelected = { selectedLat, selectedLng ->
+                latLng = String.format("%.5f,%.5f", selectedLat, selectedLng)
+                showLocationPickerMap = false
+            },
+            onBack = { showLocationPickerMap = false }
+        )
+        return
+    }
 
     SetStatusBarColor()
     val primaryColor = Color(0xFF1E3A8A) // Dark Blue theme matching Event Service
@@ -776,54 +794,44 @@ fun PostEventServiceScreen(
                             colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = primaryColor)
                         )
 
-                        Text(
-                            text = if (isBengali) "ম্যাপে সার্ভিস অবস্থান চিহ্নিত করুন:" else "Pin service location on map:",
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = Color(0xFF334155)
-                        )
-
-                        Box(
+                        Button(
+                            onClick = { showLocationPickerMap = true },
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(220.dp)
-                                .clip(RoundedCornerShape(10.dp))
-                                .border(1.dp, Color(0xFFCBD5E1), RoundedCornerShape(10.dp))
+                                .height(48.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = primaryColor),
+                            shape = RoundedCornerShape(10.dp)
                         ) {
-                            GoogleMap(
-                                modifier = Modifier.fillMaxSize(),
-                                cameraPositionState = cameraPositionState,
-                                properties = MapProperties(isMyLocationEnabled = hasLocationPermission),
-                                uiSettings = MapUiSettings(
-                                    myLocationButtonEnabled = true,
-                                    zoomControlsEnabled = true,
-                                    compassEnabled = true
-                                ),
-                                onMapClick = { latLngPoint ->
-                                    markerState.position = latLngPoint
-                                }
-                            ) {
-                                Marker(
-                                    state = markerState,
-                                    draggable = true,
-                                    title = businessName.ifBlank { if (isBengali) "সার্ভিস অবস্থান" else "Service Location" },
-                                    snippet = if (isBengali) "পিন ড্র্যাগ করে সঠিক স্থান সিলেক্ট করুন" else "Drag pin to select exact location"
-                                )
-                            }
+                            Icon(Icons.Default.Map, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = if (isBengali) "আপনার লোকেশন ম্যাপ থেকে সেট করুন" else "Set your location from map",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold
+                            )
                         }
 
-                        OutlinedTextField(
-                            value = latLng,
-                            onValueChange = { latLng = it },
-                            label = { Text(if (isBengali) "ম্যাপ কো-অর্ডিনেট (LatLng)" else "Map Location Coordinates (LatLng)") },
-                            modifier = Modifier.fillMaxWidth(),
-                            singleLine = true,
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = primaryColor,
-                                focusedContainerColor = Color.White,
-                                unfocusedContainerColor = Color.White
-                            )
-                        )
+                        if (latLng.isNotBlank()) {
+                            Surface(
+                                shape = RoundedCornerShape(8.dp),
+                                color = Color(0xFFDCFCE7),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(10.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(Icons.Default.Check, contentDescription = null, tint = Color(0xFF16A34A), modifier = Modifier.size(18.dp))
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(
+                                        text = if (isBengali) "লোকেশন সেট করা হয়েছে: $latLng" else "Location Set: $latLng",
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = Color(0xFF15803D)
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
             }

@@ -28,9 +28,14 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.layout.ContentScale
+import coil.compose.AsyncImage
 import com.barisal.cityservice.R
+import com.barisal.cityservice.core.utils.toCoilModel
+import com.barisal.cityservice.data.repository.TutorRepository
 
 data class TutorProfile(
+    val id: String = "",
     val name: String,
     val date: String,
     val bio: String,
@@ -41,7 +46,10 @@ data class TutorProfile(
     val gender: String,
     val address: String,
     val thana: String,
-    val phone: String = "01712345678"
+    val phone: String = "01712345678",
+    val postType: String = "tutor",
+    val profileImageUrl: String = "",
+    val selectedSubjects: List<String> = emptyList()
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -50,6 +58,8 @@ fun TutorScreen(
     onNavigateBack: () -> Unit
 ) {
     val context = LocalContext.current
+    val tutorRepository = remember { TutorRepository() }
+    val firestorePostsState by tutorRepository.getApprovedTutorPosts().collectAsState(initial = emptyList())
 
     var selectedTabIndex by remember { mutableStateOf(0) }
     val tabs = listOf("পড়াতে চাই", "শিক্ষক চাই")
@@ -65,9 +75,18 @@ fun TutorScreen(
     val tutorSubCategories = listOf(
         "সব",
         "১ম–৫ম",
-        "৬ষ্ঠ–১০ম",
+        "৬ষ্ঠ–৮ম",
+        "৯ম–১০ম",
         "এইচএসসি",
-        "আরবি/কুরআন শিক্ষা"
+        "পদার্থবিজ্ঞান",
+        "রসায়ন",
+        "উচ্চতর গণিত",
+        "সাধারণ গণিত",
+        "জীববিজ্ঞান",
+        "আইসিটি",
+        "ইংরেজি",
+        "হিসাববিজ্ঞান",
+        "আরবি/কুরআন"
     )
 
     val dummyTutors = remember {
@@ -83,7 +102,8 @@ fun TutorScreen(
                 gender = "ছেলে ও মেয়ে",
                 address = "উপজেলা ভুমি অফিস, ঝিলটুলি",
                 thana = "ফরিদপুর সদর",
-                phone = "01712345678"
+                phone = "01712345678",
+                postType = "tutor"
             ),
             TutorProfile(
                 name = "শেখ ফেরদৌস",
@@ -96,7 +116,8 @@ fun TutorScreen(
                 gender = "ছেলে",
                 address = "মেডিকেল কলেজ সংলগ্ন",
                 thana = "ফরিদপুর সদর",
-                phone = "01898765432"
+                phone = "01898765432",
+                postType = "tutor"
             ),
             TutorProfile(
                 name = "সজীব রায় মৃত্যুঞ্জয়",
@@ -109,7 +130,8 @@ fun TutorScreen(
                 gender = "ছেলে ও মেয়ে",
                 address = "মিরপুর ১০, ঢাকা",
                 thana = "পল্লবী",
-                phone = "01911223344"
+                phone = "01911223344",
+                postType = "tutor"
             ),
             TutorProfile(
                 name = "হাফেজ ক্বারী মাওলানা আব্দুল্লাহ",
@@ -122,20 +144,54 @@ fun TutorScreen(
                 gender = "ছেলে ও মেয়ে",
                 address = "উত্তরা সেক্টর ৭, ঢাকা",
                 thana = "উত্তরা",
-                phone = "01755667788"
+                phone = "01755667788",
+                postType = "tutor"
             )
         )
     }
 
-    val filteredTutors = remember(searchQuery, selectedSubCategory, selectedZilla, dummyTutors.size) {
-        dummyTutors.filter { tutor ->
+    val firestoreTutors = remember(firestorePostsState) {
+        firestorePostsState.map { dto ->
+            TutorProfile(
+                id = dto.id,
+                name = dto.name,
+                date = if (dto.date.isNotBlank()) dto.date else "সাম্প্রতিক",
+                bio = dto.bio,
+                classRange = dto.classRange,
+                daysPerWeek = dto.daysPerWeek,
+                subject = dto.subject,
+                salary = dto.salary,
+                gender = dto.gender,
+                address = dto.address,
+                thana = dto.thana,
+                phone = dto.phone,
+                postType = dto.postType,
+                profileImageUrl = dto.profileImageUrl,
+                selectedSubjects = dto.selectedSubjects
+            )
+        }
+    }
+
+    val allTutors = remember(dummyTutors.size, firestoreTutors) {
+        firestoreTutors + dummyTutors
+    }
+
+    val activePostType = if (selectedTabIndex == 0) "tutor" else "student"
+
+    val filteredTutors = remember(searchQuery, selectedSubCategory, selectedZilla, activePostType, allTutors) {
+        allTutors.filter { tutor ->
+            val matchesTab = tutor.postType.equals(activePostType, ignoreCase = true)
             val matchesQuery = searchQuery.isEmpty() ||
                     tutor.name.contains(searchQuery, ignoreCase = true) ||
                     tutor.subject.contains(searchQuery, ignoreCase = true) ||
                     tutor.address.contains(searchQuery, ignoreCase = true)
-            val matchesCategory = selectedSubCategory == "সব" || tutor.classRange == selectedSubCategory
-            val matchesZilla = selectedZilla == null || tutor.address.contains(selectedZilla!!, ignoreCase = true)
-            matchesQuery && matchesCategory && matchesZilla
+            val matchesCategory = selectedSubCategory == "সব" ||
+                    tutor.classRange.contains(selectedSubCategory, ignoreCase = true) ||
+                    selectedSubCategory.contains(tutor.classRange, ignoreCase = true) ||
+                    tutor.subject.contains(selectedSubCategory, ignoreCase = true) ||
+                    tutor.selectedSubjects.any { it.contains(selectedSubCategory, ignoreCase = true) }
+            val matchesZilla = selectedZilla == null || tutor.address.contains(selectedZilla!!, ignoreCase = true) || tutor.thana.contains(selectedZilla!!, ignoreCase = true)
+            matchesTab && matchesQuery && matchesCategory && matchesZilla
         }
     }
 
@@ -385,18 +441,29 @@ fun TutorCard(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                // Profile Image Placeholder
+                // Profile Image
+                val profileModel = remember(tutor.profileImageUrl) { tutor.profileImageUrl.toCoilModel() }
                 Box(
                     modifier = Modifier
                         .size(48.dp)
                         .clip(CircleShape)
-                        .background(Color.LightGray)
+                        .background(Color(0xFFE2E8F0)),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.logo), // Using logo as placeholder
-                        contentDescription = "Profile",
-                        modifier = Modifier.fillMaxSize()
-                    )
+                    if (profileModel != null) {
+                        AsyncImage(
+                            model = profileModel,
+                            contentDescription = "Profile",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
+                    } else {
+                        Image(
+                            painter = painterResource(id = R.drawable.logo),
+                            contentDescription = "Profile",
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    }
                 }
                 Spacer(modifier = Modifier.width(12.dp))
                 Column {

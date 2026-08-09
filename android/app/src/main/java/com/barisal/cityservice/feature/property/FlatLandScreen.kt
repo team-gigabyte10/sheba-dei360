@@ -26,6 +26,11 @@ import com.barisal.cityservice.core.language.LocalAppLanguage
 import com.barisal.cityservice.ui.components.GlobalAppBar
 import com.barisal.cityservice.ui.components.SetStatusBarColor
 
+import androidx.compose.ui.layout.ContentScale
+import coil.compose.AsyncImage
+import com.barisal.cityservice.core.utils.toCoilModel
+import com.barisal.cityservice.data.repository.PropertyRepository
+
 data class FlatInfo(
     val title: String,
     val location: String,
@@ -37,7 +42,10 @@ data class FlatInfo(
     val balcony: Int,
     val roomSize: String, // e.g. "1200 sqft"
     val price: String,
-    val contact: String
+    val contact: String,
+    val imageUrl: String = "",
+    val latLng: String = "",
+    val description: String = ""
 )
 
 data class LandInfo(
@@ -48,7 +56,10 @@ data class LandInfo(
     val landType: String, // e.g. "Residential"
     val registrationStatus: String,
     val price: String,
-    val contact: String
+    val contact: String,
+    val imageUrl: String = "",
+    val latLng: String = "",
+    val description: String = ""
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -57,14 +68,17 @@ fun FlatLandScreen(onNavigateBack: () -> Unit) {
     val languageState = LocalAppLanguage.current
     val isBengali = languageState.isBengali
     val context = LocalContext.current
+    val propertyRepo = remember { PropertyRepository() }
+
+    val firestorePropertyPostsState by propertyRepo.getApprovedPropertyPosts().collectAsState(initial = emptyList())
 
     SetStatusBarColor()
 
     var searchQuery by remember { mutableStateOf("") }
-    
     var showZillaFilterDialog by remember { mutableStateOf(false) }
     var selectedZilla by remember { mutableStateOf<String?>(null) }
     var selectedTabIndex by remember { mutableStateOf(0) }
+    var showPostPropertyScreen by remember { mutableStateOf(false) }
     
     val primaryColor = Color(0xFF334155) // Slate theme
 
@@ -97,6 +111,13 @@ fun FlatLandScreen(onNavigateBack: () -> Unit) {
         )
     )
 
+    if (showPostPropertyScreen) {
+        PostPropertyScreen(
+            onBack = { showPostPropertyScreen = false }
+        )
+        return
+    }
+
     Scaffold(
         topBar = {
             GlobalAppBar(
@@ -107,6 +128,15 @@ fun FlatLandScreen(onNavigateBack: () -> Unit) {
                         Icon(Icons.Default.MoreVert, contentDescription = "Filter", tint = Color.Black)
                     }
                 }
+            )
+        },
+        floatingActionButton = {
+            ExtendedFloatingActionButton(
+                onClick = { showPostPropertyScreen = true },
+                containerColor = primaryColor,
+                contentColor = Color.White,
+                icon = { Icon(Icons.Default.Add, contentDescription = "Add Post") },
+                text = { Text(if (isBengali) "নতুন পোস্ট দিন" else "Post Ad", fontWeight = FontWeight.Bold) }
             )
         }
     ) { innerPadding ->
@@ -214,6 +244,68 @@ fun FlatLandScreen(onNavigateBack: () -> Unit) {
                 )
             }
             
+            val firestoreFlats = remember(firestorePropertyPostsState) {
+                firestorePropertyPostsState
+                    .filter { it.propertyType == "flat" }
+                    .map { dto ->
+                        FlatInfo(
+                            title = dto.title,
+                            location = "${dto.location}, ${dto.thana}".trim(',', ' '),
+                            floor = if (dto.floor.isNotBlank()) dto.floor else "N/A",
+                            beds = dto.beds,
+                            baths = dto.baths,
+                            dining = dto.dining,
+                            drawing = dto.drawing,
+                            balcony = dto.balcony,
+                            roomSize = if (dto.roomSize.isNotBlank()) dto.roomSize else "N/A",
+                            price = dto.price,
+                            contact = dto.phone,
+                            imageUrl = dto.images.firstOrNull() ?: "",
+                            latLng = dto.latLng,
+                            description = dto.description
+                        )
+                    }
+            }
+
+            val firestoreLands = remember(firestorePropertyPostsState) {
+                firestorePropertyPostsState
+                    .filter { it.propertyType == "land" }
+                    .map { dto ->
+                        LandInfo(
+                            title = dto.title,
+                            location = "${dto.location}, ${dto.thana}".trim(',', ' '),
+                            area = if (dto.area.isNotBlank()) dto.area else "N/A",
+                            roadWidth = if (dto.roadWidth.isNotBlank()) dto.roadWidth else "N/A",
+                            landType = if (dto.landType.isNotBlank()) dto.landType else "আবাসিক",
+                            registrationStatus = if (dto.registrationStatus.isNotBlank()) dto.registrationStatus else "কাগজপত্র সঠিক",
+                            price = dto.price,
+                            contact = dto.phone,
+                            imageUrl = dto.images.firstOrNull() ?: "",
+                            latLng = dto.latLng,
+                            description = dto.description
+                        )
+                    }
+            }
+
+            val allFlats = remember(dummyFlats, firestoreFlats) { firestoreFlats + dummyFlats }
+            val allLands = remember(dummyLands, firestoreLands) { firestoreLands + dummyLands }
+
+            val filteredFlats = remember(searchQuery, selectedZilla, allFlats) {
+                allFlats.filter { flat ->
+                    val matchesQuery = searchQuery.isEmpty() || flat.title.contains(searchQuery, ignoreCase = true) || flat.location.contains(searchQuery, ignoreCase = true)
+                    val matchesZilla = selectedZilla == null || flat.location.contains(selectedZilla!!, ignoreCase = true)
+                    matchesQuery && matchesZilla
+                }
+            }
+
+            val filteredLands = remember(searchQuery, selectedZilla, allLands) {
+                allLands.filter { land ->
+                    val matchesQuery = searchQuery.isEmpty() || land.title.contains(searchQuery, ignoreCase = true) || land.location.contains(searchQuery, ignoreCase = true)
+                    val matchesZilla = selectedZilla == null || land.location.contains(selectedZilla!!, ignoreCase = true)
+                    matchesQuery && matchesZilla
+                }
+            }
+
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
@@ -222,11 +314,11 @@ fun FlatLandScreen(onNavigateBack: () -> Unit) {
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 if (selectedTabIndex == 0) {
-                    items(dummyFlats) { flat ->
+                    items(filteredFlats) { flat ->
                         FlatCard(flat = flat, primaryColor = primaryColor, isBengali = isBengali)
                     }
                 } else {
-                    items(dummyLands) { land ->
+                    items(filteredLands) { land ->
                         LandCard(land = land, primaryColor = primaryColor, isBengali = isBengali)
                     }
                 }
@@ -251,17 +343,28 @@ fun FlatCard(flat: FlatInfo, primaryColor: Color, isBengali: Boolean) {
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                val cardImageModel = remember(flat.imageUrl) { flat.imageUrl.toCoilModel() }
                 Box(
                     modifier = Modifier
                         .size(60.dp)
                         .clip(RoundedCornerShape(8.dp))
-                        .background(Color.LightGray)
+                        .background(Color(0xFFE2E8F0)),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.logo),
-                        contentDescription = "Flat Image",
-                        modifier = Modifier.fillMaxSize()
-                    )
+                    if (cardImageModel != null) {
+                        AsyncImage(
+                            model = cardImageModel,
+                            contentDescription = "Flat Image",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
+                    } else {
+                        Image(
+                            painter = painterResource(id = R.drawable.logo),
+                            contentDescription = "Flat Image",
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    }
                 }
                 Spacer(modifier = Modifier.width(12.dp))
                 Column(modifier = Modifier.weight(1f)) {
@@ -354,17 +457,28 @@ fun LandCard(land: LandInfo, primaryColor: Color, isBengali: Boolean) {
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                val cardImageModel = remember(land.imageUrl) { land.imageUrl.toCoilModel() }
                 Box(
                     modifier = Modifier
                         .size(60.dp)
                         .clip(RoundedCornerShape(8.dp))
-                        .background(Color.LightGray)
+                        .background(Color(0xFFE2E8F0)),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.logo),
-                        contentDescription = "Land Image",
-                        modifier = Modifier.fillMaxSize()
-                    )
+                    if (cardImageModel != null) {
+                        AsyncImage(
+                            model = cardImageModel,
+                            contentDescription = "Land Image",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
+                    } else {
+                        Image(
+                            painter = painterResource(id = R.drawable.logo),
+                            contentDescription = "Land Image",
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    }
                 }
                 Spacer(modifier = Modifier.width(12.dp))
                 Column(modifier = Modifier.weight(1f)) {

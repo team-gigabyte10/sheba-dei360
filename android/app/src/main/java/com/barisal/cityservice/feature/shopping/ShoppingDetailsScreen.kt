@@ -213,7 +213,7 @@ fun ShoppingDetailsScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
                 .background(Color(0xFFF9FAFB)) // Very light gray
-                .verticalScroll(rememberScrollState(), enabled = !cameraPositionState.isMoving)
+                .verticalScroll(rememberScrollState())
         ) {
             // Top Image Header
             Box(
