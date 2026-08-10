@@ -117,6 +117,7 @@ fun PostMistriServiceScreen(
     val primaryColor = Color(0xFF2563EB)
 
     Scaffold(
+        modifier = Modifier.fillMaxSize().imePadding(),
         topBar = {
             GlobalAppBar(
                 title = if (isBengali) "মিস্ত্রি সার্ভিস পোস্ট করুন" else "Post Mistri Service",
@@ -743,6 +744,9 @@ fun PostMistriServiceScreen(
                     onBack()
                 },
                 title = if (isBengali) "পোস্ট সফলভাবে জমা হয়েছে!" else "Submission Successful!",
+                icon = Icons.Default.Check,
+                iconTint = Color(0xFF16A34A),
+                iconBackgroundColor = Color(0xFFDCFCE7),
                 confirmButtonText = if (isBengali) "ঠিক আছে" else "OK",
                 onConfirm = {
                     showSuccessDialog = false

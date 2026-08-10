@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.barisal.cityservice.core.language.LocalAppLanguage
+import com.barisal.cityservice.ui.components.CustomDialog
 import com.barisal.cityservice.ui.components.GlobalAppBar
 import com.barisal.cityservice.ui.components.SetStatusBarColor
 
@@ -85,6 +86,9 @@ fun CreateMatrimonyProfileScreen(
     // Section 5: About Myself
     var about by remember { mutableStateOf("") }
 
+    var showSuccessDialog by remember { mutableStateOf(false) }
+    var createdProfileTemp by remember { mutableStateOf<MatrimonyProfile?>(null) }
+
     val photoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia()
     ) { uri ->
@@ -94,6 +98,7 @@ fun CreateMatrimonyProfileScreen(
     }
 
     Scaffold(
+        modifier = Modifier.fillMaxSize().imePadding(),
         topBar = {
             GlobalAppBar(
                 title = if (isBengali) "নতুন বায়োডাটা তৈরি করুন" else "Create Biodata",
@@ -109,6 +114,8 @@ fun CreateMatrimonyProfileScreen(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .navigationBarsPadding()
+                        .imePadding()
                         .padding(16.dp)
                 ) {
                     Button(
@@ -147,9 +154,8 @@ fun CreateMatrimonyProfileScreen(
                                     about = if (about.isBlank()) "ধার্মিক, সৎ ও পরিবার সচেতন ব্যক্তিত্ব।" else about,
                                     imageUri = selectedImageUri?.toString()
                                 )
-                                onProfileCreated(newProfile)
-                                Toast.makeText(context, if (isBengali) "বায়োডাটা সফলভাবে পোস্ট হয়েছে!" else "Biodata posted successfully!", Toast.LENGTH_SHORT).show()
-                                onBack()
+                                createdProfileTemp = newProfile
+                                showSuccessDialog = true
                             }
                         },
                         modifier = Modifier
@@ -517,6 +523,35 @@ fun CreateMatrimonyProfileScreen(
             }
 
             Spacer(modifier = Modifier.height(20.dp))
+        }
+    }
+
+    if (showSuccessDialog) {
+        CustomDialog(
+            onDismissRequest = {
+                showSuccessDialog = false
+                createdProfileTemp?.let { onProfileCreated(it) }
+                onBack()
+            },
+            title = if (isBengali) "বায়োডাটা জমা হয়েছে!" else "Biodata Submitted Successfully!",
+            icon = Icons.Default.Check,
+            iconTint = Color(0xFF16A34A),
+            iconBackgroundColor = Color(0xFFDCFCE7),
+            confirmButtonText = if (isBengali) "ঠিক আছে" else "OK",
+            onConfirm = {
+                showSuccessDialog = false
+                createdProfileTemp?.let { onProfileCreated(it) }
+                onBack()
+            }
+        ) {
+            Text(
+                text = if (isBengali)
+                    "আপনার পাত্র/পাত্রীর বায়োডাটা সফলভাবে পোস্ট হয়েছে। এডমিন অনুমোদনের পর প্রকাশিত হবে।"
+                else
+                    "Your matrimony profile has been submitted for admin review. It will be published once approved.",
+                fontSize = 14.sp,
+                color = Color.DarkGray
+            )
         }
     }
 }

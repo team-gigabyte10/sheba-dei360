@@ -59,18 +59,14 @@ data class ShoppingCategory(
 )
 
 val shoppingCategories = listOf(
-    ShoppingCategory("Services", "সার্ভিসেস", Icons.Default.Build),
-    ShoppingCategory("Repair & Construction", "রিপেয়ার ও কনস্ট্রাকশন", Icons.Default.Construction),
-    ShoppingCategory("Commercial Equipment & Tools", "কমার্শিয়াল ইকুইপমেন্ট", Icons.Default.PrecisionManufacturing),
-    ShoppingCategory("Leisure & Activities", "বিনোদন ও স্পোর্টস", Icons.Default.FitnessCenter),
-    ShoppingCategory("Babies & Kids", "শিশু ও কিডস", Icons.Default.ChildCare),
-    ShoppingCategory("Food, Agriculture & Farming", "খাবার ও কৃষি", Icons.Default.Agriculture),
-    ShoppingCategory("Animals & Pets", "পশুপাখি ও পেটস", Icons.Default.Pets),
-    ShoppingCategory("Jobs", "চাকরি", Icons.Default.Work),
-    ShoppingCategory("Seeking Work - CVs", "সিভি / কাজ খুঁজছি", Icons.Default.Description),
-    ShoppingCategory("Mobiles & Electronics", "মোবাইল ও ইলেকট্রনিক্স", Icons.Default.Smartphone),
+    ShoppingCategory("Mobiles", "মোবাইল", Icons.Default.Smartphone),
+    ShoppingCategory("Computers & Laptops", "কম্পিউটার/ল্যাপটপ", Icons.Default.Computer),
+    ShoppingCategory("Electronics Products", "ইলেকট্রনিক্স পন্য", Icons.Default.Devices),
     ShoppingCategory("Vehicles & Property", "গাড়ি ও প্রপার্টি", Icons.Default.DirectionsCar),
-    ShoppingCategory("Home & Living", "হোম ও লিভিং", Icons.Default.Chair)
+    ShoppingCategory("Home & Living", "হোম ও লিভিং", Icons.Default.Chair),
+    ShoppingCategory("Repair & Construction", "রিপেয়ার ও কনস্ট্রাকশন", Icons.Default.Construction),
+    ShoppingCategory("Animals & Pets", "পশুপাখি ও পেটস", Icons.Default.Pets),
+    ShoppingCategory("Others", "অন্যান্য", Icons.Default.MoreHoriz)
 )
 
 val dummyProducts = listOf(
@@ -436,7 +432,7 @@ fun ShoppingListScreen(
                             FilterChip(
                                 selected = isSelected,
                                 onClick = { selectedCondition = key },
-                                label = { Text(label, fontSize = 12.sp, fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium) },
+                                label = { Text(label, fontSize = 14.sp, fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium) },
                                 colors = FilterChipDefaults.filterChipColors(
                                     selectedContainerColor = primaryColor,
                                     selectedLabelColor = Color.White
@@ -667,7 +663,7 @@ fun ShoppingGridCard(
                 Text(
                     text = product.productName,
                     color = Color(0xFF0F172A),
-                    fontSize = 13.sp,
+                    fontSize = 15.sp,
                     fontWeight = FontWeight.SemiBold,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
@@ -677,7 +673,7 @@ fun ShoppingGridCard(
                 Text(
                     text = "${product.address} • ${product.condition}",
                     color = Color(0xFF64748B),
-                    fontSize = 11.sp,
+                    fontSize = 13.sp,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -823,7 +819,7 @@ fun ShoppingCartDialog(
                             ) {
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(product.productName, fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                                    Text(product.price, fontSize = 12.sp, color = Color(0xFF059669), fontWeight = FontWeight.SemiBold)
+                                    Text(product.price, fontSize = 14.sp, color = Color(0xFF059669), fontWeight = FontWeight.SemiBold)
                                 }
 
                                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -841,12 +837,12 @@ fun ShoppingCartDialog(
 
                     HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp), color = Color(0xFFCBD5E1))
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text("পণ্যের সাবটোটাল:", fontSize = 13.sp, color = Color.DarkGray)
-                        Text("৳ $subtotal", fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                        Text("পণ্যের সাবটোটাল:", fontSize = 15.sp, color = Color.DarkGray)
+                        Text("৳ $subtotal", fontSize = 15.sp, fontWeight = FontWeight.Bold)
                     }
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text("ডেলিভারি চার্জ:", fontSize = 13.sp, color = Color.DarkGray)
-                        Text("৳ $deliveryFee", fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                        Text("ডেলিভারি চার্জ:", fontSize = 15.sp, color = Color.DarkGray)
+                        Text("৳ $deliveryFee", fontSize = 15.sp, fontWeight = FontWeight.Bold)
                     }
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                         Text("সর্বমোট মূল্য:", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = Color(0xFF059669))

@@ -29,7 +29,7 @@ import com.barisal.cityservice.core.theme.LocalAppTheme
 @Composable
 fun SetStatusBarColor(
     color: Color = MaterialTheme.colorScheme.background,
-    isDarkTheme: Boolean = LocalAppTheme.current.isDarkMode
+    isDarkTheme: Boolean = false
 ) {
     val view = LocalView.current
     if (!view.isInEditMode) {

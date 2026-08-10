@@ -33,6 +33,7 @@ import com.barisal.cityservice.core.utils.bangladeshZillas
 import com.barisal.cityservice.core.utils.rememberLocationPermissionState
 import com.barisal.cityservice.data.model.HealthServiceDto
 import com.barisal.cityservice.data.repository.HealthServiceRepository
+import com.barisal.cityservice.ui.components.CustomDialog
 import com.barisal.cityservice.ui.components.GlobalAppBar
 import com.barisal.cityservice.ui.components.LocationPickerMapScreen
 import com.barisal.cityservice.ui.components.SetStatusBarColor
@@ -96,6 +97,7 @@ fun PostHealthServiceScreen(
     var zillaDropdownExpanded by remember { mutableStateOf(false) }
 
     var isSubmitting by remember { mutableStateOf(false) }
+    var showSuccessDialog by remember { mutableStateOf(false) }
     var showLocationPickerMap by remember { mutableStateOf(false) }
 
     if (showLocationPickerMap) {
@@ -182,7 +184,7 @@ fun PostHealthServiceScreen(
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
                                 text = if (isBengali) "ছবি পরিবর্তন করতে ট্যাপ করুন" else "Tap to change photo",
-                                fontSize = 12.sp,
+                                fontSize = 14.sp,
                                 color = primaryColor,
                                 fontWeight = FontWeight.Medium
                             )
@@ -215,12 +217,29 @@ fun PostHealthServiceScreen(
 
             // Service Name
             item {
+                val isHomeCare = selectedCategoryKey == "home_care"
                 OutlinedTextField(
                     value = serviceName,
                     onValueChange = { serviceName = it },
-                    label = { Text(if (isBengali) "প্রতিষ্ঠান বা সেবার নাম *" else "Organization / Service Name *") },
-                    placeholder = { Text(if (isBengali) "যেমন: বরিশাল অ্যাপোলো হাসপাতাল / গ্রীন অ্যাম্বুলেন্স" else "e.g. Barisal General Hospital / Green Ambulance") },
-                    leadingIcon = { Icon(Icons.Default.Business, contentDescription = null, tint = primaryColor) },
+                    label = {
+                        Text(
+                            if (isHomeCare) {
+                                if (isBengali) "আপনার নাম / সেবার নাম *" else "Your Name / Service Title *"
+                            } else {
+                                if (isBengali) "প্রতিষ্ঠান বা সেবার নাম *" else "Organization / Service Name *"
+                            }
+                        )
+                    },
+                    placeholder = {
+                        Text(
+                            if (isHomeCare) {
+                                if (isBengali) "যেমন: নার্স আমেনা বেগম / অ্যাসিস্ট্যান্ট তারেক" else "e.g. Nurse Amena Begum / Med Assistant Tareq"
+                            } else {
+                                if (isBengali) "যেমন: বরিশাল অ্যাপোলো হাসপাতাল / গ্রীন অ্যাম্বুলেন্স" else "e.g. Barisal General Hospital / Green Ambulance"
+                            }
+                        )
+                    },
+                    leadingIcon = { Icon(Icons.Default.Person, contentDescription = null, tint = primaryColor) },
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = primaryColor,
@@ -231,12 +250,29 @@ fun PostHealthServiceScreen(
 
             // Service Type / Sub-Type
             item {
+                val isHomeCare = selectedCategoryKey == "home_care"
                 OutlinedTextField(
                     value = serviceType,
                     onValueChange = { serviceType = it },
-                    label = { Text(if (isBengali) "সেবার বিবরণী (টাইপ) *" else "Service Type / Category Detail *") },
-                    placeholder = { Text(if (isBengali) "যেমন: সরকারি হাসপাতাল / আইসিইউ অ্যাম্বুলেন্স / ও+ রক্ত" else "e.g. Private Hospital / ICU Ambulance / O+ Blood") },
-                    leadingIcon = { Icon(Icons.Default.Category, contentDescription = null, tint = primaryColor) },
+                    label = {
+                        Text(
+                            if (isHomeCare) {
+                                if (isBengali) "পদবী ও যোগ্যতা (Designation/Role) *" else "Designation & Qualification *"
+                            } else {
+                                if (isBengali) "সেবার বিবরণী (টাইপ) *" else "Service Type / Category Detail *"
+                            }
+                        )
+                    },
+                    placeholder = {
+                        Text(
+                            if (isHomeCare) {
+                                if (isBengali) "যেমন: সিনিয়র নার্স (B.Sc) / মেডিকেল অ্যাসিস্ট্যান্ট (MATS)" else "e.g. Senior Nurse (B.Sc) / Med Assistant (MATS)"
+                            } else {
+                                if (isBengali) "যেমন: সরকারি হাসপাতাল / আইসিইউ অ্যাম্বুলেন্স / ও+ রক্ত" else "e.g. Private Hospital / ICU Ambulance / O+ Blood"
+                            }
+                        )
+                    },
+                    leadingIcon = { Icon(Icons.Default.Badge, contentDescription = null, tint = primaryColor) },
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = primaryColor,
@@ -250,8 +286,8 @@ fun PostHealthServiceScreen(
                 OutlinedTextField(
                     value = address,
                     onValueChange = { address = it },
-                    label = { Text(if (isBengali) "সম্পূর্ণ ঠিকানা *" else "Full Address *") },
-                    placeholder = { Text(if (isBengali) "যেমন: বান্দ রোড, বরিশাল সদর" else "e.g. Band Road, Barisal Sadar") },
+                    label = { Text(if (isBengali) "বাসা/এলাকার ঠিকানা *" else "Home / Area Address *") },
+                    placeholder = { Text(if (isBengali) "যেমন: নথুল্লাবাদ, বরিশাল সদর" else "e.g. Nathullabad, Barisal Sadar") },
                     leadingIcon = { Icon(Icons.Default.HomeWork, contentDescription = null, tint = primaryColor) },
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
@@ -318,11 +354,20 @@ fun PostHealthServiceScreen(
 
             // Details & Description
             item {
+                val isHomeCare = selectedCategoryKey == "home_care"
                 OutlinedTextField(
                     value = details,
                     onValueChange = { details = it },
-                    label = { Text(if (isBengali) "বিস্তারিত তথ্য ও সেবাসমূহ" else "Details & Facilities") },
-                    placeholder = { Text(if (isBengali) "২৪ ঘন্টা খোলা, ফ্রি অক্সিজেন সুবিধা, সার্বক্ষণিক ডাক্তার..." else "24 Hours Open, Free Oxygen facility, Resident doctors...") },
+                    label = { Text(if (isBengali) "সেবাসমূহ, সময়সূচী ও ফি *" else "Services, Available Timing & Fee *") },
+                    placeholder = {
+                        Text(
+                            if (isHomeCare) {
+                                if (isBengali) "ইনজেকশন/স্যালাইন, ড্রেসিং। সময়: অফিস সময়ের পর (বিকাল ৫টা-১০টা)। ফি: ৳৩০০।" else "Injection, Dressing. Timing: After office hours (5 PM - 10 PM). Fee: 300 BDT."
+                            } else {
+                                if (isBengali) "২৪ ঘন্টা খোলা, ফ্রি অক্সিজেন সুবিধা, সার্বক্ষণিক ডাক্তার..." else "24 Hours Open, Free Oxygen facility, Resident doctors..."
+                            }
+                        )
+                    },
                     leadingIcon = { Icon(Icons.Default.Info, contentDescription = null, tint = primaryColor) },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -371,7 +416,7 @@ fun PostHealthServiceScreen(
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text(
                                     text = if (isBengali) "লোকেশন সেট করা হয়েছে: $latLng" else "Location Set: $latLng",
-                                    fontSize = 12.sp,
+                                    fontSize = 14.sp,
                                     fontWeight = FontWeight.SemiBold,
                                     color = Color(0xFF15803D)
                                 )
@@ -420,12 +465,7 @@ fun PostHealthServiceScreen(
                             isSubmitting = false
 
                             if (result.isSuccess) {
-                                Toast.makeText(
-                                    context,
-                                    if (isBengali) "আপনার পোস্টটি জমা নেওয়া হয়েছে! অ্যাডমিন অনুমোদনের পর প্রকাশিত হবে।" else "Post submitted! Will be published after admin approval.",
-                                    Toast.LENGTH_LONG
-                                ).show()
-                                onBack()
+                                showSuccessDialog = true
                             } else {
                                 Toast.makeText(
                                     context,
@@ -452,6 +492,33 @@ fun PostHealthServiceScreen(
                         )
                     }
                 }
+            }
+        }
+
+        if (showSuccessDialog) {
+            CustomDialog(
+                onDismissRequest = {
+                    showSuccessDialog = false
+                    onBack()
+                },
+                title = if (isBengali) "পোস্ট সফলভাবে জমা হয়েছে!" else "Post Submitted Successfully!",
+                icon = Icons.Default.Check,
+                iconTint = Color(0xFF16A34A),
+                iconBackgroundColor = Color(0xFFDCFCE7),
+                confirmButtonText = if (isBengali) "ঠিক আছে" else "OK",
+                onConfirm = {
+                    showSuccessDialog = false
+                    onBack()
+                }
+            ) {
+                Text(
+                    text = if (isBengali)
+                        "আপনার স্বাস্থ্য সেবার পোস্টটি সফলভাবে অ্যাডমিন প্যানেলে জমা হয়েছে। পর্যালোচনার পর পোস্টটি প্রকাশিত হবে।"
+                    else
+                        "Your healthcare service post has been submitted for admin review. It will be published once approved.",
+                    fontSize = 14.sp,
+                    color = Color.DarkGray
+                )
             }
         }
     }

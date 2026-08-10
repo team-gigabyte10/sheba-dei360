@@ -20,14 +20,9 @@ class ThemeState(
     var isSystemDark by mutableStateOf(initialIsSystemDark)
 
     var isDarkMode: Boolean
-        get() = when (themeMode) {
-            AppThemeMode.LIGHT -> false
-            AppThemeMode.DARK -> true
-            AppThemeMode.SYSTEM -> isSystemDark
-        }
+        get() = false
         set(value) {
-            val newMode = if (value) AppThemeMode.DARK else AppThemeMode.LIGHT
-            updateThemeMode(newMode)
+            updateThemeMode(AppThemeMode.LIGHT)
         }
 
     fun updateThemeMode(newMode: AppThemeMode) {

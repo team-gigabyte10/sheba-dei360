@@ -161,7 +161,7 @@ fun TutorMapScreen(
                                 Text(
                                     text = tutor.name,
                                     color = Color.White,
-                                    fontSize = 11.sp,
+                                    fontSize = 13.sp,
                                     fontWeight = FontWeight.Bold
                                 )
                             }
@@ -206,7 +206,7 @@ fun TutorMapScreen(
                                 Text(tutor.name, fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Color.Black)
                                 Text(
                                     text = "${tutor.address}, ${tutor.thana}",
-                                    fontSize = 12.sp,
+                                    fontSize = 14.sp,
                                     color = Color.Gray
                                 )
                             }
@@ -217,7 +217,7 @@ fun TutorMapScreen(
                                 Text(
                                     text = tutor.classRange,
                                     color = Color(0xFF0F766E),
-                                    fontSize = 12.sp,
+                                    fontSize = 14.sp,
                                     fontWeight = FontWeight.Bold,
                                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                                 )
@@ -226,7 +226,7 @@ fun TutorMapScreen(
 
                         Text(
                             text = tutor.bio,
-                            fontSize = 13.sp,
+                            fontSize = 15.sp,
                             color = Color.DarkGray,
                             maxLines = 2
                         )
@@ -237,12 +237,12 @@ fun TutorMapScreen(
                         ) {
                             Text(
                                 text = if (isBengali) "বিষয়: ${tutor.subject}" else "Subject: ${tutor.subject}",
-                                fontSize = 12.sp,
+                                fontSize = 14.sp,
                                 color = Color(0xFF4B5563)
                             )
                             Text(
                                 text = if (isBengali) "বেতন: ${tutor.salary}" else "Salary: ${tutor.salary}",
-                                fontSize = 12.sp,
+                                fontSize = 14.sp,
                                 color = Color(0xFF0F766E),
                                 fontWeight = FontWeight.Bold
                             )
@@ -262,7 +262,7 @@ fun TutorMapScreen(
                         ) {
                             Icon(Icons.Default.Call, contentDescription = null, modifier = Modifier.size(18.dp))
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text(if (isBengali) "শিক্ষকের সাথে যোগাযোগ করুন (${tutor.phone})" else "Contact Tutor (${tutor.phone})", fontSize = 13.sp)
+                            Text(if (isBengali) "শিক্ষকের সাথে যোগাযোগ করুন (${tutor.phone})" else "Contact Tutor (${tutor.phone})", fontSize = 15.sp)
                         }
                     }
                 }

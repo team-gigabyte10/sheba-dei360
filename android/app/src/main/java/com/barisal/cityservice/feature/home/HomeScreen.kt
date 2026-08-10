@@ -60,6 +60,9 @@ fun HomeScreen(
     onNavigateToHotel: () -> Unit = {},
     onNavigateToRestaurant: () -> Unit = {},
     onNavigateToFlatLand: () -> Unit = {},
+    onNavigateToTrainingAcademy: () -> Unit = {},
+    onNavigateToJob: () -> Unit = {},
+    onNavigateToDomesticHelp: () -> Unit = {},
     onNavigateToCategoryMap: (String) -> Unit = {},
     onNavigateToAllServices: () -> Unit = {},
     onNavigateToHealthServices: () -> Unit = {},
@@ -434,7 +437,7 @@ fun HomeScreen(
                                                 "বাসা ভাড়া", "House Rent" -> onNavigateToHouseRent()
                                                 "বেচা-কেনা", "Shopping" -> onNavigateToShopping()
                                                 "পাত্র-পাত্রী", "Matrimony" -> onNavigateToMatrimony()
-                                                "রাইড", "Ride" -> onNavigateToRide()
+                                                "গাড়ি ভাড়া", "Rent a Car", "রাইড", "Ride" -> onNavigateToRide()
                                                 "কুরিয়ার", "Courier" -> onNavigateToCourier()
                                                 "রক্তদাতা", "Blood Donor" -> onNavigateToBloodDonor()
                                                 "ইভেন্ট সার্ভিস", "Event Service" -> onNavigateToEventService()
@@ -442,6 +445,11 @@ fun HomeScreen(
                                                 "মিস্ত্রি", "Mistri", "Labour" -> onNavigateToMistriService()
                                                 "টিউটর", "Tutor" -> onNavigateToTutor()
                                                 "ফ্ল্যাট ও জমি", "Flat and Land" -> onNavigateToFlatLand()
+                                                "হোটেল", "Hotel", "hotel" -> onNavigateToHotel()
+                                                "রেস্টুরেন্ট", "Restaurant", "restaurant" -> onNavigateToRestaurant()
+                                                "ট্রেনিং একাডেমি", "Training Academy", "training_academy" -> onNavigateToTrainingAcademy()
+                                                "চাকরি ও নিয়োগ", "Jobs Circular", "job_screen", "চাকরি" -> onNavigateToJob()
+                                                "গৃহকর্মী ও বুয়া", "Domestic Help / Maid", "domestic_help_screen", "গৃহকর্মী" -> onNavigateToDomesticHelp()
                                                 else -> onNavigateToCategoryMap(category.name)
                                             }
                                         }

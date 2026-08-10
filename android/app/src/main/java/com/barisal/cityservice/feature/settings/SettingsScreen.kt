@@ -1,24 +1,18 @@
 package com.barisal.cityservice.feature.settings
 
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.ChevronRight
-import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Language
-import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.PhoneAndroid
 import androidx.compose.material.icons.filled.PrivacyTip
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -32,8 +26,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.barisal.cityservice.core.language.AppLanguage
 import com.barisal.cityservice.core.language.LocalAppLanguage
-import com.barisal.cityservice.core.theme.AppThemeMode
-import com.barisal.cityservice.core.theme.LocalAppTheme
 import com.barisal.cityservice.ui.components.GlobalAppBar
 import com.barisal.cityservice.ui.components.SetStatusBarColor
 
@@ -47,8 +39,6 @@ fun SettingsScreen(
 ) {
     val languageState = LocalAppLanguage.current
     val isBengali = languageState.isBengali
-
-    val themeState = LocalAppTheme.current
 
     var notificationsEnabled by remember { mutableStateOf(true) }
 
@@ -112,22 +102,6 @@ fun SettingsScreen(
                     checked = isBengali,
                     onCheckedChange = { isBangla ->
                         languageState.currentLanguage = if (isBangla) AppLanguage.BENGALI else AppLanguage.ENGLISH
-                    }
-                )
-            }
-
-            item { Spacer(modifier = Modifier.height(16.dp)) }
-
-            // Theme Control Section
-            item {
-                SectionTitle(if (isBengali) "থিম মোড" else "Theme Mode")
-            }
-            item {
-                ThemeSelectorCard(
-                    currentMode = themeState.themeMode,
-                    isBengali = isBengali,
-                    onModeSelected = { mode ->
-                        themeState.updateThemeMode(mode)
                     }
                 )
             }
@@ -229,120 +203,4 @@ fun SettingsSwitchItem(icon: ImageVector, title: String, checked: Boolean, onChe
     }
 }
 
-@Composable
-fun ThemeSelectorCard(
-    currentMode: AppThemeMode,
-    isBengali: Boolean,
-    onModeSelected: (AppThemeMode) -> Unit
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Text(
-                text = if (isBengali) "অ্যাপের থিম নির্বাচন করুন" else "Select App Theme",
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Medium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                ThemeOptionChip(
-                    modifier = Modifier.weight(1f),
-                    icon = Icons.Default.LightMode,
-                    title = if (isBengali) "লাইট" else "Light",
-                    isSelected = currentMode == AppThemeMode.LIGHT,
-                    onClick = { onModeSelected(AppThemeMode.LIGHT) }
-                )
-
-                ThemeOptionChip(
-                    modifier = Modifier.weight(1f),
-                    icon = Icons.Default.DarkMode,
-                    title = if (isBengali) "ডার্ক" else "Dark",
-                    isSelected = currentMode == AppThemeMode.DARK,
-                    onClick = { onModeSelected(AppThemeMode.DARK) }
-                )
-
-                ThemeOptionChip(
-                    modifier = Modifier.weight(1f),
-                    icon = Icons.Default.PhoneAndroid,
-                    title = if (isBengali) "সিস্টেম" else "System",
-                    isSelected = currentMode == AppThemeMode.SYSTEM,
-                    onClick = { onModeSelected(AppThemeMode.SYSTEM) }
-                )
-            }
-        }
-    }
-}
-
-@Composable
-fun ThemeOptionChip(
-    modifier: Modifier = Modifier,
-    icon: ImageVector,
-    title: String,
-    isSelected: Boolean,
-    onClick: () -> Unit
-) {
-    val backgroundColor by animateColorAsState(
-        targetValue = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant,
-        label = "chipBgColor"
-    )
-
-    val contentColor by animateColorAsState(
-        targetValue = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-        label = "chipContentColor"
-    )
-
-    val borderColor by animateColorAsState(
-        targetValue = if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent,
-        label = "chipBorderColor"
-    )
-
-    Column(
-        modifier = modifier
-            .clip(RoundedCornerShape(12.dp))
-            .background(backgroundColor)
-            .border(width = 1.5.dp, color = borderColor, shape = RoundedCornerShape(12.dp))
-            .clickable(onClick = onClick)
-            .padding(vertical = 12.dp, horizontal = 8.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Box(contentAlignment = Alignment.TopEnd) {
-            Icon(
-                imageVector = icon,
-                contentDescription = title,
-                tint = contentColor,
-                modifier = Modifier.size(24.dp)
-            )
-            if (isSelected) {
-                Icon(
-                    imageVector = Icons.Default.Check,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier
-                        .size(12.dp)
-                        .offset(x = 6.dp, y = (-4).dp)
-                )
-            }
-        }
-        Spacer(modifier = Modifier.height(6.dp))
-        Text(
-            text = title,
-            fontSize = 13.sp,
-            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-            color = contentColor
-        )
-    }
-}

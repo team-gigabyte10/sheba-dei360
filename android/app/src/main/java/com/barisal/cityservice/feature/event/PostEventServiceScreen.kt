@@ -36,6 +36,7 @@ import com.barisal.cityservice.core.utils.bangladeshZillas
 import com.barisal.cityservice.core.utils.rememberLocationPermissionState
 import com.barisal.cityservice.data.model.EventProviderDto
 import com.barisal.cityservice.data.repository.EventRepository
+import com.barisal.cityservice.ui.components.CustomDialog
 import com.barisal.cityservice.ui.components.GlobalAppBar
 import com.barisal.cityservice.ui.components.LocationPickerMapScreen
 import com.barisal.cityservice.ui.components.SetStatusBarColor
@@ -143,6 +144,7 @@ fun PostEventServiceScreen(
     var details by remember { mutableStateOf("") }
 
     var isSubmitting by remember { mutableStateOf(false) }
+    var showSuccessDialog by remember { mutableStateOf(false) }
     var showLocationPickerMap by remember { mutableStateOf(false) }
 
     if (showLocationPickerMap) {
@@ -958,8 +960,7 @@ fun PostEventServiceScreen(
                             val res = repository.saveEventService(providerDto)
                             isSubmitting = false
                             if (res.isSuccess) {
-                                Toast.makeText(context, "আপনার ইভেন্ট সার্ভিস সফলভাবে সাবমিট হয়েছে! এডমিন অনুমোদনের পর প্রকাশিত হবে।", Toast.LENGTH_LONG).show()
-                                onBack()
+                                showSuccessDialog = true
                             } else {
                                 Toast.makeText(context, "পোস্ট করতে সমস্যা হয়েছে: ${res.exceptionOrNull()?.message}", Toast.LENGTH_LONG).show()
                             }
@@ -980,6 +981,33 @@ fun PostEventServiceScreen(
                         Text(if (isBengali) "সার্ভিস পোস্ট করুন" else "Post Event Service", fontSize = 16.sp, fontWeight = FontWeight.Bold)
                     }
                 }
+            }
+        }
+
+        if (showSuccessDialog) {
+            CustomDialog(
+                onDismissRequest = {
+                    showSuccessDialog = false
+                    onBack()
+                },
+                title = if (isBengali) "পোস্ট সফলভাবে জমা হয়েছে!" else "Post Submitted Successfully!",
+                icon = Icons.Default.Check,
+                iconTint = Color(0xFF16A34A),
+                iconBackgroundColor = Color(0xFFDCFCE7),
+                confirmButtonText = if (isBengali) "ঠিক আছে" else "OK",
+                onConfirm = {
+                    showSuccessDialog = false
+                    onBack()
+                }
+            ) {
+                Text(
+                    text = if (isBengali)
+                        "আপনার ইভেন্ট সেবার পোস্টটি সফলভাবে অ্যাডমিন প্যানেলে জমা হয়েছে। পর্যালোচনার পর পোস্টটি প্রকাশিত হবে।"
+                    else
+                        "Your event service post has been submitted for admin review. It will be published once approved.",
+                    fontSize = 14.sp,
+                    color = Color.DarkGray
+                )
             }
         }
     }

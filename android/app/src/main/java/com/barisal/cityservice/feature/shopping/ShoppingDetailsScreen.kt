@@ -545,7 +545,7 @@ fun ShoppingDetailsScreen(
                                     ) {
                                         Text(
                                             text = relatedItem.condition,
-                                            fontSize = 10.sp,
+                                            fontSize = 12.sp,
                                             color = Color.White,
                                             fontWeight = FontWeight.Bold
                                         )
@@ -577,7 +577,7 @@ fun ShoppingDetailsScreen(
                                     Spacer(modifier = Modifier.width(2.dp))
                                     Text(
                                         text = relatedItem.address,
-                                        fontSize = 11.sp,
+                                        fontSize = 13.sp,
                                         color = Color.Gray,
                                         maxLines = 1,
                                         overflow = TextOverflow.Ellipsis
@@ -668,14 +668,14 @@ fun BuyNowModalDialog(
                     singleLine = true
                 )
 
-                Text("পেমেন্ট পদ্ধতি নির্বাচন করুন:", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                Text("পেমেন্ট পদ্ধতি নির্বাচন করুন:", fontWeight = FontWeight.Bold, fontSize = 15.sp)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     listOf("COD" to "ক্যাশ অন ডেলিভারি", "bKash" to "বিকাশ", "Nagad" to "নগদ").forEach { (key, label) ->
                         val isSelected = paymentMethod == key
                         FilterChip(
                             selected = isSelected,
                             onClick = { paymentMethod = key },
-                            label = { Text(label, fontSize = 11.sp) },
+                            label = { Text(label, fontSize = 13.sp) },
                             colors = FilterChipDefaults.filterChipColors(
                                 selectedContainerColor = Color(0xFFE65100),
                                 selectedLabelColor = Color.White
@@ -737,7 +737,7 @@ fun SellerChatDialog(
                     Text(
                         text = "পণ্য: ${product.productName} (${product.price})",
                         modifier = Modifier.padding(10.dp),
-                        fontSize = 12.sp,
+                        fontSize = 14.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFFE65100)
                     )

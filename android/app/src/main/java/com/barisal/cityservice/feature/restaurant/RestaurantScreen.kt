@@ -1,80 +1,105 @@
 package com.barisal.cityservice.feature.restaurant
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.barisal.cityservice.R
+import coil.compose.AsyncImage
 import com.barisal.cityservice.core.language.LocalAppLanguage
+import com.barisal.cityservice.data.model.RestaurantDto
+import com.barisal.cityservice.data.repository.RestaurantRepository
+import com.barisal.cityservice.ui.components.CustomDialog
 import com.barisal.cityservice.ui.components.GlobalAppBar
 import com.barisal.cityservice.ui.components.SetStatusBarColor
 
-data class RestaurantInfo(
-    val name: String,
-    val type: String,
-    val address: String,
-    val rating: String,
-    val reviews: String,
-    val deliveryAvailable: Boolean,
-    val contact: String
-)
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RestaurantScreen(onNavigateBack: () -> Unit) {
+fun RestaurantScreen(
+    onNavigateBack: () -> Unit,
+    onNavigateToPostRestaurant: () -> Unit = {},
+    onNavigateToRestaurantDetail: (String) -> Unit = {}
+) {
     val languageState = LocalAppLanguage.current
     val isBengali = languageState.isBengali
     val context = LocalContext.current
+    val repository = remember { RestaurantRepository() }
+    val firestoreRestaurants by repository.getRestaurantsFlow().collectAsState(initial = emptyList())
 
     SetStatusBarColor()
 
     var searchQuery by remember { mutableStateOf("") }
-    
+    var selectedSubCategory by remember { mutableStateOf(if (isBengali) "সব" else "All") }
     var showZillaFilterDialog by remember { mutableStateOf(false) }
     var selectedZilla by remember { mutableStateOf<String?>(null) }
     
     val primaryColor = Color(0xFFC2410C) // Orange/Red theme for food
 
+    val subCategories = listOf(
+        if (isBengali) "সব" else "All",
+        if (isBengali) "বাংলা খাবার/বিরিয়ানি" else "Bengali Food/Biriyani",
+        if (isBengali) "ফাস্ট ফুড ও ক্যাফে" else "Fast Food & Cafe",
+        if (isBengali) "চাইনিজ ও থাই" else "Chinese & Thai",
+        if (isBengali) "বেকারি ও মিষ্টি" else "Bakery & Sweets"
+    )
+
     val dummyRestaurants = listOf(
-        RestaurantInfo(
+        RestaurantDto(
+            id = "preset_1",
             name = if (isBengali) "হাজী বিরিয়ানি" else "Haji Biriyani",
-            type = if (isBengali) "বাংলা খাবার, বিরিয়ানি" else "Bengali Food, Biriyani",
-            address = if (isBengali) "নাজিরা বাজার, ঢাকা" else "Nazira Bazar, Dhaka",
+            cuisineType = if (isBengali) "বাংলা খাবার, বিরিয়ানি" else "Bengali Food, Biriyani",
+            address = if (isBengali) "সদর রোড, বরিশাল" else "Sadar Road, Barisal",
             rating = "4.7",
-            reviews = "(1.2k)",
+            reviewsCount = "(1.2k)",
             deliveryAvailable = true,
             contact = "01711-333333"
         ),
-        RestaurantInfo(
+        RestaurantDto(
+            id = "preset_2",
             name = if (isBengali) "কাশ্মীরি কিচেন" else "Kashmiri Kitchen",
-            type = if (isBengali) "ইন্ডিয়ান, চাইনিজ" else "Indian, Chinese",
-            address = if (isBengali) "ধানমন্ডি ২৭, ঢাকা" else "Dhanmondi 27, Dhaka",
+            cuisineType = if (isBengali) "ইন্ডিয়ান, চাইনিজ" else "Indian, Chinese",
+            address = if (isBengali) "বান্দ রোড, বরিশাল" else "Band Road, Barisal",
             rating = "4.4",
-            reviews = "(850)",
+            reviewsCount = "(850)",
             deliveryAvailable = false,
             contact = "01712-444444"
         )
     )
 
+    val combinedRestaurants = remember(firestoreRestaurants, searchQuery, selectedSubCategory, selectedZilla) {
+        val approvedFirestore = firestoreRestaurants.filter { it.isApproved }
+        val list = if (approvedFirestore.isNotEmpty()) approvedFirestore + dummyRestaurants else dummyRestaurants
+        list.filter { restaurant ->
+            val matchesSearch = searchQuery.isBlank() ||
+                    restaurant.name.contains(searchQuery, ignoreCase = true) ||
+                    restaurant.address.contains(searchQuery, ignoreCase = true) ||
+                    restaurant.cuisineType.contains(searchQuery, ignoreCase = true)
+            val matchesCategory = selectedSubCategory == "সব" || selectedSubCategory == "All" ||
+                    restaurant.cuisineType.contains(selectedSubCategory, ignoreCase = true) ||
+                    selectedSubCategory.contains(restaurant.cuisineType, ignoreCase = true)
+            val matchesZilla = selectedZilla == null || restaurant.zilla.contains(selectedZilla!!, ignoreCase = true) || restaurant.address.contains(selectedZilla!!, ignoreCase = true)
+
+            matchesSearch && matchesCategory && matchesZilla
+        }
+    }
+
     Scaffold(
+        modifier = Modifier.fillMaxSize(),
         topBar = {
             GlobalAppBar(
                 title = if (isBengali) "রেস্টুরেন্ট" else "Restaurant",
@@ -85,10 +110,27 @@ fun RestaurantScreen(onNavigateBack: () -> Unit) {
                     }
                 }
             )
+        },
+        floatingActionButton = {
+            ExtendedFloatingActionButton(
+                onClick = onNavigateToPostRestaurant,
+                containerColor = primaryColor,
+                contentColor = Color.White,
+                shape = RoundedCornerShape(24.dp),
+                elevation = FloatingActionButtonDefaults.elevation(6.dp)
+            ) {
+                Icon(Icons.Default.Add, contentDescription = "Post Restaurant")
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = if (isBengali) "রেস্টুরেন্ট পোস্ট করুন" else "Post Restaurant",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 14.sp
+                )
+            }
         }
     ) { innerPadding ->
         if (showZillaFilterDialog) {
-            com.barisal.cityservice.ui.components.CustomDialog(
+            CustomDialog(
                 onDismissRequest = { showZillaFilterDialog = false },
                 title = if (isBengali) "জেলা নির্বাচন করুন" else "Select Zilla",
                 confirmButtonText = if (isBengali) "বন্ধ করুন" else "Close",
@@ -130,14 +172,14 @@ fun RestaurantScreen(onNavigateBack: () -> Unit) {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .background(Color(0xFFF3F4F6)) // Light gray background
+                .background(Color(0xFFF8FAFC))
         ) {
             // Search Bar Area
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(Color(0xFFF8FAFC))
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 OutlinedTextField(
@@ -145,7 +187,7 @@ fun RestaurantScreen(onNavigateBack: () -> Unit) {
                     onValueChange = { searchQuery = it },
                     placeholder = { 
                         Text(
-                            text = if (isBengali) "রেস্টুরেন্ট খুঁজুন" else "Search Restaurant",
+                            text = if (isBengali) "রেস্টুরেন্ট খুঁজুন..." else "Search Restaurant...",
                             color = Color.Gray,
                             fontSize = 14.sp
                         )
@@ -166,134 +208,109 @@ fun RestaurantScreen(onNavigateBack: () -> Unit) {
                     singleLine = true
                 )
             }
-            
+
+            // Sub-Category Filter Chips Row
+            LazyRow(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 4.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                items(subCategories) { cat ->
+                    val isSelected = selectedSubCategory == cat
+                    FilterChip(
+                        selected = isSelected,
+                        onClick = { selectedSubCategory = cat },
+                        label = { Text(cat, fontSize = 13.sp, fontWeight = FontWeight.Medium) },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = primaryColor,
+                            selectedLabelColor = Color.White
+                        )
+                    )
+                }
+            }
+
+            // Restaurant Items List Shown Initially
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(horizontal = 16.dp),
-                contentPadding = PaddingValues(bottom = 80.dp, top = 8.dp),
+                contentPadding = PaddingValues(bottom = 88.dp, top = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                items(dummyRestaurants) { restaurant ->
-                    RestaurantCard(restaurant = restaurant, primaryColor = primaryColor, isBengali = isBengali)
+                items(combinedRestaurants) { restaurant ->
+                    RestaurantCardDto(
+                        restaurant = restaurant,
+                        primaryColor = primaryColor,
+                        isBengali = isBengali,
+                        onClick = { onNavigateToRestaurantDetail(restaurant.id) }
+                    )
                 }
             }
         }
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RestaurantCard(restaurant: RestaurantInfo, primaryColor: Color, isBengali: Boolean) {
+fun RestaurantCardDto(
+    restaurant: RestaurantDto,
+    primaryColor: Color,
+    isBengali: Boolean,
+    onClick: () -> Unit = {}
+) {
     Card(
+        onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
-        Column(
-            modifier = Modifier.padding(16.dp)
-        ) {
-            // Header
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                // Image Placeholder
-                Box(
-                    modifier = Modifier
-                        .size(60.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(Color.LightGray)
-                ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.logo),
-                        contentDescription = "Restaurant Image",
-                        modifier = Modifier.fillMaxSize()
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+                if (restaurant.coverImage.isNotBlank()) {
+                    AsyncImage(
+                        model = restaurant.coverImage,
+                        contentDescription = restaurant.name,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .size(70.dp)
+                            .clip(RoundedCornerShape(8.dp))
                     )
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .size(70.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(primaryColor.copy(alpha = 0.1f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(Icons.Default.Restaurant, contentDescription = null, tint = primaryColor, modifier = Modifier.size(36.dp))
+                    }
                 }
                 Spacer(modifier = Modifier.width(12.dp))
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = restaurant.name,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF1E293B)
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = restaurant.type,
-                        fontSize = 14.sp,
-                        color = Color(0xFF64748B)
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(text = restaurant.name, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1E293B))
+                    Text(text = restaurant.cuisineType, fontSize = 13.sp, color = primaryColor, fontWeight = FontWeight.Medium)
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.Star, contentDescription = "Rating", tint = Color(0xFFF59E0B), modifier = Modifier.size(16.dp))
+                        Icon(Icons.Default.LocationOn, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(14.dp))
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = "${restaurant.rating} ${restaurant.reviews}",
-                            fontSize = 13.sp,
-                            color = Color(0xFF64748B)
-                        )
+                        Text(text = restaurant.address, fontSize = 13.sp, color = Color.Gray)
                     }
                 }
             }
-
-            Spacer(modifier = Modifier.height(16.dp))
-            HorizontalDivider(color = Color(0xFFE2E8F0))
             Spacer(modifier = Modifier.height(12.dp))
-
-            // Details
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Default.LocationOn, contentDescription = "Location", tint = Color.Gray, modifier = Modifier.size(16.dp))
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = restaurant.address,
-                    fontSize = 14.sp,
-                    color = Color.DarkGray
-                )
-            }
-            Spacer(modifier = Modifier.height(8.dp))
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Default.DeliveryDining, contentDescription = "Delivery", tint = Color.Gray, modifier = Modifier.size(16.dp))
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = if (restaurant.deliveryAvailable) (if (isBengali) "হোম ডেলিভারি উপলব্ধ" else "Home Delivery Available") else (if (isBengali) "হোম ডেলিভারি নেই" else "No Home Delivery"),
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = if (restaurant.deliveryAvailable) primaryColor else Color.Gray
-                )
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Action Buttons
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Button(
-                    onClick = { /* Handle call */ },
-                    modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.buttonColors(containerColor = primaryColor),
-                    shape = RoundedCornerShape(8.dp),
-                    contentPadding = PaddingValues(vertical = 12.dp)
-                ) {
-                    Icon(Icons.Default.Call, contentDescription = "Call", modifier = Modifier.size(18.dp))
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(if (isBengali) "কল করুন" else "Call", fontSize = 14.sp)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.Star, contentDescription = null, tint = Color(0xFFF59E0B), modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(text = "${restaurant.rating} ${restaurant.reviewsCount}", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1E293B))
                 }
-                
-                Button(
-                    onClick = { /* Handle Maps */ },
-                    modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF475569)),
-                    shape = RoundedCornerShape(8.dp),
-                    contentPadding = PaddingValues(vertical = 12.dp)
-                ) {
-                    Icon(Icons.Default.Map, contentDescription = "Map", modifier = Modifier.size(18.dp))
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(if (isBengali) "ম্যাপ" else "Map", fontSize = 14.sp)
-                }
+                Text(text = if (isBengali) "খাবারের মেনু বিবরণ ➔" else "View Menu ➔", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = primaryColor)
             }
         }
     }

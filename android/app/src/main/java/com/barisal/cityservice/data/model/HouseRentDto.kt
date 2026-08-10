@@ -14,7 +14,7 @@ data class FlatDetailsDto(
 data class HouseRentDto(
     val id: String = "",
     val title: String = "",
-    val houseType: String = "", // e.g. "ফ্ল্যাট ভাড়া", "ব্যাচেলর রুম/সিট", "সাবলেট", "হোস্টেল", "অফিস স্পেস", "দোকান", "গ্যারেজ"
+    val houseType: String = "", // e.g. "ফ্ল্যাট ভাড়া", "ব্যাচেলর রুম/সিট", "মেয়েদের মেস", "সাবলেট", "হোস্টেল", "অফিস স্পেস", "দোকান", "গ্যারেজ"
     val rentAmount: String = "",
     val address: String = "",
     val zilla: String = "",

@@ -42,6 +42,7 @@ fun HealthServicesScreen(
     onNavigateToDoctor: () -> Unit,
     onNavigateToHospital: () -> Unit,
     onNavigateToBloodDonor: () -> Unit,
+    onNavigateToHomeCare: () -> Unit = {},
     onNavigateToCategoryMap: (String) -> Unit,
     onNavigateToPostHealthService: (String) -> Unit = {}
 ) {
@@ -51,13 +52,13 @@ fun HealthServicesScreen(
     SetStatusBarColor()
 
     val healthSubCategories = listOf(
+        HealthCategoryItem("home_care", "হোম কেয়ার", "Home Care", Icons.Default.HomeWork, Color(0xFFF59E0B)),
+        HealthCategoryItem("blood", "ব্লাড ডোনার", "Blood Donor", Icons.Default.Bloodtype, Color(0xFFDC2626)),
         HealthCategoryItem("doctor", "ডাক্তার", "Doctor", Icons.Default.MedicalServices, Color(0xFF10B981)),
         HealthCategoryItem("hospital", "হাসপাতাল", "Hospital", Icons.Default.LocalHospital, Color(0xFFEC4899)),
         HealthCategoryItem("diagnostic", "ডায়াগনস্টিক সেন্টার", "Diagnostic Center", Icons.Default.Biotech, Color(0xFF8B5CF6)),
         HealthCategoryItem("ambulance", "অ্যাম্বুলেন্স", "Ambulance", Icons.Default.AirportShuttle, Color(0xFFEF4444)),
-        HealthCategoryItem("pharmacy", "ফার্মেসি", "Pharmacy", Icons.Default.Medication, Color(0xFF3B82F6)),
-        HealthCategoryItem("blood", "ব্লাড ডোনার", "Blood Donor", Icons.Default.Bloodtype, Color(0xFFDC2626)),
-        HealthCategoryItem("home_care", "হোম কেয়ার", "Home Care", Icons.Default.HomeWork, Color(0xFFF59E0B))
+        HealthCategoryItem("pharmacy", "ফার্মেসি", "Pharmacy", Icons.Default.Medication, Color(0xFF3B82F6))
     )
 
     Scaffold(
@@ -164,6 +165,7 @@ fun HealthServicesScreen(
                                     "doctor" -> onNavigateToDoctor()
                                     "hospital" -> onNavigateToHospital()
                                     "blood" -> onNavigateToBloodDonor()
+                                    "home_care" -> onNavigateToHomeCare()
                                     else -> onNavigateToCategoryMap(cat.id)
                                 }
                             },
@@ -204,7 +206,7 @@ fun HealthServicesScreen(
                                 textAlign = TextAlign.Center
                             )
 
-                            if (cat.id != "doctor" && cat.id != "blood" && cat.id != "hospital") {
+                            if (cat.id != "home_care" && cat.id != "doctor" && cat.id != "blood" && cat.id != "hospital") {
                                 Spacer(modifier = Modifier.height(8.dp))
                                 Surface(
                                     onClick = { onNavigateToPostHealthService(cat.id) },

@@ -44,7 +44,7 @@ class MainActivity : ComponentActivity() {
                 LocalAppLanguage provides languageState,
                 LocalAppTheme provides themeState
             ) {
-                Sheba_deiTheme(darkTheme = themeState.isDarkMode) {
+                Sheba_deiTheme {
                     Surface(
                         modifier = Modifier.fillMaxSize(),
                         color = MaterialTheme.colorScheme.background

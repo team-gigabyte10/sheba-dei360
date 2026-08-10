@@ -35,6 +35,7 @@ import coil.compose.AsyncImage
 import com.barisal.cityservice.core.language.LocalAppLanguage
 import com.barisal.cityservice.data.model.TutorDto
 import com.barisal.cityservice.data.repository.TutorRepository
+import com.barisal.cityservice.ui.components.CustomDialog
 import com.barisal.cityservice.ui.components.GlobalAppBar
 import com.barisal.cityservice.ui.components.LocationPickerMapScreen
 import kotlinx.coroutines.launch
@@ -55,6 +56,8 @@ fun CreateTutorPostScreen(
     val tutorRepo = remember { TutorRepository() }
 
     var isSubmitting by remember { mutableStateOf(false) }
+    var showSuccessDialog by remember { mutableStateOf(false) }
+    var createdPostTemp by remember { mutableStateOf<TutorProfile?>(null) }
 
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
     val imagePickerLauncher = rememberLauncherForActivityResult(
@@ -76,7 +79,9 @@ fun CreateTutorPostScreen(
             "বাংলা",
             "হিসাববিজ্ঞান",
             "ফিন্যান্স ও ব্যাংকিং",
-            "অর্থনীতি"
+            "অর্থনীতি",
+            "নৃত্য শিক্ষক",
+            "সঙ্গীত শিক্ষক"
         )
     }
 
@@ -109,14 +114,14 @@ fun CreateTutorPostScreen(
     }
 
     Scaffold(
+        modifier = Modifier.fillMaxSize().imePadding(),
         topBar = {
             GlobalAppBar(
                 title = if (isBengali) "নতুন পোস্ট তৈরি করুন" else "Create New Post",
                 onBackClick = onBack
             )
         },
-        containerColor = Color(0xFFF8FAFC),
-        contentWindowInsets = WindowInsets.ime
+        containerColor = Color(0xFFF8FAFC)
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -154,7 +159,7 @@ fun CreateTutorPostScreen(
                             Text(
                                 text = if (isBengali) "সঠিক ও নির্ভুল তথ্য প্রদান করে ফর্মটি পূরণ করুন" else "Fill in the form with accurate details",
                                 color = Color(0xFFCCFBF1),
-                                fontSize = 12.sp
+                                fontSize = 14.sp
                             )
                         }
                     }
@@ -172,7 +177,7 @@ fun CreateTutorPostScreen(
                         modifier = Modifier.weight(1f),
                         label = {
                             Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                                Text(if (isBengali) "👨‍🏫 পড়াতে চাই (Tutor)" else "👨‍🏫 Tutor Available", fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                                Text(if (isBengali) "👨‍🏫 পড়াতে চাই (Tutor)" else "👨‍🏫 Tutor Available", fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
                             }
                         },
                         colors = FilterChipDefaults.filterChipColors(
@@ -186,7 +191,7 @@ fun CreateTutorPostScreen(
                         modifier = Modifier.weight(1f),
                         label = {
                             Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                                Text(if (isBengali) "🎓 শিক্ষক চাই (Student)" else "🎓 Tuition Wanted", fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                                Text(if (isBengali) "🎓 শিক্ষক চাই (Student)" else "🎓 Tuition Wanted", fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
                             }
                         },
                         colors = FilterChipDefaults.filterChipColors(
@@ -237,7 +242,7 @@ fun CreateTutorPostScreen(
                                     Spacer(modifier = Modifier.height(2.dp))
                                     Text(
                                         text = if (isBengali) "ছবি যোগ করুন" else "Add Photo",
-                                        fontSize = 11.sp,
+                                        fontSize = 13.sp,
                                         color = Color(0xFF0F766E),
                                         fontWeight = FontWeight.Medium
                                     )
@@ -263,7 +268,7 @@ fun CreateTutorPostScreen(
                     value = bio,
                     onValueChange = { bio = it },
                     label = { Text(if (isBengali) "যোগ্যতা / সংক্ষিপ্ত বিবরণ *" else "Qualification / Details *", fontSize = 14.sp) },
-                    placeholder = { Text(if (isBengali) "যেমন: ঢাকা বিশ্ববিদ্যালয় পদার্থবিজ্ঞান ২য় বর্ষ..." else "e.g., DU Physics 2nd year student...", fontSize = 13.sp) },
+                    placeholder = { Text(if (isBengali) "যেমন: ঢাকা বিশ্ববিদ্যালয় পদার্থবিজ্ঞান ২য় বর্ষ..." else "e.g., DU Physics 2nd year student...", fontSize = 15.sp) },
                     textStyle = androidx.compose.ui.text.TextStyle(fontSize = 15.sp),
                     modifier = Modifier.fillMaxWidth(),
                     minLines = 3,
@@ -271,17 +276,23 @@ fun CreateTutorPostScreen(
                     colors = OutlinedTextFieldDefaults.colors(focusedContainerColor = Color.White, unfocusedContainerColor = Color.White)
                 )
 
-                // Class Range Selector
-                Text(if (isBengali) "শ্রেণী (Class Range) *" else "Class Range *", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.DarkGray)
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                // Class / Sub-Category Selector
+                Text(if (isBengali) "শ্রেণী / ক্যাটাগরি (Class / Category) *" else "Class / Category *", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.DarkGray)
+                @OptIn(ExperimentalLayoutApi::class)
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp),
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    listOf("১ম–৫ম", "৬ষ্ঠ–৮ম", "৯ম–১০ম", "এইচএসসি", "আরবি/কুরআন").forEach { cls ->
+                    listOf("১ম–৫ম", "৬ষ্ঠ–৮ম", "৯ম–১০ম", "এইচএসসি", "আরবি/কুরআন", "নৃত্য শিক্ষক", "সঙ্গীত শিক্ষক").forEach { cls ->
                         FilterChip(
                             selected = classRange == cls,
                             onClick = { classRange = cls },
-                            label = { Text(cls, fontSize = 12.sp, fontWeight = FontWeight.Medium) }
+                            label = { Text(cls, fontSize = 14.sp, fontWeight = FontWeight.Medium) },
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = Color(0xFF0F766E),
+                                selectedLabelColor = Color.White
+                            )
                         )
                     }
                 }
@@ -290,7 +301,7 @@ fun CreateTutorPostScreen(
                 if (classRange == "৯ম–১০ম" || classRange == "এইচএসসি") {
                     Text(
                         text = if (isBengali) "৯ম-১২দশ শ্রেণীর বিষয়সমূহ নির্বাচন করুন (Subject Checkboxes) *" else "Select Subjects for Class 9+ *",
-                        fontSize = 13.sp,
+                        fontSize = 15.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF0F766E)
                     )
@@ -311,7 +322,7 @@ fun CreateTutorPostScreen(
                                         selectedSubjectCheckboxes.add(sub)
                                     }
                                 },
-                                label = { Text(sub, fontSize = 12.sp, fontWeight = FontWeight.Medium) },
+                                label = { Text(sub, fontSize = 14.sp, fontWeight = FontWeight.Medium) },
                                 leadingIcon = if (isSelected) {
                                     { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(14.dp)) }
                                 } else null,
@@ -338,7 +349,7 @@ fun CreateTutorPostScreen(
                             fontSize = 14.sp
                         )
                     },
-                    placeholder = { Text(if (isBengali) "যেমন: গণিত, ইংরেজি, পদার্থবিজ্ঞান..." else "e.g., Math, Physics, English...", fontSize = 13.sp) },
+                    placeholder = { Text(if (isBengali) "যেমন: গণিত, ইংরেজি, পদার্থবিজ্ঞান..." else "e.g., Math, Physics, English...", fontSize = 15.sp) },
                     textStyle = androidx.compose.ui.text.TextStyle(fontSize = 15.sp),
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
@@ -353,7 +364,7 @@ fun CreateTutorPostScreen(
                     OutlinedTextField(
                         value = daysPerWeek,
                         onValueChange = { daysPerWeek = it },
-                        label = { Text(if (isBengali) "দিন / সপ্তাহে" else "Days / Week", fontSize = 13.sp) },
+                        label = { Text(if (isBengali) "দিন / সপ্তাহে" else "Days / Week", fontSize = 14.sp) },
                         textStyle = androidx.compose.ui.text.TextStyle(fontSize = 15.sp),
                         modifier = Modifier.weight(1f),
                         singleLine = true,
@@ -362,8 +373,8 @@ fun CreateTutorPostScreen(
                     OutlinedTextField(
                         value = salary,
                         onValueChange = { salary = it },
-                        label = { Text(if (isBengali) "বেতন *" else "Salary *", fontSize = 13.sp) },
-                        placeholder = { Text("৳৪,০০০", fontSize = 13.sp) },
+                        label = { Text(if (isBengali) "বেতন *" else "Salary *", fontSize = 14.sp) },
+                        placeholder = { Text("৳৪,০০০", fontSize = 15.sp) },
                         textStyle = androidx.compose.ui.text.TextStyle(fontSize = 15.sp),
                         modifier = Modifier.weight(1f),
                         singleLine = true,
@@ -379,7 +390,7 @@ fun CreateTutorPostScreen(
                     OutlinedTextField(
                         value = address,
                         onValueChange = { address = it },
-                        label = { Text(if (isBengali) "বর্তমান ঠিকানা *" else "Address *", fontSize = 13.sp) },
+                        label = { Text(if (isBengali) "বর্তমান ঠিকানা *" else "Address *", fontSize = 14.sp) },
                         textStyle = androidx.compose.ui.text.TextStyle(fontSize = 15.sp),
                         modifier = Modifier.weight(1f),
                         singleLine = true,
@@ -388,7 +399,7 @@ fun CreateTutorPostScreen(
                     OutlinedTextField(
                         value = thana,
                         onValueChange = { thana = it },
-                        label = { Text(if (isBengali) "থানা / উপজেলা *" else "Thana *", fontSize = 13.sp) },
+                        label = { Text(if (isBengali) "থানা / উপজেলা *" else "Thana *", fontSize = 14.sp) },
                         textStyle = androidx.compose.ui.text.TextStyle(fontSize = 15.sp),
                         modifier = Modifier.weight(1f),
                         singleLine = true,
@@ -439,7 +450,7 @@ fun CreateTutorPostScreen(
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
                                 text = String.format("লোকেশন সেট করা হয়েছে: %.5f, %.5f", selectedLat, selectedLng),
-                                fontSize = 12.sp,
+                                fontSize = 14.sp,
                                 fontWeight = FontWeight.SemiBold,
                                 color = Color(0xFF15803D)
                             )
@@ -541,13 +552,8 @@ fun CreateTutorPostScreen(
                                     val result = tutorRepo.saveTutorPostToFirestore(dto)
                                     isSubmitting = false
                                     if (result.isSuccess) {
-                                        onPostCreated(newPost)
-                                        Toast.makeText(
-                                            context,
-                                            if (isBengali) "পোস্ট জমা দেওয়া হয়েছে! এডমিন অনুমোদনের পর পোস্টটি প্রকাশিত হবে।" else "Post submitted! It will be published after admin approval.",
-                                            Toast.LENGTH_LONG
-                                        ).show()
-                                        onBack()
+                                        createdPostTemp = newPost
+                                        showSuccessDialog = true
                                     } else {
                                         Toast.makeText(
                                             context,
@@ -577,6 +583,35 @@ fun CreateTutorPostScreen(
                         }
                     }
                 }
+            }
+        }
+
+        if (showSuccessDialog) {
+            CustomDialog(
+                onDismissRequest = {
+                    showSuccessDialog = false
+                    createdPostTemp?.let { onPostCreated(it) }
+                    onBack()
+                },
+                title = if (isBengali) "পোস্ট সফলভাবে জমা হয়েছে!" else "Post Submitted Successfully!",
+                icon = Icons.Default.Check,
+                iconTint = Color(0xFF16A34A),
+                iconBackgroundColor = Color(0xFFDCFCE7),
+                confirmButtonText = if (isBengali) "ঠিক আছে" else "OK",
+                onConfirm = {
+                    showSuccessDialog = false
+                    createdPostTemp?.let { onPostCreated(it) }
+                    onBack()
+                }
+            ) {
+                Text(
+                    text = if (isBengali)
+                        "আপনার টিউশন পোস্টটি সফলভাবে অ্যাডমিন প্যানেলে জমা হয়েছে। পর্যালোচনার পর পোস্টটি প্রকাশিত হবে।"
+                    else
+                        "Your tutor post has been submitted for admin review. It will be published once approved.",
+                    fontSize = 14.sp,
+                    color = Color.DarkGray
+                )
             }
         }
     }

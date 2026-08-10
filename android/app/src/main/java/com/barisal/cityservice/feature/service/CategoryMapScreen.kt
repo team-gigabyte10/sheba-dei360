@@ -231,7 +231,7 @@ fun CategoryMapScreen(
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
                                 text = if (isBengali) "${sortedItems.size}টি নিকটস্থ স্থান পাওয়া গেছে" else "${sortedItems.size} nearest locations found",
-                                fontSize = 13.sp,
+                                fontSize = 15.sp,
                                 fontWeight = FontWeight.SemiBold,
                                 color = Color(0xFF1E293B)
                             )
@@ -255,7 +255,7 @@ fun CategoryMapScreen(
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(
                                 text = if (isMapView) (if (isBengali) "তালিকা" else "List") else (if (isBengali) "ম্যাপ" else "Map"),
-                                fontSize = 12.sp,
+                                fontSize = 14.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Color(0xFF1E3A8A)
                             )
@@ -426,7 +426,7 @@ fun NearestItemCard(
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
                             text = if (isBengali) item.addressBan else item.addressEng,
-                            fontSize = 13.sp,
+                            fontSize = 15.sp,
                             color = Color(0xFF64748B),
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
@@ -443,7 +443,7 @@ fun NearestItemCard(
                 ) {
                     Text(
                         text = if (isBengali) "%.1f কি.মি.".format(distanceKm) else "%.1f km".format(distanceKm),
-                        fontSize = 12.sp,
+                        fontSize = 14.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF2563EB)
                     )
@@ -461,8 +461,8 @@ fun NearestItemCard(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Default.Star, contentDescription = null, tint = Color(0xFFFFC107), modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text(text = "${item.rating}", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = Color.Black)
-                    Text(text = " (${item.reviews})", fontSize = 12.sp, color = Color.Gray)
+                    Text(text = "${item.rating}", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                    Text(text = " (${item.reviews})", fontSize = 14.sp, color = Color.Gray)
                 }
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -470,7 +470,7 @@ fun NearestItemCard(
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
                         text = if (isBengali) item.openHoursBan else item.openHoursEng,
-                        fontSize = 12.sp,
+                        fontSize = 14.sp,
                         color = Color(0xFF10B981),
                         fontWeight = FontWeight.Medium
                     )
@@ -495,7 +495,7 @@ fun NearestItemCard(
                 ) {
                     Icon(Icons.Default.Call, contentDescription = null, tint = Color(0xFF1E3A8A), modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(6.dp))
-                    Text(if (isBengali) "কল করুন" else "Call", color = Color(0xFF1E3A8A), fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                    Text(if (isBengali) "কল করুন" else "Call", color = Color(0xFF1E3A8A), fontWeight = FontWeight.Bold, fontSize = 15.sp)
                 }
 
                 Button(
@@ -507,7 +507,7 @@ fun NearestItemCard(
                 ) {
                     Icon(Icons.Default.Directions, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(6.dp))
-                    Text(if (isBengali) "দিকনির্দেশনা" else "Directions", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                    Text(if (isBengali) "দিকনির্দেশনা" else "Directions", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 15.sp)
                 }
             }
         }

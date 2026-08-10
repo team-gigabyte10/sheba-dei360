@@ -86,7 +86,9 @@ fun TutorScreen(
         "আইসিটি",
         "ইংরেজি",
         "হিসাববিজ্ঞান",
-        "আরবি/কুরআন"
+        "আরবি/কুরআন",
+        "নৃত্য শিক্ষক",
+        "সঙ্গীত শিক্ষক"
     )
 
     val dummyTutors = remember {
@@ -336,7 +338,7 @@ fun TutorScreen(
                                     text = cat,
                                     color = if (isSelected) Color.White else Color.DarkGray,
                                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                    fontSize = 13.sp
+                                    fontSize = 14.sp
                                 )
                             }
                         }
@@ -475,7 +477,7 @@ fun TutorCard(
                     )
                     Text(
                         text = tutor.date,
-                        fontSize = 12.sp,
+                        fontSize = 14.sp,
                         color = Color.Gray
                     )
                 }
@@ -528,7 +530,7 @@ fun TutorCard(
                 ) {
                     Icon(Icons.Default.Call, contentDescription = null, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(6.dp))
-                    Text("যোগাযোগ করুন", fontSize = 13.sp)
+                    Text("যোগাযোগ করুন", fontSize = 15.sp)
                 }
                 
                 Button(
@@ -541,7 +543,7 @@ fun TutorCard(
                 ) {
                     Icon(Icons.Default.LocationOn, contentDescription = null, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(6.dp))
-                    Text("গুগল ম্যাপ", fontSize = 13.sp)
+                    Text("গুগল ম্যাপ", fontSize = 15.sp)
                 }
             }
         }
@@ -567,15 +569,15 @@ fun TutorDetailRow(icon: ImageVector, label: String, value: String) {
         }
         Spacer(modifier = Modifier.width(8.dp))
         Column {
-            Text(text = label, fontSize = 12.sp, color = Color.Gray)
+            Text(text = label, fontSize = 14.sp, color = Color.Gray)
             Text(
                 text = value,
-                fontSize = 13.sp,
+                fontSize = 15.sp,
                 color = Color.DarkGray,
                 fontWeight = FontWeight.Medium,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
-                lineHeight = 16.sp
+                lineHeight = 18.sp
             )
         }
     }
