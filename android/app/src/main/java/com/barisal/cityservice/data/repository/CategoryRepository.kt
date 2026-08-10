@@ -303,7 +303,7 @@ class CategoryRepository {
             SubCategoryItem(1803, 18, "Cook / Chef", "রান্নার বুয়া", fallbackIcon = Icons.Default.SoupKitchen, route = "cook_chef"),
             SubCategoryItem(1804, 18, "Baby Sitter", "শিশু দেখাশোনা", fallbackIcon = Icons.Default.ChildCare, route = "baby_sitter"),
             SubCategoryItem(1805, 18, "Elderly Care", "বয়স্ক সেবা", fallbackIcon = Icons.Default.Elderly, route = "elderly_care"),
-            SubCategoryItem(1806, 18, "House Cleaner", "বাসা পরিষ্কার", fallbackIcon = Icons.Default.Broom, route = "house_cleaner"),
+            SubCategoryItem(1806, 18, "House Cleaner", "বাসা পরিষ্কার", fallbackIcon = Icons.Default.CleaningServices, route = "house_cleaner"),
             SubCategoryItem(1807, 18, "Others", "অন্যান্য", fallbackIcon = Icons.Default.MoreHoriz, route = "help_others")
         )
     }
