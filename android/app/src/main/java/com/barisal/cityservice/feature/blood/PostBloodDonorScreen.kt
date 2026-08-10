@@ -24,6 +24,7 @@ import com.barisal.cityservice.core.language.LocalAppLanguage
 import com.barisal.cityservice.core.utils.bangladeshZillas
 import com.barisal.cityservice.data.model.BloodDonorDto
 import com.barisal.cityservice.data.repository.BloodRepository
+import com.barisal.cityservice.ui.components.CustomDialog
 import com.barisal.cityservice.ui.components.GlobalAppBar
 import com.barisal.cityservice.ui.components.SetStatusBarColor
 import kotlinx.coroutines.launch
@@ -55,6 +56,7 @@ fun PostBloodDonorScreen(
     var zillaDropdownExpanded by remember { mutableStateOf(false) }
 
     var isSubmitting by remember { mutableStateOf(false) }
+    var showSuccessDialog by remember { mutableStateOf(false) }
 
     val calendar = remember { java.util.Calendar.getInstance() }
     val year = calendar.get(java.util.Calendar.YEAR)
@@ -345,12 +347,7 @@ fun PostBloodDonorScreen(
                             isSubmitting = false
 
                             if (result.isSuccess) {
-                                Toast.makeText(
-                                    context,
-                                    if (isBengali) "আপনার পোস্টটি জমা নেওয়া হয়েছে! অ্যাডমিন অনুমোদনের পর প্রকাশিত হবে।" else "Post submitted! Will be published after admin approval.",
-                                    Toast.LENGTH_LONG
-                                ).show()
-                                onBack()
+                                showSuccessDialog = true
                             } else {
                                 Toast.makeText(
                                     context,
@@ -377,6 +374,33 @@ fun PostBloodDonorScreen(
                         )
                     }
                 }
+            }
+        }
+
+        if (showSuccessDialog) {
+            CustomDialog(
+                onDismissRequest = {
+                    showSuccessDialog = false
+                    onBack()
+                },
+                title = if (isBengali) "নিবন্ধন সফলভাবে জমা হয়েছে!" else "Registration Submitted Successfully!",
+                icon = Icons.Default.Check,
+                iconTint = Color(0xFF16A34A),
+                iconBackgroundColor = Color(0xFFDCFCE7),
+                confirmButtonText = if (isBengali) "ঠিক আছে" else "OK",
+                onConfirm = {
+                    showSuccessDialog = false
+                    onBack()
+                }
+            ) {
+                Text(
+                    text = if (isBengali)
+                        "আপনার রক্তদাতা নিবন্ধন পোস্টটি সফলভাবে অ্যাডমিন প্যানেলে জমা হয়েছে। পর্যালোচনার পর প্রকাশিত হবে।"
+                    else
+                        "Your blood donor registration has been submitted for admin review. It will be published once approved.",
+                    fontSize = 14.sp,
+                    color = Color.DarkGray
+                )
             }
         }
     }

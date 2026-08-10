@@ -35,6 +35,7 @@ import com.barisal.cityservice.core.utils.rememberLocationPermissionState
 import com.barisal.cityservice.data.model.ChamberDto
 import com.barisal.cityservice.data.model.DoctorDto
 import com.barisal.cityservice.data.repository.DoctorRepository
+import com.barisal.cityservice.ui.components.CustomDialog
 import com.barisal.cityservice.ui.components.GlobalAppBar
 import com.barisal.cityservice.ui.components.LocationPickerMapScreen
 import com.barisal.cityservice.ui.components.SetStatusBarColor
@@ -99,6 +100,7 @@ fun PostDoctorScreen(
     }
 
     var isSubmitting by remember { mutableStateOf(false) }
+    var showSuccessDialog by remember { mutableStateOf(false) }
     var showLocationPickerMap by remember { mutableStateOf(false) }
 
     if (showLocationPickerMap) {
@@ -185,7 +187,7 @@ fun PostDoctorScreen(
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
                                 text = if (isBengali) "ছবি পরিবর্তন করতে ট্যাপ করুন" else "Tap to change photo",
-                                fontSize = 12.sp,
+                                fontSize = 14.sp,
                                 color = primaryColor,
                                 fontWeight = FontWeight.Medium
                             )
@@ -516,7 +518,7 @@ fun PostDoctorScreen(
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text(
                                     text = if (isBengali) "লোকেশন সেট করা হয়েছে: $latLng" else "Location Set: $latLng",
-                                    fontSize = 12.sp,
+                                    fontSize = 14.sp,
                                     fontWeight = FontWeight.SemiBold,
                                     color = Color(0xFF15803D)
                                 )
@@ -576,12 +578,7 @@ fun PostDoctorScreen(
                             isSubmitting = false
 
                             if (result.isSuccess) {
-                                Toast.makeText(
-                                    context,
-                                    if (isBengali) "আপনার পোস্টটি জমা নেওয়া হয়েছে! অ্যাডমিন অনুমোদনের পর প্রকাশিত হবে।" else "Post submitted! Will be published after admin approval.",
-                                    Toast.LENGTH_LONG
-                                ).show()
-                                onBack()
+                                showSuccessDialog = true
                             } else {
                                 Toast.makeText(
                                     context,
@@ -608,6 +605,33 @@ fun PostDoctorScreen(
                         )
                     }
                 }
+            }
+        }
+
+        if (showSuccessDialog) {
+            CustomDialog(
+                onDismissRequest = {
+                    showSuccessDialog = false
+                    onBack()
+                },
+                title = if (isBengali) "পোস্ট সফলভাবে জমা হয়েছে!" else "Post Submitted Successfully!",
+                icon = Icons.Default.Check,
+                iconTint = Color(0xFF16A34A),
+                iconBackgroundColor = Color(0xFFDCFCE7),
+                confirmButtonText = if (isBengali) "ঠিক আছে" else "OK",
+                onConfirm = {
+                    showSuccessDialog = false
+                    onBack()
+                }
+            ) {
+                Text(
+                    text = if (isBengali)
+                        "আপনার ডাক্তারের তথ্যের পোস্টটি সফলভাবে অ্যাডমিন প্যানেলে জমা হয়েছে। পর্যালোচনার পর পোস্টটি প্রকাশিত হবে।"
+                    else
+                        "Your doctor profile post has been submitted for admin review. It will be published once approved.",
+                    fontSize = 14.sp,
+                    color = Color.DarkGray
+                )
             }
         }
     }

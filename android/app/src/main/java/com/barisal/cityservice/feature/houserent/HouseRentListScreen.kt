@@ -3,10 +3,15 @@ package com.barisal.cityservice.feature.houserent
 import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -20,6 +25,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -27,7 +33,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
-import com.barisal.cityservice.core.language.LocalAppLanguage
+import com.barisal.cityservice.core.language.*
 import com.barisal.cityservice.core.utils.bangladeshZillas
 import com.barisal.cityservice.core.utils.toCoilModel
 import com.barisal.cityservice.data.model.FlatDetailsDto
@@ -54,11 +60,19 @@ data class HouseRentInfo(
     val isRented: Boolean = false
 )
 
+data class HouseRentCategoryItem(
+    val id: String,
+    val titleBan: String,
+    val titleEng: String,
+    val icon: ImageVector,
+    val color: Color
+)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HouseRentListScreen(
     onBack: () -> Unit,
-    onNavigateToPostHouseRent: () -> Unit = {},
+    onNavigateToPostHouseRent: (String?) -> Unit = {},
     onNavigateToHouseRentDetail: (String) -> Unit = {}
 ) {
     val languageState = LocalAppLanguage.current
@@ -68,25 +82,32 @@ fun HouseRentListScreen(
 
     SetStatusBarColor()
 
+    var selectedSubCategory by remember { mutableStateOf<String?>(null) }
+
+    BackHandler(enabled = selectedSubCategory != null) {
+        selectedSubCategory = null
+    }
+
     var searchQuery by remember { mutableStateOf("") }
     var showZillaFilterDialog by remember { mutableStateOf(false) }
     var selectedZilla by remember { mutableStateOf<String?>(null) }
     val primaryColor = Color(0xFF00897B)
 
-    var selectedSubCategory by remember { mutableStateOf("সব") }
-    val houseRentSubCategories = listOf(
-        "সব",
-        "ফ্ল্যাট ভাড়া",
-        "ব্যাচেলর রুম/সিট",
-        "সাবলেট",
-        "হোস্টেল",
-        "অফিস স্পেস",
-        "দোকান",
-        "গ্যারেজ"
-    )
+    val houseRentCategoryItems = remember(isBengali) {
+        listOf(
+            HouseRentCategoryItem("ফ্ল্যাট ভাড়া", if (isBengali) "ফ্ল্যাট ভাড়া" else "Flat Rent", "Flat Rent", Icons.Default.Apartment, Color(0xFF00897B)),
+            HouseRentCategoryItem("ব্যাচেলর রুম/সিট", if (isBengali) "ব্যাচেলর রুম/সিট" else "Bachelor Room/Seat", "Bachelor Room/Seat", Icons.Default.Bed, Color(0xFF6366F1)),
+            HouseRentCategoryItem("মেয়েদের মেস", if (isBengali) "মেয়েদের মেস" else "Female Mess", "Female Mess", Icons.Default.Female, Color(0xFFE11D48)),
+            HouseRentCategoryItem("সাবলেট", if (isBengali) "সাবলেট" else "Sublet", "Sublet", Icons.Default.HomeWork, Color(0xFFF59E0B)),
+            HouseRentCategoryItem("হোস্টেল", if (isBengali) "হোস্টেল" else "Hostel", "Hostel", Icons.Default.Hotel, Color(0xFF8B5CF6)),
+            HouseRentCategoryItem("অফিস স্পেস", if (isBengali) "অফিস স্পেস" else "Office Space", "Office Space", Icons.Default.CorporateFare, Color(0xFF2563EB)),
+            HouseRentCategoryItem("দোকান", if (isBengali) "দোকান" else "Shop/Space", "Shop/Space", Icons.Default.Storefront, Color(0xFF10B981)),
+            HouseRentCategoryItem("গ্যারেজ", if (isBengali) "গ্যারেজ" else "Garage", "Garage", Icons.Default.DirectionsCar, Color(0xFF64748B))
+        )
+    }
 
     val houseRentRepository = remember { HouseRentRepository() }
-    val firestoreHouseRentsState by houseRentRepository.getHouseRents(if (selectedSubCategory == "সব") "" else selectedSubCategory)
+    val firestoreHouseRentsState by houseRentRepository.getHouseRents(if (selectedSubCategory == null || selectedSubCategory == "সব") "" else selectedSubCategory!!)
         .collectAsState(initial = emptyList())
 
     val dummyHouses = remember(isBengali) {
@@ -152,7 +173,7 @@ fun HouseRentListScreen(
                     house.address.contains(searchQuery, ignoreCase = true) ||
                     house.details.contains(searchQuery, ignoreCase = true)
 
-            val matchesCategory = selectedSubCategory == "সব" || house.houseType.equals(selectedSubCategory, ignoreCase = true)
+            val matchesCategory = selectedSubCategory == null || selectedSubCategory == "সব" || house.houseType.equals(selectedSubCategory, ignoreCase = true)
             val matchesZilla = selectedZilla == null || house.zilla.equals(selectedZilla, ignoreCase = true) || house.address.contains(selectedZilla!!, ignoreCase = true)
 
             matchesQuery && matchesCategory && matchesZilla
@@ -162,8 +183,17 @@ fun HouseRentListScreen(
     Scaffold(
         topBar = {
             GlobalAppBar(
-                title = if (isBengali) "বাসা ভাড়া" else "House Rent",
-                onBackClick = onBack,
+                title = if (selectedSubCategory == null)
+                    (if (isBengali) "বাসা ভাড়া সাব-ক্যাটাগরি" else "House Rent Categories")
+                else
+                    (selectedSubCategory ?: (if (isBengali) "বাসা ভাড়া" else "House Rent")),
+                onBackClick = {
+                    if (selectedSubCategory != null) {
+                        selectedSubCategory = null
+                    } else {
+                        onBack()
+                    }
+                },
                 actions = {
                     IconButton(onClick = { showZillaFilterDialog = true }) {
                         Icon(Icons.Default.MoreVert, contentDescription = "Filter", tint = Color.Black)
@@ -172,19 +202,21 @@ fun HouseRentListScreen(
             )
         },
         floatingActionButton = {
-            ExtendedFloatingActionButton(
-                onClick = onNavigateToPostHouseRent,
-                containerColor = primaryColor,
-                contentColor = Color.White,
-                shape = RoundedCornerShape(24.dp)
-            ) {
-                Icon(Icons.Default.Add, contentDescription = "Post House Rent")
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = if (isBengali) "বাসা ভাড়া পোস্ট করুন" else "Post House Rent",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 14.sp
-                )
+            if (selectedSubCategory != null) {
+                ExtendedFloatingActionButton(
+                    onClick = { onNavigateToPostHouseRent(selectedSubCategory) },
+                    containerColor = primaryColor,
+                    contentColor = Color.White,
+                    shape = RoundedCornerShape(24.dp)
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = "Post House Rent")
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = if (isBengali) "বাসা ভাড়া পোস্ট করুন" else "Post House Rent",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.sp
+                    )
+                }
             }
         }
     ) { innerPadding ->
@@ -227,92 +259,156 @@ fun HouseRentListScreen(
             }
         }
 
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .background(Color(0xFFF3F4F6))
-        ) {
-            // 1. Sub-Categories horizontal bar
-            ScrollableTabRow(
-                selectedTabIndex = houseRentSubCategories.indexOf(selectedSubCategory).coerceAtLeast(0),
-                containerColor = Color.White,
-                edgePadding = 12.dp,
-                divider = {}
+        if (selectedSubCategory == null) {
+            // Sub-Categories Grid View (Doctor Style)
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .background(Color(0xFFF8FAFC))
+                    .padding(16.dp)
             ) {
-                houseRentSubCategories.forEach { category ->
-                    val isSelected = selectedSubCategory == category
-                    Tab(
-                        selected = isSelected,
-                        onClick = { selectedSubCategory = category },
-                        text = {
-                            Text(
-                                text = category,
-                                color = if (isSelected) primaryColor else Color(0xFF475569),
-                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                                fontSize = 13.sp
-                            )
-                        }
-                    )
-                }
-            }
+                Text(
+                    text = if (isBengali) "সকল বাসা ভাড়া সাব-ক্যাটাগরি" else "All House Rent Sub-Categories",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 17.sp,
+                    color = Color.Black
+                )
 
-            // 2. Search & Filter Bar
-            Surface(
-                color = Color.White,
-                shadowElevation = 1.dp
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 12.dp, vertical = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                Spacer(modifier = Modifier.height(14.dp))
+
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(2),
+                    horizontalArrangement = Arrangement.spacedBy(14.dp),
+                    verticalArrangement = Arrangement.spacedBy(14.dp),
+                    modifier = Modifier.fillMaxSize()
                 ) {
-                    OutlinedTextField(
-                        value = searchQuery,
-                        onValueChange = { searchQuery = it },
-                        placeholder = { Text(if (isBengali) "বাসা ভাড়া বা এলাকা খুঁজুন..." else "Search house rent or area...", fontSize = 13.sp) },
-                        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = primaryColor) },
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(48.dp),
-                        shape = RoundedCornerShape(24.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = primaryColor,
-                            unfocusedBorderColor = Color.LightGray
-                        ),
-                        singleLine = true
-                    )
-
-                    Spacer(modifier = Modifier.width(8.dp))
-
-                    IconButton(onClick = { showZillaFilterDialog = true }) {
-                        Box(
+                    items(houseRentCategoryItems) { cat ->
+                        Card(
                             modifier = Modifier
-                                .size(40.dp)
-                                .clip(CircleShape)
-                                .background(if (selectedZilla != null) primaryColor else Color(0xFFE2E8F0)),
-                            contentAlignment = Alignment.Center
+                                .fillMaxWidth()
+                                .clickable { selectedSubCategory = cat.id },
+                            shape = RoundedCornerShape(14.dp),
+                            colors = CardDefaults.cardColors(containerColor = Color.White),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                            border = BorderStroke(1.dp, Color(0xFFF1F5F9))
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.FilterList,
-                                contentDescription = "Filter Zilla",
-                                tint = if (selectedZilla != null) Color.White else Color(0xFF475569)
-                            )
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(54.dp)
+                                        .clip(CircleShape)
+                                        .background(cat.color.copy(alpha = 0.12f)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = cat.icon,
+                                        contentDescription = null,
+                                        tint = cat.color,
+                                        modifier = Modifier.size(28.dp)
+                                    )
+                                }
+
+                                Spacer(modifier = Modifier.height(10.dp))
+
+                                Text(
+                                    text = if (isBengali) cat.titleBan else cat.titleEng,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 15.sp,
+                                    color = Color.Black,
+                                    textAlign = TextAlign.Center
+                                )
+                            }
                         }
                     }
                 }
             }
-
-            // 3. Main List
-            LazyColumn(
+        } else {
+            // House Rent Items Listing View
+            Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 12.dp),
-                contentPadding = PaddingValues(top = 10.dp, bottom = 80.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                    .padding(innerPadding)
+                    .background(Color(0xFFF3F4F6))
             ) {
-                items(filteredHouses) { house ->
+                // Header & Search Bar
+                Surface(
+                    color = Color.White,
+                    shadowElevation = 1.dp
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 12.dp, vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        OutlinedTextField(
+                            value = searchQuery,
+                            onValueChange = { searchQuery = it },
+                            placeholder = { Text(if (isBengali) "বাসা ভাড়া বা এলাকা খুঁজুন..." else "Search house rent or area...", fontSize = 15.sp) },
+                            leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = primaryColor) },
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(48.dp),
+                            shape = RoundedCornerShape(24.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = primaryColor,
+                                unfocusedBorderColor = Color.LightGray
+                            ),
+                            singleLine = true
+                        )
+
+                        Spacer(modifier = Modifier.width(8.dp))
+
+                        IconButton(onClick = { showZillaFilterDialog = true }) {
+                            Box(
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .clip(CircleShape)
+                                    .background(if (selectedZilla != null) primaryColor else Color(0xFFE2E8F0)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.FilterList,
+                                    contentDescription = "Filter Zilla",
+                                    tint = if (selectedZilla != null) Color.White else Color(0xFF475569)
+                                )
+                            }
+                        }
+                    }
+                }
+
+                // Houses List
+                if (filteredHouses.isEmpty()) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Icon(Icons.Default.HomeWork, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(48.dp))
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = if (isBengali) "কোন বাসা ভাড়া পাওয়া যায়নি" else "No House Rents Found",
+                                color = Color.Gray,
+                                fontSize = 15.sp
+                            )
+                        }
+                    }
+                } else {
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 12.dp),
+                        contentPadding = PaddingValues(top = 10.dp, bottom = 80.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        items(filteredHouses) { house ->
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -362,7 +458,7 @@ fun HouseRentListScreen(
                                         )
                                         Text(
                                             text = house.date,
-                                            fontSize = 11.sp,
+                                            fontSize = 13.sp,
                                             color = Color(0xFF64748B)
                                         )
                                     }
@@ -376,7 +472,7 @@ fun HouseRentListScreen(
                                         Text(
                                             text = if (house.isRented) (if (isBengali) "ভাড়া হয়ে গেছে" else "RENTED") else house.rentAmount,
                                             color = Color.White,
-                                            fontSize = 12.sp,
+                                            fontSize = 14.sp,
                                             fontWeight = FontWeight.Bold,
                                             modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
                                         )
@@ -384,7 +480,7 @@ fun HouseRentListScreen(
                                     if (house.isRented) {
                                         Text(
                                             text = house.rentAmount,
-                                            fontSize = 11.sp,
+                                            fontSize = 13.sp,
                                             color = Color.Gray,
                                             fontWeight = FontWeight.Medium
                                         )
@@ -431,7 +527,7 @@ fun HouseRentListScreen(
                                     Text(
                                         text = house.houseType,
                                         color = Color(0xFF0369A1),
-                                        fontSize = 11.sp,
+                                        fontSize = 13.sp,
                                         fontWeight = FontWeight.Bold,
                                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
                                     )
@@ -439,22 +535,22 @@ fun HouseRentListScreen(
 
                                 if (house.flatDetails.levelNo.isNotBlank()) {
                                     Surface(color = Color(0xFFF1F5F9), shape = RoundedCornerShape(6.dp)) {
-                                        Text("🏢 ${house.flatDetails.levelNo}", fontSize = 11.sp, color = Color.DarkGray, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
+                                        Text("🏢 ${house.flatDetails.levelNo}", fontSize = 13.sp, color = Color.DarkGray, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
                                     }
                                 }
                                 if (house.flatDetails.flatNo.isNotBlank()) {
                                     Surface(color = Color(0xFFF1F5F9), shape = RoundedCornerShape(6.dp)) {
-                                        Text("🔑 ${house.flatDetails.flatNo}", fontSize = 11.sp, color = Color.DarkGray, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
+                                        Text("🔑 ${house.flatDetails.flatNo}", fontSize = 13.sp, color = Color.DarkGray, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
                                     }
                                 }
                                 if (house.flatDetails.bedrooms.isNotBlank()) {
                                     Surface(color = Color(0xFFF1F5F9), shape = RoundedCornerShape(6.dp)) {
-                                        Text("🛏️ ${house.flatDetails.bedrooms}", fontSize = 11.sp, color = Color.DarkGray, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
+                                        Text("🛏️ ${house.flatDetails.bedrooms}", fontSize = 13.sp, color = Color.DarkGray, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
                                     }
                                 }
                                 if (house.flatDetails.bathrooms.isNotBlank()) {
                                     Surface(color = Color(0xFFF1F5F9), shape = RoundedCornerShape(6.dp)) {
-                                        Text("🚿 ${house.flatDetails.bathrooms}", fontSize = 11.sp, color = Color.DarkGray, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
+                                        Text("🚿 ${house.flatDetails.bathrooms}", fontSize = 13.sp, color = Color.DarkGray, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
                                     }
                                 }
                             }
@@ -472,7 +568,7 @@ fun HouseRentListScreen(
                                 Spacer(modifier = Modifier.width(4.dp))
                                 Text(
                                     text = house.address,
-                                    fontSize = 13.sp,
+                                    fontSize = 15.sp,
                                     color = Color(0xFF334155),
                                     fontWeight = FontWeight.Medium
                                 )
@@ -484,7 +580,7 @@ fun HouseRentListScreen(
                             if (house.details.isNotBlank()) {
                                 Text(
                                     text = house.details,
-                                    fontSize = 12.sp,
+                                    fontSize = 14.sp,
                                     color = Color(0xFF64748B),
                                     maxLines = 2
                                 )
@@ -501,17 +597,15 @@ fun HouseRentListScreen(
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                if (house.id.isNotBlank() && !house.id.startsWith("dummy")) {
+                                if (house.isRented && house.id.isNotBlank() && !house.id.startsWith("dummy")) {
                                     TextButton(
                                         onClick = {
                                             coroutineScope.launch {
-                                                val newStatus = !house.isRented
-                                                val res = houseRentRepository.updateRentStatus(house.id, newStatus)
+                                                val res = houseRentRepository.updateRentStatus(house.id, false)
                                                 if (res.isSuccess) {
                                                     Toast.makeText(
                                                         context,
-                                                        if (newStatus) (if (isBengali) "বাসাটি 'ভাড়া হয়ে গেছে' মার্ক করা হলো" else "Marked as Rented")
-                                                        else (if (isBengali) "বাসাটি খালি মার্ক করা হলো" else "Marked as Available"),
+                                                        if (isBengali) "বাসাটি খালি মার্ক করা হলো" else "Marked as Available",
                                                         Toast.LENGTH_SHORT
                                                     ).show()
                                                 }
@@ -520,10 +614,10 @@ fun HouseRentListScreen(
                                         contentPadding = PaddingValues(0.dp)
                                     ) {
                                         Text(
-                                            text = if (house.isRented) (if (isBengali) "খালি মার্ক করুন" else "Mark Available") else (if (isBengali) "ভাড়া সম্পন্ন মার্ক করুন" else "Mark Rented"),
-                                            fontSize = 11.sp,
+                                            text = if (isBengali) "খালি মার্ক করুন" else "Mark Available",
+                                            fontSize = 13.sp,
                                             fontWeight = FontWeight.Bold,
-                                            color = if (house.isRented) primaryColor else Color(0xFFDC2626)
+                                            color = primaryColor
                                         )
                                     }
                                 } else {
@@ -546,7 +640,7 @@ fun HouseRentListScreen(
                                     ) {
                                         Icon(Icons.Default.Sms, contentDescription = null, tint = primaryColor, modifier = Modifier.size(14.dp))
                                         Spacer(modifier = Modifier.width(4.dp))
-                                        Text(if (isBengali) "মেসেজ" else "SMS", fontSize = 11.sp, color = primaryColor)
+                                        Text(if (isBengali) "মেসেজ" else "SMS", fontSize = 13.sp, color = primaryColor)
                                     }
 
                                     Spacer(modifier = Modifier.width(8.dp))
@@ -565,7 +659,7 @@ fun HouseRentListScreen(
                                     ) {
                                         Icon(Icons.Default.Phone, contentDescription = null, tint = Color.White, modifier = Modifier.size(14.dp))
                                         Spacer(modifier = Modifier.width(4.dp))
-                                        Text(if (isBengali) "কল করুন" else "Call", fontSize = 11.sp, color = Color.White, fontWeight = FontWeight.Bold)
+                                        Text(if (isBengali) "কল করুন" else "Call", fontSize = 13.sp, color = Color.White, fontWeight = FontWeight.Bold)
                                     }
                                 }
                             }
@@ -575,4 +669,5 @@ fun HouseRentListScreen(
             }
         }
     }
-}
+}}}
+

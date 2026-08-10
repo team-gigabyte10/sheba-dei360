@@ -142,7 +142,7 @@ fun TransportServiceScreen(
                         Text(
                             text = if (isBengali) "অনলাইন টিকিট পোর্টাল" else "Online Ticketing Portals",
                             color = Color.White,
-                            fontSize = 11.sp,
+                            fontSize = 13.sp,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
                         )
@@ -158,7 +158,7 @@ fun TransportServiceScreen(
                     Text(
                         text = if (isBengali) "অফিসিয়াল ওয়েব পোর্টাল থেকে সরাসরি ই-টিকিট গ্রহণ করুন" else "Direct access to official BD e-ticketing websites",
                         color = Color(0xFF93C5FD),
-                        fontSize = 12.sp
+                        fontSize = 14.sp
                     )
                 }
             }
@@ -214,7 +214,7 @@ fun TransportServiceScreen(
                                         )
                                         Text(
                                             text = if (isBengali) item.badgeTextBn else item.badgeTextEn,
-                                            fontSize = 11.sp,
+                                            fontSize = 13.sp,
                                             color = item.accentColor,
                                             fontWeight = FontWeight.SemiBold
                                         )
@@ -231,9 +231,9 @@ fun TransportServiceScreen(
 
                             Text(
                                 text = if (isBengali) item.descBn else item.descEn,
-                                fontSize = 12.sp,
+                                fontSize = 14.sp,
                                 color = Color.DarkGray,
-                                lineHeight = 16.sp
+                                lineHeight = 18.sp
                             )
 
                             HorizontalDivider(color = Color(0xFFF1F5F9))
@@ -252,7 +252,7 @@ fun TransportServiceScreen(
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
                                     text = if (isBengali) "অনলাইন টিকিট কাটুন (অফিসিয়াল লিংক)" else "Book Online Ticket (Official Link)",
-                                    fontSize = 13.sp,
+                                    fontSize = 15.sp,
                                     fontWeight = FontWeight.Bold
                                 )
                             }

@@ -193,6 +193,15 @@ fun AppNavigation() {
                 onNavigateToFlatLand = {
                     navController.navigate("flat_land")
                 },
+                onNavigateToTrainingAcademy = {
+                    navController.navigate("training_academy")
+                },
+                onNavigateToJob = {
+                    navController.navigate("job_screen")
+                },
+                onNavigateToDomesticHelp = {
+                    navController.navigate("domestic_help_screen")
+                },
                 onNavigateToCategoryMap = { categoryKey ->
                     navController.navigate("category_map/$categoryKey")
                 },
@@ -266,7 +275,21 @@ fun AppNavigation() {
             )
         }
         composable("ride_screen") {
-            com.barisal.cityservice.feature.ride.RideScreen(
+            com.barisal.cityservice.feature.ride.RentCarScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToPostRentCar = { navigateWithAuthCheck("post_rent_car") },
+                onNavigateToRentCarDetail = { carId -> navController.navigate("rent_car_detail/$carId") }
+            )
+        }
+        composable("post_rent_car") {
+            com.barisal.cityservice.feature.ride.PostRentCarScreen(
+                onBack = { navController.popBackStack() }
+            )
+        }
+        composable("rent_car_detail/{carId}") { backStackEntry ->
+            val carId = backStackEntry.arguments?.getString("carId") ?: ""
+            com.barisal.cityservice.feature.ride.RentCarDetailScreen(
+                carId = carId,
                 onBack = { navController.popBackStack() }
             )
         }
@@ -279,12 +302,45 @@ fun AppNavigation() {
             com.barisal.cityservice.feature.service.AllServicesScreen(
                 onBack = { navController.popBackStack() },
                 onCategoryClick = { categoryKey ->
-                    if (categoryKey == "health_services") {
-                        navController.navigate("health_services")
-                    } else {
-                        navController.navigate("category_map/$categoryKey")
+                    when (categoryKey.lowercase()) {
+                        "health", "health_services" -> navController.navigate("health_services")
+                        "doctor" -> navController.navigate("doctor_category")
+                        "hospital" -> navController.navigate("hospital_list")
+                        "houserent", "house_rent" -> navController.navigate("house_rent_list")
+                        "shopping" -> navController.navigate("shopping_list")
+                        "matrimony" -> navController.navigate("matrimony_home")
+                        "event" -> navController.navigate("event_service")
+                        "ride", "ride_sharing", "rentcar", "rent_car" -> navController.navigate("ride_screen")
+                        "mistri" -> navController.navigate("mistri_service")
+                        "tutor" -> navController.navigate("tutor")
+                        "hotel" -> navController.navigate("hotel")
+                        "restaurant" -> navController.navigate("restaurant")
+                        "flatland", "flat_land" -> navController.navigate("flat_land")
+                        "training_academy", "training" -> navController.navigate("training_academy")
+                        "job", "job_screen", "jobs" -> navController.navigate("job_screen")
+                        "domestic_help", "domestic_help_screen", "maid" -> navController.navigate("domestic_help_screen")
+                        else -> navController.navigate("category_map/$categoryKey")
                     }
                 }
+            )
+        }
+        composable("training_academy") {
+            com.barisal.cityservice.feature.training.TrainingAcademyScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToPostTrainingAcademy = { navigateWithAuthCheck("post_training_academy") },
+                onNavigateToTrainingAcademyDetail = { courseId -> navController.navigate("training_academy_detail/$courseId") }
+            )
+        }
+        composable("post_training_academy") {
+            com.barisal.cityservice.feature.training.PostTrainingAcademyScreen(
+                onBack = { navController.popBackStack() }
+            )
+        }
+        composable("training_academy_detail/{courseId}") { backStackEntry ->
+            val courseId = backStackEntry.arguments?.getString("courseId") ?: ""
+            com.barisal.cityservice.feature.training.TrainingAcademyDetailScreen(
+                courseId = courseId,
+                onBack = { navController.popBackStack() }
             )
         }
         composable("category_map/{categoryKey}") { backStackEntry ->
@@ -345,10 +401,55 @@ fun AppNavigation() {
                 onBack = { navController.popBackStack() }
             )
         }
+        composable("admin_approval/{categoryKey}") { backStackEntry ->
+            val categoryKey = backStackEntry.arguments?.getString("categoryKey")
+            com.barisal.cityservice.feature.admin.AdminApprovalScreen(
+                initialCategoryKey = categoryKey,
+                onBack = { navController.popBackStack() }
+            )
+        }
         composable("event_service") {
             com.barisal.cityservice.feature.event.EventServiceScreen(
                 onNavigateBack = { navController.popBackStack() },
                 onNavigateToPostEvent = { navigateWithAuthCheck("post_event_service") }
+            )
+        }
+        composable("job_screen") {
+            com.barisal.cityservice.feature.job.JobScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToPostJob = { navigateWithAuthCheck("post_job") },
+                onNavigateToDetail = { jobId -> navController.navigate("job_detail/$jobId") }
+            )
+        }
+        composable("post_job") {
+            com.barisal.cityservice.feature.job.PostJobScreen(
+                onBack = { navController.popBackStack() }
+            )
+        }
+        composable("job_detail/{jobId}") { backStackEntry ->
+            val jobId = backStackEntry.arguments?.getString("jobId") ?: ""
+            com.barisal.cityservice.feature.job.JobDetailScreen(
+                jobId = jobId,
+                onBack = { navController.popBackStack() }
+            )
+        }
+        composable("domestic_help_screen") {
+            com.barisal.cityservice.feature.domestichelp.DomesticHelpScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToPostDomesticHelp = { navigateWithAuthCheck("post_domestic_help") },
+                onNavigateToDetail = { helpId -> navController.navigate("domestic_help_detail/$helpId") }
+            )
+        }
+        composable("post_domestic_help") {
+            com.barisal.cityservice.feature.domestichelp.PostDomesticHelpScreen(
+                onBack = { navController.popBackStack() }
+            )
+        }
+        composable("domestic_help_detail/{helpId}") { backStackEntry ->
+            val helpId = backStackEntry.arguments?.getString("helpId") ?: ""
+            com.barisal.cityservice.feature.domestichelp.DomesticHelpDetailScreen(
+                helpId = helpId,
+                onBack = { navController.popBackStack() }
             )
         }
         composable("post_event_service") {
@@ -359,7 +460,14 @@ fun AppNavigation() {
         composable("house_rent_list") {
             com.barisal.cityservice.feature.houserent.HouseRentListScreen(
                 onBack = { navController.popBackStack() },
-                onNavigateToPostHouseRent = { navigateWithAuthCheck("post_house_rent") },
+                onNavigateToPostHouseRent = { category ->
+                    val route = if (!category.isNullOrBlank()) {
+                        "post_house_rent?subCategory=${android.net.Uri.encode(category)}"
+                    } else {
+                        "post_house_rent"
+                    }
+                    navigateWithAuthCheck(route)
+                },
                 onNavigateToHouseRentDetail = { houseId ->
                     navController.navigate("house_rent_detail/$houseId")
                 }
@@ -372,8 +480,19 @@ fun AppNavigation() {
                 onBack = { navController.popBackStack() }
             )
         }
-        composable("post_house_rent") {
+        composable(
+            route = "post_house_rent?subCategory={subCategory}",
+            arguments = listOf(
+                androidx.navigation.navArgument("subCategory") {
+                    type = androidx.navigation.NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                }
+            )
+        ) { backStackEntry ->
+            val subCategory = backStackEntry.arguments?.getString("subCategory")
             com.barisal.cityservice.feature.houserent.PostHouseRentScreen(
+                initialSubCategory = subCategory,
                 onBack = { navController.popBackStack() }
             )
         }
@@ -389,12 +508,40 @@ fun AppNavigation() {
         }
         composable("hotel") {
             com.barisal.cityservice.feature.hotel.HotelScreen(
-                onNavigateBack = { navController.popBackStack() }
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToPostHotel = { navigateWithAuthCheck("post_hotel") },
+                onNavigateToHotelDetail = { hotelId -> navController.navigate("hotel_detail/$hotelId") }
+            )
+        }
+        composable("post_hotel") {
+            com.barisal.cityservice.feature.hotel.PostHotelScreen(
+                onBack = { navController.popBackStack() }
+            )
+        }
+        composable("hotel_detail/{hotelId}") { backStackEntry ->
+            val hotelId = backStackEntry.arguments?.getString("hotelId") ?: ""
+            com.barisal.cityservice.feature.hotel.HotelDetailScreen(
+                hotelId = hotelId,
+                onBack = { navController.popBackStack() }
             )
         }
         composable("restaurant") {
             com.barisal.cityservice.feature.restaurant.RestaurantScreen(
-                onNavigateBack = { navController.popBackStack() }
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToPostRestaurant = { navigateWithAuthCheck("post_restaurant") },
+                onNavigateToRestaurantDetail = { restaurantId -> navController.navigate("restaurant_detail/$restaurantId") }
+            )
+        }
+        composable("post_restaurant") {
+            com.barisal.cityservice.feature.restaurant.PostRestaurantScreen(
+                onBack = { navController.popBackStack() }
+            )
+        }
+        composable("restaurant_detail/{restaurantId}") { backStackEntry ->
+            val restaurantId = backStackEntry.arguments?.getString("restaurantId") ?: ""
+            com.barisal.cityservice.feature.restaurant.RestaurantDetailScreen(
+                restaurantId = restaurantId,
+                onBack = { navController.popBackStack() }
             )
         }
         composable("flat_land") {
@@ -434,9 +581,18 @@ fun AppNavigation() {
                 onNavigateToDoctor = { navController.navigate("doctor_category") },
                 onNavigateToHospital = { navController.navigate("hospital_list") },
                 onNavigateToBloodDonor = { navController.navigate("blood_donor") },
+                onNavigateToHomeCare = { navController.navigate("home_care_list") },
                 onNavigateToCategoryMap = { categoryKey -> navController.navigate("category_map/$categoryKey") },
                 onNavigateToPostHealthService = { cat ->
                     navigateWithAuthCheck("post_health_service?category=$cat")
+                }
+            )
+        }
+        composable("home_care_list") {
+            com.barisal.cityservice.feature.doctor.HomeCareListScreen(
+                onBack = { navController.popBackStack() },
+                onNavigateToPostHomeCare = {
+                    navigateWithAuthCheck("post_health_service?category=home_care")
                 }
             )
         }

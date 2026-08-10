@@ -151,7 +151,7 @@ fun LocationPickerMapScreen(
                         Text(
                             text = if (isBengali) "পিন পয়েন্ট ড্র্যাগ করুন" else "Drag map to target location",
                             color = Color.White,
-                            fontSize = 11.sp,
+                            fontSize = 13.sp,
                             fontWeight = FontWeight.SemiBold,
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                         )
@@ -244,7 +244,7 @@ fun LocationPickerMapScreen(
                     placeholder = {
                         Text(
                             text = if (isBengali) "বরিশালের স্থান খুঁজুন (যেমন: রূপাতলী, নথুল্লাবাদ, সদর রোড)..." else "Search location in Barisal (e.g. Rupatali, Sadar Road)...",
-                            fontSize = 13.sp,
+                            fontSize = 15.sp,
                             color = Color.Gray
                         )
                     },

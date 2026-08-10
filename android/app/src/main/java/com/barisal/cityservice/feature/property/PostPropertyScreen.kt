@@ -33,6 +33,7 @@ import coil.compose.AsyncImage
 import com.barisal.cityservice.core.language.LocalAppLanguage
 import com.barisal.cityservice.data.model.PropertyDto
 import com.barisal.cityservice.data.repository.PropertyRepository
+import com.barisal.cityservice.ui.components.CustomDialog
 import com.barisal.cityservice.ui.components.GlobalAppBar
 import com.barisal.cityservice.ui.components.LocationPickerMapScreen
 import kotlinx.coroutines.launch
@@ -94,6 +95,7 @@ fun PostPropertyScreen(
     }
 
     var isSubmitting by remember { mutableStateOf(false) }
+    var showSuccessDialog by remember { mutableStateOf(false) }
 
     if (showLocationPickerMap) {
         LocationPickerMapScreen(
@@ -110,14 +112,14 @@ fun PostPropertyScreen(
     }
 
     Scaffold(
+        modifier = Modifier.fillMaxSize().imePadding(),
         topBar = {
             GlobalAppBar(
                 title = if (isBengali) "ফ্ল্যাট ও জমি বিজ্ঞাপন দিন" else "Post Property Ad",
                 onBackClick = onBack
             )
         },
-        containerColor = Color(0xFFF8FAFC),
-        contentWindowInsets = WindowInsets.ime
+        containerColor = Color(0xFFF8FAFC)
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -509,13 +511,7 @@ fun PostPropertyScreen(
                                     val result = propertyRepo.savePropertyPostToFirestore(dto)
                                     isSubmitting = false
                                     if (result.isSuccess) {
-                                        onPostCreated()
-                                        Toast.makeText(
-                                            context,
-                                            if (isBengali) "পোস্ট জমা দেওয়া হয়েছে! এডমিন অনুমোদনের পর পোস্টটি প্রকাশিত হবে।" else "Post submitted! It will be published after admin approval.",
-                                            Toast.LENGTH_LONG
-                                        ).show()
-                                        onBack()
+                                        showSuccessDialog = true
                                     } else {
                                         Toast.makeText(
                                             context,
@@ -545,6 +541,35 @@ fun PostPropertyScreen(
                         }
                     }
                 }
+            }
+        }
+
+        if (showSuccessDialog) {
+            CustomDialog(
+                onDismissRequest = {
+                    showSuccessDialog = false
+                    onPostCreated()
+                    onBack()
+                },
+                title = if (isBengali) "পোস্ট সফলভাবে জমা হয়েছে!" else "Post Submitted Successfully!",
+                icon = Icons.Default.Check,
+                iconTint = Color(0xFF16A34A),
+                iconBackgroundColor = Color(0xFFDCFCE7),
+                confirmButtonText = if (isBengali) "ঠিক আছে" else "OK",
+                onConfirm = {
+                    showSuccessDialog = false
+                    onPostCreated()
+                    onBack()
+                }
+            ) {
+                Text(
+                    text = if (isBengali)
+                        "আপনার প্রপার্টি পোস্টটি সফলভাবে অ্যাডমিন প্যানেলে জমা হয়েছে। পর্যালোচনার পর পোস্টটি প্রকাশিত হবে।"
+                    else
+                        "Your property post has been submitted for admin review. It will be published once approved.",
+                    fontSize = 14.sp,
+                    color = Color.DarkGray
+                )
             }
         }
     }

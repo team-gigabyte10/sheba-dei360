@@ -42,6 +42,7 @@ import androidx.core.content.ContextCompat
 import android.content.pm.PackageManager
 import androidx.compose.ui.platform.LocalContext
 import com.barisal.cityservice.core.language.LocalAppLanguage
+import com.barisal.cityservice.ui.components.CustomDialog
 import com.barisal.cityservice.ui.components.GlobalAppBar
 import com.barisal.cityservice.ui.components.LocationPickerMapScreen
 import com.barisal.cityservice.ui.components.SetStatusBarColor
@@ -77,6 +78,7 @@ fun PostProductScreen(
     var selectedLocation by remember { mutableStateOf(LatLng(22.7010, 90.3535)) }
     var showLocationPickerMap by remember { mutableStateOf(false) }
     var isSubmitting by remember { mutableStateOf(false) }
+    var showSuccessDialog by remember { mutableStateOf(false) }
 
     if (showLocationPickerMap) {
         LocationPickerMapScreen(
@@ -105,29 +107,23 @@ fun PostProductScreen(
 
     val categories = if (isBengali) {
         listOf(
-            "মোবাইল ও ইলেকট্রনিক্স",
+            "মোবাইল",
+            "কম্পিউটার/ল্যাপটপ",
+            "ইলেকট্রনিক্স পন্য",
             "গাড়ি ও প্রপার্টি",
             "হোম ও লিভিং",
-            "সার্ভিসেস",
             "রিপেয়ার ও কনস্ট্রাকশন",
-            "কমার্শিয়াল ইকুইপমেন্ট",
-            "বিনোদন ও স্পোর্টস",
-            "শিশু ও কিডস",
-            "খাবার ও কৃষি",
             "পশুপাখি ও পেটস",
             "অন্যান্য"
         )
     } else {
         listOf(
-            "Mobiles & Electronics",
+            "Mobiles",
+            "Computers & Laptops",
+            "Electronics Products",
             "Vehicles & Property",
             "Home & Living",
-            "Services",
             "Repair & Construction",
-            "Commercial Equipment & Tools",
-            "Leisure & Activities",
-            "Babies & Kids",
-            "Food, Agriculture & Farming",
             "Animals & Pets",
             "Others"
         )
@@ -140,6 +136,7 @@ fun PostProductScreen(
     }
 
     Scaffold(
+        modifier = Modifier.fillMaxSize().imePadding(),
         topBar = {
             GlobalAppBar(
                 title = if (isBengali) "পণ্য পোস্ট করুন" else "Post Product",
@@ -224,7 +221,7 @@ fun PostProductScreen(
                                         .background(primaryColor, RoundedCornerShape(topStart = 12.dp, bottomEnd = 12.dp))
                                         .padding(horizontal = 6.dp, vertical = 2.dp)
                                 ) {
-                                    Text("Thumbnail", color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                                    Text("Thumbnail", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                                 }
                             }
                         }
@@ -412,7 +409,7 @@ fun PostProductScreen(
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
                         text = String.format("লোকেশন সেট করা হয়েছে: %.5f, %.5f", selectedLocation.latitude, selectedLocation.longitude),
-                        fontSize = 12.sp,
+                        fontSize = 14.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = Color(0xFF15803D)
                     )
@@ -475,12 +472,7 @@ fun PostProductScreen(
                         isSubmitting = false
 
                         if (result.isSuccess) {
-                            Toast.makeText(
-                                context,
-                                if (isBengali) "পোস্টটি সফলভাবে জমা দেওয়া হয়েছে! অনুমোদনের পর প্রদর্শিত হবে।" else "Post submitted successfully! It will appear after admin approval.",
-                                Toast.LENGTH_LONG
-                            ).show()
-                            onBack()
+                            showSuccessDialog = true
                         } else {
                             Toast.makeText(
                                 context,
@@ -507,6 +499,35 @@ fun PostProductScreen(
                         color = Color.White
                     )
                 }
+            }
+
+            Spacer(modifier = Modifier.height(32.dp))
+        }
+
+        if (showSuccessDialog) {
+            CustomDialog(
+                onDismissRequest = {
+                    showSuccessDialog = false
+                    onBack()
+                },
+                title = if (isBengali) "পোস্ট সফলভাবে জমা হয়েছে!" else "Post Submitted Successfully!",
+                icon = Icons.Default.Check,
+                iconTint = Color(0xFF16A34A),
+                iconBackgroundColor = Color(0xFFDCFCE7),
+                confirmButtonText = if (isBengali) "ঠিক আছে" else "OK",
+                onConfirm = {
+                    showSuccessDialog = false
+                    onBack()
+                }
+            ) {
+                Text(
+                    text = if (isBengali)
+                        "আপনার পণ্য পোস্টটি সফলভাবে অ্যাডমিন প্যানেলে জমা হয়েছে। পর্যালোচনার পর পোস্টটি প্রকাশিত হবে।"
+                    else
+                        "Your product post has been submitted for admin review. It will be published once approved.",
+                    fontSize = 14.sp,
+                    color = Color.DarkGray
+                )
             }
         }
     }

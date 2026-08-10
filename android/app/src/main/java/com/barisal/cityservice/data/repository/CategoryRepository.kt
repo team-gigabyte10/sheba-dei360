@@ -146,6 +146,11 @@ class CategoryRepository {
             "tutor" -> Icons.Default.School
             "flatland" -> Icons.Default.Landscape
             "categorymap" -> Icons.Default.LocationOn
+            "hotel" -> Icons.Default.Hotel
+            "restaurant" -> Icons.Default.Restaurant
+            "training_academy" -> Icons.Default.School
+            "job_screen" -> Icons.Default.Work
+            "domestic_help_screen" -> Icons.Default.CleaningServices
             else -> Icons.Default.Category
         }
     }
@@ -161,18 +166,23 @@ class CategoryRepository {
             CategoryItem(4, "Shopping", "বেচা-কেনা", fallbackIcon = Icons.Default.ShoppingCart, route = "shopping"),
             CategoryItem(5, "Matrimony", "পাত্র-পাত্রী", fallbackIcon = Icons.Default.People, route = "matrimony"),
             CategoryItem(6, "Event Service", "ইভেন্ট সার্ভিস", fallbackIcon = Icons.Default.Event, route = "event"),
-            CategoryItem(7, "Ride", "রাইড", fallbackIcon = Icons.Default.TwoWheeler, route = "ride"),
+            CategoryItem(7, "Rent a Car", "গাড়ি ভাড়া", fallbackIcon = Icons.Default.DirectionsCar, route = "ride"),
             CategoryItem(8, "Courier", "কুরিয়ার", fallbackIcon = Icons.Default.LocalShipping, route = "courier"),
             CategoryItem(9, "Mistri", "মিস্ত্রি", fallbackIcon = Icons.Default.Construction, route = "mistri"),
             CategoryItem(10, "Emergency Service", "জরুরী সেবা", fallbackIcon = Icons.Default.Emergency, route = "emergency"),
             CategoryItem(11, "Tutor", "টিউটর", fallbackIcon = Icons.Default.School, route = "tutor"),
             CategoryItem(12, "Flat and Land", "ফ্ল্যাট ও জমি", fallbackIcon = Icons.Default.Landscape, route = "flatland"),
-            CategoryItem(13, "Location Based Services", "লোকেশন ভিত্তিক সেবা", fallbackIcon = Icons.Default.LocationOn, route = "categorymap")
+            CategoryItem(13, "Location Based Services", "লোকেশন ভিত্তিক সেবা", fallbackIcon = Icons.Default.LocationOn, route = "categorymap"),
+            CategoryItem(14, "Hotel", "হোটেল", fallbackIcon = Icons.Default.Hotel, route = "hotel"),
+            CategoryItem(15, "Restaurant", "রেস্টুরেন্ট", fallbackIcon = Icons.Default.Restaurant, route = "restaurant"),
+            CategoryItem(16, "Training Academy", "ট্রেনিং একাডেমি", fallbackIcon = Icons.Default.School, route = "training_academy"),
+            CategoryItem(17, "Jobs Circular", "চাকরি ও নিয়োগ", fallbackIcon = Icons.Default.Work, route = "job_screen"),
+            CategoryItem(18, "Domestic Help / Maid", "গৃহকর্মী ও বুয়া", fallbackIcon = Icons.Default.CleaningServices, route = "domestic_help_screen")
         )
     }
 
     /**
-     * Default sub-categories list for all 13 core categories (Static, non-Firestore).
+     * Default sub-categories list for all 16 core categories (Static, non-Firestore).
      */
     fun getDefaultSubCategories(): List<SubCategoryItem> {
         return listOf(
@@ -217,10 +227,14 @@ class CategoryRepository {
             SubCategoryItem(604, 6, "Photography & Video", "ফটোগ্রাফি ও ভিডিও", fallbackIcon = Icons.Default.CameraAlt, route = "photography"),
             SubCategoryItem(605, 6, "Sound & Lighting", "সাউন্ড ও লাইটিং", fallbackIcon = Icons.Default.VolumeUp, route = "sound"),
 
-            // Category 7: Ride
-            SubCategoryItem(701, 7, "Bike Ride", "বাইক রাইড", fallbackIcon = Icons.Default.TwoWheeler, route = "bike"),
-            SubCategoryItem(702, 7, "Car Ride", "কার রাইড", fallbackIcon = Icons.Default.DirectionsCar, route = "car"),
-            SubCategoryItem(703, 7, "Auto & CNG", "অটো ও সিএনজি", fallbackIcon = Icons.Default.TwoWheeler, route = "cng"),
+            // Category 7: Rent a Car
+            SubCategoryItem(701, 7, "Private Car", "প্রাইভেট কার", fallbackIcon = Icons.Default.DirectionsCar, route = "private_car"),
+            SubCategoryItem(702, 7, "Microbus", "মাইক্রোবাস", fallbackIcon = Icons.Default.AirportShuttle, route = "microbus"),
+            SubCategoryItem(703, 7, "Pickup", "পিকআপ", fallbackIcon = Icons.Default.LocalShipping, route = "pickup"),
+            SubCategoryItem(704, 7, "Truck", "ট্রাক", fallbackIcon = Icons.Default.LocalShipping, route = "truck"),
+            SubCategoryItem(705, 7, "Ride Sharing", "রাইড শেয়ারিং", fallbackIcon = Icons.Default.TwoWheeler, route = "ride_sharing"),
+            SubCategoryItem(706, 7, "Van Vara", "ভ্যান ভাড়া", fallbackIcon = Icons.Default.Commute, route = "van_vara"),
+            SubCategoryItem(707, 7, "Auto Vara", "অটো ভাড়া", fallbackIcon = Icons.Default.ElectricRickshaw, route = "auto_vara"),
 
             // Category 8: Courier
             SubCategoryItem(801, 8, "Parcel Delivery", "পার্সেল ডেলিভারি", fallbackIcon = Icons.Default.LocalShipping, route = "parcel"),
@@ -256,7 +270,41 @@ class CategoryRepository {
             SubCategoryItem(1301, 13, "Nearby Hospitals", "কাছাকাছি হাসপাতাল", fallbackIcon = Icons.Default.LocalHospital, route = "map_hospital"),
             SubCategoryItem(1302, 13, "Nearby Police Stations", "কাছাকাছি পুলিশ স্টেশন", fallbackIcon = Icons.Default.LocalPolice, route = "map_police"),
             SubCategoryItem(1303, 13, "Nearby Banks & ATMs", "কাছাকাছি ব্যাংক ও এটিএম", fallbackIcon = Icons.Default.AccountBalance, route = "map_bank"),
-            SubCategoryItem(1304, 13, "Nearby Restaurants", "কাছাকাছি রেস্তোরাঁ", fallbackIcon = Icons.Default.Restaurant, route = "map_restaurant")
+            SubCategoryItem(1304, 13, "Nearby Restaurants", "কাছাকাছি রেস্তোরাঁ", fallbackIcon = Icons.Default.Restaurant, route = "map_restaurant"),
+
+            // Category 14: Hotel
+            SubCategoryItem(1401, 14, "Residential Hotel", "আবাসিক হোটেল", fallbackIcon = Icons.Default.Hotel, route = "res_hotel"),
+            SubCategoryItem(1402, 14, "Resort & Cottage", "রিসোর্ট ও কটেজ", fallbackIcon = Icons.Default.Villa, route = "resort"),
+            SubCategoryItem(1403, 14, "Rest House", "রেস্ট হাউস", fallbackIcon = Icons.Default.HomeWork, route = "rest_house"),
+
+            // Category 15: Restaurant
+            SubCategoryItem(1501, 15, "Traditional Food", "বাংলা খাবার / বিরিয়ানি", fallbackIcon = Icons.Default.RestaurantMenu, route = "bengali_food"),
+            SubCategoryItem(1502, 15, "Fast Food & Cafe", "ফাস্ট ফুড ও ক্যাফে", fallbackIcon = Icons.Default.Fastfood, route = "fast_food"),
+            SubCategoryItem(1503, 15, "Chinese & Thai", "চাইনিজ ও থাই", fallbackIcon = Icons.Default.RamenDining, route = "chinese_food"),
+            SubCategoryItem(1504, 15, "Bakery & Sweets", "বেকারি ও মিষ্টি", fallbackIcon = Icons.Default.Cake, route = "bakery"),
+
+            // Category 16: Training Academy
+            SubCategoryItem(1601, 16, "Car Driving Training", "কার ড্রাইভিং ট্রেনিং", fallbackIcon = Icons.Default.DirectionsCar, route = "car_driving"),
+            SubCategoryItem(1602, 16, "Computer Training", "কম্পিউটার ট্রেনিং", fallbackIcon = Icons.Default.Computer, route = "computer_training"),
+            SubCategoryItem(1603, 16, "Technical Training", "টেকনিক্যাল ট্রেনিং", fallbackIcon = Icons.Default.Build, route = "technical_training"),
+            SubCategoryItem(1604, 16, "Language Learning", "ভাষা শিক্ষা", fallbackIcon = Icons.Default.Translate, route = "language_learning"),
+            SubCategoryItem(1605, 16, "Job & Career", "চাকরি ও ক্যারিয়ার", fallbackIcon = Icons.Default.Work, route = "job_career"),
+            SubCategoryItem(1606, 16, "Others", "অন্যান্য", fallbackIcon = Icons.Default.MoreHoriz, route = "others"),
+
+            // Category 17: Jobs Circular (Chakri)
+            SubCategoryItem(1701, 17, "Protisthan", "প্রতিষ্ঠানে চাকরি", fallbackIcon = Icons.Default.Business, route = "protisthan"),
+            SubCategoryItem(1702, 17, "Shoroom", "শো-রুমে চাকরি", fallbackIcon = Icons.Default.Storefront, route = "shoroom"),
+            SubCategoryItem(1703, 17, "Dokan", "দোকানে চাকরি", fallbackIcon = Icons.Default.Store, route = "dokan"),
+            SubCategoryItem(1704, 17, "Others", "অন্যান্য চাকরি", fallbackIcon = Icons.Default.Work, route = "job_others"),
+
+            // Category 18: Domestic Help / Maid (Grihokormi / Buya)
+            SubCategoryItem(1801, 18, "Full-Time Maid", "ফুল-টাইম গৃহকর্মী", fallbackIcon = Icons.Default.CleaningServices, route = "full_time_maid"),
+            SubCategoryItem(1802, 18, "Part-Time Maid", "পার্ট-টাইম গৃহকর্মী", fallbackIcon = Icons.Default.CleaningServices, route = "part_time_maid"),
+            SubCategoryItem(1803, 18, "Cook / Chef", "রান্নার বুয়া", fallbackIcon = Icons.Default.SoupKitchen, route = "cook_chef"),
+            SubCategoryItem(1804, 18, "Baby Sitter", "শিশু দেখাশোনা", fallbackIcon = Icons.Default.ChildCare, route = "baby_sitter"),
+            SubCategoryItem(1805, 18, "Elderly Care", "বয়স্ক সেবা", fallbackIcon = Icons.Default.Elderly, route = "elderly_care"),
+            SubCategoryItem(1806, 18, "House Cleaner", "বাসা পরিষ্কার", fallbackIcon = Icons.Default.CleaningServices, route = "house_cleaner"),
+            SubCategoryItem(1807, 18, "Others", "অন্যান্য", fallbackIcon = Icons.Default.MoreHoriz, route = "help_others")
         )
     }
 }

@@ -36,6 +36,7 @@ import com.barisal.cityservice.core.utils.rememberLocationPermissionState
 import com.barisal.cityservice.data.model.FlatDetailsDto
 import com.barisal.cityservice.data.model.HouseRentDto
 import com.barisal.cityservice.data.repository.HouseRentRepository
+import com.barisal.cityservice.ui.components.CustomDialog
 import com.barisal.cityservice.ui.components.GlobalAppBar
 import com.barisal.cityservice.ui.components.LocationPickerMapScreen
 import com.barisal.cityservice.ui.components.SetStatusBarColor
@@ -47,6 +48,7 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PostHouseRentScreen(
+    initialSubCategory: String? = null,
     onBack: () -> Unit = {}
 ) {
     val context = LocalContext.current
@@ -55,10 +57,23 @@ fun PostHouseRentScreen(
     val coroutineScope = rememberCoroutineScope()
     val repository = remember { HouseRentRepository() }
 
+    val houseTypeList = listOf("ফ্ল্যাট ভাড়া", "ব্যাচেলর রুম/সিট", "মেয়েদের মেস", "সাবলেট", "হোস্টেল", "অফিস স্পেস", "দোকান", "গ্যারেজ")
+    val defaultHouseType = remember(initialSubCategory) {
+        if (initialSubCategory.isNullOrBlank()) return@remember "ফ্ল্যাট ভাড়া"
+        val decoded = try {
+            java.net.URLDecoder.decode(initialSubCategory, "UTF-8").replace("+", " ").trim()
+        } catch (e: Exception) {
+            initialSubCategory.replace("+", " ").trim()
+        }
+        houseTypeList.find { type ->
+            type.equals(decoded, ignoreCase = true) ||
+            type.replace(" ", "").equals(decoded.replace(" ", ""), ignoreCase = true)
+        } ?: "ফ্ল্যাট ভাড়া"
+    }
+
     var title by remember { mutableStateOf("") }
-    var selectedHouseType by remember { mutableStateOf("ফ্ল্যাট ভাড়া") }
+    var selectedHouseType by remember(defaultHouseType) { mutableStateOf(defaultHouseType) }
     var houseTypeDropdownExpanded by remember { mutableStateOf(false) }
-    val houseTypeList = listOf("ফ্ল্যাট ভাড়া", "ব্যাচেলর রুম/সিট", "সাবলেট", "হোস্টেল", "অফিস স্পেস", "দোকান", "গ্যারেজ")
 
     var rentAmount by remember { mutableStateOf("") }
     var address by remember { mutableStateOf("") }
@@ -106,6 +121,7 @@ fun PostHouseRentScreen(
     var zillaDropdownExpanded by remember { mutableStateOf(false) }
 
     var isSubmitting by remember { mutableStateOf(false) }
+    var showSuccessDialog by remember { mutableStateOf(false) }
     var showLocationPickerMap by remember { mutableStateOf(false) }
 
     if (showLocationPickerMap) {
@@ -613,12 +629,7 @@ fun PostHouseRentScreen(
                             isSubmitting = false
 
                             if (result.isSuccess) {
-                                Toast.makeText(
-                                    context,
-                                    if (isBengali) "আপনার বাসা ভাড়ার পোস্টটি জমা নেওয়া হয়েছে! অ্যাডমিন অনুমোদনের পর প্রকাশিত হবে।" else "Post submitted! Will be published after admin approval.",
-                                    Toast.LENGTH_LONG
-                                ).show()
-                                onBack()
+                                showSuccessDialog = true
                             } else {
                                 Toast.makeText(
                                     context,
@@ -647,6 +658,33 @@ fun PostHouseRentScreen(
                         )
                     }
                 }
+            }
+        }
+
+        if (showSuccessDialog) {
+            CustomDialog(
+                onDismissRequest = {
+                    showSuccessDialog = false
+                    onBack()
+                },
+                title = if (isBengali) "পোস্ট সফলভাবে জমা হয়েছে!" else "Post Submitted Successfully!",
+                icon = Icons.Default.Check,
+                iconTint = Color(0xFF16A34A),
+                iconBackgroundColor = Color(0xFFDCFCE7),
+                confirmButtonText = if (isBengali) "ঠিক আছে" else "OK",
+                onConfirm = {
+                    showSuccessDialog = false
+                    onBack()
+                }
+            ) {
+                Text(
+                    text = if (isBengali)
+                        "আপনার বাসা ভাড়ার বিজ্ঞাপনটি সফলভাবে অ্যাডমিন প্যানেলে জমা হয়েছে। পর্যালোচনার পর পোস্টটি প্রকাশিত হবে।"
+                    else
+                        "Your house rent ad has been submitted for admin review. It will be published once approved.",
+                    fontSize = 14.sp,
+                    color = Color.DarkGray
+                )
             }
         }
     }

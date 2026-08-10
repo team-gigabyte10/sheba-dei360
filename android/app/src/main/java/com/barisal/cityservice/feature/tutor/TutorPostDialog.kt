@@ -69,7 +69,9 @@ fun TutorPostDialog(
             "বাংলা",
             "হিসাববিজ্ঞান",
             "ফিন্যান্স ও ব্যাংকিং",
-            "অর্থনীতি"
+            "অর্থনীতি",
+            "নৃত্য শিক্ষক",
+            "সঙ্গীত শিক্ষক"
         )
     }
 
@@ -127,7 +129,7 @@ fun TutorPostDialog(
                     FilterChip(
                         selected = postType == "tutor",
                         onClick = { postType = "tutor" },
-                        label = { Text(if (isBengali) "👨‍🏫 পড়াতে চাই (Tutor)" else "👨‍🏫 Tutor Available", fontSize = 13.sp, fontWeight = FontWeight.Medium) },
+                        label = { Text(if (isBengali) "👨‍🏫 পড়াতে চাই (Tutor)" else "👨‍🏫 Tutor Available", fontSize = 15.sp, fontWeight = FontWeight.Medium) },
                         colors = FilterChipDefaults.filterChipColors(
                             selectedContainerColor = Color(0xFF0F766E),
                             selectedLabelColor = Color.White
@@ -136,7 +138,7 @@ fun TutorPostDialog(
                     FilterChip(
                         selected = postType == "student",
                         onClick = { postType = "student" },
-                        label = { Text(if (isBengali) "🎓 শিক্ষক চাই (Student)" else "🎓 Tuition Wanted", fontSize = 13.sp, fontWeight = FontWeight.Medium) },
+                        label = { Text(if (isBengali) "🎓 শিক্ষক চাই (Student)" else "🎓 Tuition Wanted", fontSize = 15.sp, fontWeight = FontWeight.Medium) },
                         colors = FilterChipDefaults.filterChipColors(
                             selectedContainerColor = Color(0xFF2563EB),
                             selectedLabelColor = Color.White
@@ -148,7 +150,7 @@ fun TutorPostDialog(
                 if (postType == "tutor") {
                     Text(
                         text = if (isBengali) "প্রোফাইল ছবি (Profile Picture)" else "Profile Picture",
-                        fontSize = 13.sp,
+                        fontSize = 15.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.DarkGray
                     )
@@ -184,7 +186,7 @@ fun TutorPostDialog(
                                     )
                                     Text(
                                         text = if (isBengali) "ছবি যোগ করুন" else "Add Photo",
-                                        fontSize = 10.sp,
+                                        fontSize = 13.sp,
                                         color = Color(0xFF0F766E),
                                         fontWeight = FontWeight.Medium
                                     )
@@ -209,21 +211,30 @@ fun TutorPostDialog(
                     value = bio,
                     onValueChange = { bio = it },
                     label = { Text(if (isBengali) "যোগ্যতা/সংক্ষিপ্ত বিবরণ *" else "Bio/Qualification *", fontSize = 14.sp) },
-                    placeholder = { Text(if (isBengali) "যেমন: ঢাকা বিশ্ববিদ্যালয় পদার্থবিজ্ঞান ২য় বর্ষ..." else "e.g., DU Physics 2nd year...", fontSize = 13.sp) },
+                    placeholder = { Text(if (isBengali) "যেমন: ঢাকা বিশ্ববিদ্যালয় পদার্থবিজ্ঞান ২য় বর্ষ..." else "e.g., DU Physics 2nd year...", fontSize = 15.sp) },
                     textStyle = androidx.compose.ui.text.TextStyle(fontSize = 15.sp),
                     modifier = Modifier.fillMaxWidth(),
                     minLines = 2,
                     maxLines = 4
                 )
 
-                // Class Range Selector
-                Text(if (isBengali) "শ্রেণী (Class):" else "Class:", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.DarkGray)
-                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    listOf("১ম–৫ম", "৬ষ্ঠ–৮ম", "৯ম–১০ম", "এইচএসসি", "আরবি/কুরআন").forEach { cls ->
+                // Class / Sub-Category Selector
+                Text(if (isBengali) "শ্রেণী / ক্যাটাগরি (Class / Category):" else "Class / Category:", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.DarkGray)
+                @OptIn(ExperimentalLayoutApi::class)
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    listOf("১ম–৫ম", "৬ষ্ঠ–৮ম", "৯ম–১০ম", "এইচএসসি", "আরবি/কুরআন", "নৃত্য শিক্ষক", "সঙ্গীত শিক্ষক").forEach { cls ->
                         FilterChip(
                             selected = classRange == cls,
                             onClick = { classRange = cls },
-                            label = { Text(cls, fontSize = 12.sp, fontWeight = FontWeight.Medium) }
+                            label = { Text(cls, fontSize = 14.sp, fontWeight = FontWeight.Medium) },
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = Color(0xFF0F766E),
+                                selectedLabelColor = Color.White
+                            )
                         )
                     }
                 }
@@ -232,7 +243,7 @@ fun TutorPostDialog(
                 if (classRange == "৯ম–১০ম" || classRange == "এইচএসসি") {
                     Text(
                         text = if (isBengali) "৯ম-১২দশ শ্রেণীর বিষয়সমূহ (Subject Checkboxes) *" else "Select Subjects for Class 9+ *",
-                        fontSize = 13.sp,
+                        fontSize = 15.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF0F766E)
                     )
@@ -253,7 +264,7 @@ fun TutorPostDialog(
                                         selectedSubjectCheckboxes.add(sub)
                                     }
                                 },
-                                label = { Text(sub, fontSize = 12.sp, fontWeight = FontWeight.Medium) },
+                                label = { Text(sub, fontSize = 14.sp, fontWeight = FontWeight.Medium) },
                                 leadingIcon = if (isSelected) {
                                     { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(14.dp)) }
                                 } else null,
@@ -280,7 +291,7 @@ fun TutorPostDialog(
                             fontSize = 14.sp
                         )
                     },
-                    placeholder = { Text(if (isBengali) "যেমন: গণিত, ইংরেজি, পদার্থবিজ্ঞান..." else "e.g., Math, Physics...", fontSize = 13.sp) },
+                    placeholder = { Text(if (isBengali) "যেমন: গণিত, ইংরেজি, পদার্থবিজ্ঞান..." else "e.g., Math, Physics...", fontSize = 15.sp) },
                     textStyle = androidx.compose.ui.text.TextStyle(fontSize = 15.sp),
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
@@ -291,7 +302,7 @@ fun TutorPostDialog(
                     OutlinedTextField(
                         value = daysPerWeek,
                         onValueChange = { daysPerWeek = it },
-                        label = { Text(if (isBengali) "দিন/সপ্তাহ" else "Days/Wk", fontSize = 13.sp) },
+                        label = { Text(if (isBengali) "দিন/সপ্তাহ" else "Days/Wk", fontSize = 14.sp) },
                         textStyle = androidx.compose.ui.text.TextStyle(fontSize = 15.sp),
                         modifier = Modifier.weight(1f),
                         singleLine = true
@@ -299,8 +310,8 @@ fun TutorPostDialog(
                     OutlinedTextField(
                         value = salary,
                         onValueChange = { salary = it },
-                        label = { Text(if (isBengali) "বেতন *" else "Salary *", fontSize = 13.sp) },
-                        placeholder = { Text("৳৪,০০০", fontSize = 13.sp) },
+                        label = { Text(if (isBengali) "বেতন *" else "Salary *", fontSize = 14.sp) },
+                        placeholder = { Text("৳৪,০০০", fontSize = 15.sp) },
                         textStyle = androidx.compose.ui.text.TextStyle(fontSize = 15.sp),
                         modifier = Modifier.weight(1f),
                         singleLine = true
@@ -312,7 +323,7 @@ fun TutorPostDialog(
                     OutlinedTextField(
                         value = address,
                         onValueChange = { address = it },
-                        label = { Text(if (isBengali) "ঠিকানা *" else "Address *", fontSize = 13.sp) },
+                        label = { Text(if (isBengali) "ঠিকানা *" else "Address *", fontSize = 14.sp) },
                         textStyle = androidx.compose.ui.text.TextStyle(fontSize = 15.sp),
                         modifier = Modifier.weight(1f),
                         singleLine = true
@@ -320,7 +331,7 @@ fun TutorPostDialog(
                     OutlinedTextField(
                         value = thana,
                         onValueChange = { thana = it },
-                        label = { Text(if (isBengali) "থানা *" else "Thana *", fontSize = 13.sp) },
+                        label = { Text(if (isBengali) "থানা *" else "Thana *", fontSize = 14.sp) },
                         textStyle = androidx.compose.ui.text.TextStyle(fontSize = 15.sp),
                         modifier = Modifier.weight(1f),
                         singleLine = true
@@ -351,7 +362,7 @@ fun TutorPostDialog(
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = if (isBengali) "আপনার লোকেশন ম্যাপ থেকে সেট করুন" else "Set location from map",
-                        fontSize = 13.sp,
+                        fontSize = 15.sp,
                         fontWeight = FontWeight.Bold
                     )
                 }
@@ -370,7 +381,7 @@ fun TutorPostDialog(
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
                                 text = String.format("লোকেশন সেট: %.5f, %.5f", selectedLat, selectedLng),
-                                fontSize = 12.sp,
+                                fontSize = 14.sp,
                                 fontWeight = FontWeight.SemiBold,
                                 color = Color(0xFF15803D)
                             )
