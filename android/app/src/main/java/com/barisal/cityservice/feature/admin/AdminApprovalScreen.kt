@@ -52,8 +52,26 @@ import com.barisal.cityservice.data.repository.ShoppingRepository
 import com.barisal.cityservice.data.repository.TutorRepository
 import com.barisal.cityservice.data.repository.JobRepository
 import com.barisal.cityservice.data.repository.DomesticHelpRepository
+import com.barisal.cityservice.data.repository.HotelRepository
+import com.barisal.cityservice.data.repository.RestaurantRepository
+import com.barisal.cityservice.data.repository.RentCarRepository
+import com.barisal.cityservice.data.repository.TrainingAcademyRepository
+import com.barisal.cityservice.data.repository.LegalServiceRepository
+import com.barisal.cityservice.data.repository.HajjTourRepository
+import com.barisal.cityservice.data.repository.MoneyExchangeRepository
+import com.barisal.cityservice.data.repository.MissingFoundRepository
+import com.barisal.cityservice.data.repository.NoticeRepository
 import com.barisal.cityservice.data.model.JobDto
 import com.barisal.cityservice.data.model.DomesticHelpDto
+import com.barisal.cityservice.data.model.HotelDto
+import com.barisal.cityservice.data.model.RestaurantDto
+import com.barisal.cityservice.data.model.RentCarDto
+import com.barisal.cityservice.data.model.TrainingAcademyDto
+import com.barisal.cityservice.data.model.LegalServiceDto
+import com.barisal.cityservice.data.model.HajjTourDto
+import com.barisal.cityservice.data.model.MoneyExchangeDto
+import com.barisal.cityservice.data.model.MissingFoundDto
+import com.barisal.cityservice.data.model.NoticeDto
 import com.barisal.cityservice.ui.components.GlobalAppBar
 import com.barisal.cityservice.ui.components.SetStatusBarColor
 import kotlinx.coroutines.launch
@@ -95,6 +113,11 @@ fun AdminApprovalScreen(
     val trainingRepo = remember { TrainingAcademyRepository() }
     val jobRepo = remember { JobRepository() }
     val domesticHelpRepo = remember { DomesticHelpRepository() }
+    val legalRepo = remember { LegalServiceRepository() }
+    val hajjTourRepo = remember { HajjTourRepository() }
+    val moneyExchangeRepo = remember { MoneyExchangeRepository() }
+    val missingFoundRepo = remember { MissingFoundRepository() }
+    val noticeRepo = remember { NoticeRepository() }
 
     val pendingDoctors by doctorRepo.getPendingDoctors().collectAsState(initial = emptyList())
     val pendingHealthServices by healthRepo.getPendingHealthServices().collectAsState(initial = emptyList())
@@ -113,16 +136,30 @@ fun AdminApprovalScreen(
     val pendingTrainingPosts by trainingRepo.getPendingTrainingPosts().collectAsState(initial = emptyList())
     val pendingJobs by jobRepo.getPendingJobs().collectAsState(initial = emptyList())
     val pendingDomesticHelps by domesticHelpRepo.getPendingDomesticHelps().collectAsState(initial = emptyList())
+    val pendingLegalServices by legalRepo.getPendingLegalServices().collectAsState(initial = emptyList())
+    val pendingHajjTourPosts by hajjTourRepo.getPendingHajjTourPosts().collectAsState(initial = emptyList())
+    val pendingMoneyExchanges by moneyExchangeRepo.getPendingMoneyExchangePosts().collectAsState(initial = emptyList())
+    val pendingMissingFounds by missingFoundRepo.getPendingMissingFoundPosts().collectAsState(initial = emptyList())
+    val allNotices by noticeRepo.getAllNotices().collectAsState(initial = emptyList())
 
     var selectedCategoryKey by remember { mutableStateOf<String?>(initialCategoryKey) }
     var selectedItemForDetail by remember { mutableStateOf<Any?>(null) }
+
+    var showNewNoticeDialog by remember { mutableStateOf(false) }
+    var noticeTitleInput by remember { mutableStateOf("") }
+    var noticeContentInput by remember { mutableStateOf("") }
+    var noticeDateInput by remember { mutableStateOf("") }
+    var isNoticeUrgent by remember { mutableStateOf(false) }
+    var isSubmittingNotice by remember { mutableStateOf(false) }
+
     val tealColor = Color(0xFF0F766E)
 
     val categoryList = remember(
         pendingDoctors, pendingHealthServices, pendingBloodDonors, pendingBloodRequests,
         pendingHouseRents, pendingEventServices, pendingProducts, pendingMistriProviders,
         pendingDrivers, pendingTutorPosts, pendingPropertyPosts, pendingHotels,
-        pendingRestaurants, pendingRentCars, pendingTrainingPosts, pendingJobs, pendingDomesticHelps
+        pendingRestaurants, pendingRentCars, pendingTrainingPosts, pendingJobs, pendingDomesticHelps,
+        pendingLegalServices, pendingHajjTourPosts, pendingMoneyExchanges, pendingMissingFounds, allNotices
     ) {
         listOf(
             AdminCategoryApprovalItem("doctor", "ডাক্তার", "Doctors", Icons.Default.MedicalServices, pendingDoctors.size, Color(0xFF0F766E)),
@@ -141,7 +178,14 @@ fun AdminApprovalScreen(
             AdminCategoryApprovalItem("rentcar", "গাড়ি ভাড়া", "Rent a Car", Icons.Default.DirectionsCar, pendingRentCars.size, Color(0xFF1D4ED8)),
             AdminCategoryApprovalItem("training", "ট্রেনিং একাডেমি", "Training Academy", Icons.Default.School, pendingTrainingPosts.size, Color(0xFF6D28D9)),
             AdminCategoryApprovalItem("job", "চাকরি ও নিয়োগ", "Jobs Circular", Icons.Default.Work, pendingJobs.size, Color(0xFF0F766E)),
-            AdminCategoryApprovalItem("domestic_help", "গৃহকর্মী ও বুয়া", "Domestic Help", Icons.Default.CleaningServices, pendingDomesticHelps.size, Color(0xFFD97706))
+            AdminCategoryApprovalItem("domestic_help", "গৃহকর্মী ও বুয়া", "Domestic Help", Icons.Default.CleaningServices, pendingDomesticHelps.size, Color(0xFFD97706)),
+            AdminCategoryApprovalItem("legal", "আইনি সেবা", "Legal Services", Icons.Default.Gavel, pendingLegalServices.filter { it.categoryKey == "legal" }.size, Color(0xFF1E293B)),
+            AdminCategoryApprovalItem("deed_amin", "দলিল লেখক/আমিন", "Deed Writer & Amin", Icons.Default.Assignment, pendingLegalServices.filter { it.categoryKey == "deed_amin" }.size, Color(0xFFD97706)),
+            AdminCategoryApprovalItem("hajj", "হজ ও উমরাহ সেবা", "Hajj & Umrah", Icons.Default.Mosque, pendingHajjTourPosts.filter { it.categoryKey == "hajj" }.size, Color(0xFF047857)),
+            AdminCategoryApprovalItem("tour", "ট্যুর ও ট্রাভেলস", "Tour & Travels", Icons.Default.FlightTakeoff, pendingHajjTourPosts.filter { it.categoryKey == "tour" }.size, Color(0xFF0284C7)),
+            AdminCategoryApprovalItem("money_exchange", "মানি এক্সচেঞ্জ", "Money Exchange", Icons.Default.CurrencyExchange, pendingMoneyExchanges.size, Color(0xFF0F766E)),
+            AdminCategoryApprovalItem("missing_found", "নিখোজ বিজ্ঞপ্তি", "Missing & Found", Icons.Default.Search, pendingMissingFounds.size, Color(0xFFDC2626)),
+            AdminCategoryApprovalItem("admin_notice", "নোটিশ বোর্ড", "Notice Board", Icons.Default.Campaign, allNotices.size, Color(0xFFDC2626))
         )
     }
 
@@ -906,9 +950,335 @@ fun AdminApprovalScreen(
                         }
                     }
                 }
+                "legal", "deed_amin" -> {
+                    val currentPendingList = pendingLegalServices.filter { it.categoryKey == selectedCategoryKey }
+                    if (currentPendingList.isEmpty()) {
+                        EmptyPendingBox(if (isBengali) "কোনো অপেক্ষমাণ আইনি/দলিল লেখক পোস্ট নেই" else "No pending legal/deed writer posts")
+                    } else {
+                        LazyColumn(
+                            verticalArrangement = Arrangement.spacedBy(12.dp),
+                            modifier = Modifier.fillMaxSize()
+                        ) {
+                            items(currentPendingList) { item ->
+                                PendingLegalCard(
+                                    service = item,
+                                    isBengali = isBengali,
+                                    onItemClick = { selectedItemForDetail = item },
+                                    onApprove = {
+                                        coroutineScope.launch {
+                                            val res = legalRepo.approveLegalService(item.id)
+                                            if (res.isSuccess) {
+                                                Toast.makeText(context, if (isBengali) "পোস্টটি অনুমোদিত হয়েছে!" else "Approved successfully!", Toast.LENGTH_SHORT).show()
+                                            } else {
+                                                Toast.makeText(context, "ত্রুটি: ${res.exceptionOrNull()?.message}", Toast.LENGTH_LONG).show()
+                                            }
+                                        }
+                                    },
+                                    onReject = {
+                                        coroutineScope.launch {
+                                            val res = legalRepo.rejectLegalService(item.id)
+                                            if (res.isSuccess) {
+                                                Toast.makeText(context, if (isBengali) "পোস্টটি বাতিল করা হয়েছে" else "Rejected/Deleted", Toast.LENGTH_SHORT).show()
+                                            } else {
+                                                Toast.makeText(context, "ত্রুটি: ${res.exceptionOrNull()?.message}", Toast.LENGTH_LONG).show()
+                                            }
+                                        }
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
+                "hajj", "tour" -> {
+                    val currentPendingList = pendingHajjTourPosts.filter { it.categoryKey == selectedCategoryKey }
+                    if (currentPendingList.isEmpty()) {
+                        EmptyPendingBox(if (isBengali) "কোনো অপেক্ষমাণ হজ/উমরাহ বা ট্যুর পোস্ট নেই" else "No pending Hajj/Tour posts")
+                    } else {
+                        LazyColumn(
+                            verticalArrangement = Arrangement.spacedBy(12.dp),
+                            modifier = Modifier.fillMaxSize()
+                        ) {
+                            items(currentPendingList) { item ->
+                                PendingHajjTourCard(
+                                    item = item,
+                                    isBengali = isBengali,
+                                    onItemClick = { selectedItemForDetail = item },
+                                    onApprove = {
+                                        coroutineScope.launch {
+                                            val res = hajjTourRepo.approveHajjTourPost(item.id)
+                                            if (res.isSuccess) {
+                                                Toast.makeText(context, if (isBengali) "পোস্টটি অনুমোদিত হয়েছে!" else "Approved successfully!", Toast.LENGTH_SHORT).show()
+                                            } else {
+                                                Toast.makeText(context, "ত্রুটি: ${res.exceptionOrNull()?.message}", Toast.LENGTH_LONG).show()
+                                            }
+                                        }
+                                    },
+                                    onReject = {
+                                        coroutineScope.launch {
+                                            val res = hajjTourRepo.rejectHajjTourPost(item.id)
+                                            if (res.isSuccess) {
+                                                Toast.makeText(context, if (isBengali) "পোস্টটি বাতিল করা হয়েছে" else "Rejected/Deleted", Toast.LENGTH_SHORT).show()
+                                            } else {
+                                                Toast.makeText(context, "ত্রুটি: ${res.exceptionOrNull()?.message}", Toast.LENGTH_LONG).show()
+                                            }
+                                        }
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
+                "money_exchange" -> {
+                    if (pendingMoneyExchanges.isEmpty()) {
+                        EmptyPendingBox(if (isBengali) "কোনো অপেক্ষমাণ মানি এক্সচেঞ্জ পোস্ট নেই" else "No pending money exchange posts")
+                    } else {
+                        LazyColumn(
+                            verticalArrangement = Arrangement.spacedBy(12.dp),
+                            modifier = Modifier.fillMaxSize()
+                        ) {
+                            items(pendingMoneyExchanges) { item ->
+                                PendingMoneyExchangeCard(
+                                    item = item,
+                                    isBengali = isBengali,
+                                    onItemClick = { selectedItemForDetail = item },
+                                    onApprove = {
+                                        coroutineScope.launch {
+                                            val res = moneyExchangeRepo.approveMoneyExchangePost(item.id)
+                                            if (res.isSuccess) {
+                                                Toast.makeText(context, if (isBengali) "পোস্টটি অনুমোদিত হয়েছে!" else "Approved successfully!", Toast.LENGTH_SHORT).show()
+                                            } else {
+                                                Toast.makeText(context, "ত্রুটি: ${res.exceptionOrNull()?.message}", Toast.LENGTH_LONG).show()
+                                            }
+                                        }
+                                    },
+                                    onReject = {
+                                        coroutineScope.launch {
+                                            val res = moneyExchangeRepo.rejectMoneyExchangePost(item.id)
+                                            if (res.isSuccess) {
+                                                Toast.makeText(context, if (isBengali) "পোস্টটি বাতিল করা হয়েছে" else "Rejected/Deleted", Toast.LENGTH_SHORT).show()
+                                            } else {
+                                                Toast.makeText(context, "ত্রুটি: ${res.exceptionOrNull()?.message}", Toast.LENGTH_LONG).show()
+                                            }
+                                        }
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
+                "missing_found" -> {
+                    if (pendingMissingFounds.isEmpty()) {
+                        EmptyPendingBox(if (isBengali) "কোনো অপেক্ষমাণ নিখোঁজ/প্রাপ্তি বিজ্ঞপ্তি নেই" else "No pending missing/found notices")
+                    } else {
+                        LazyColumn(
+                            verticalArrangement = Arrangement.spacedBy(12.dp),
+                            modifier = Modifier.fillMaxSize()
+                        ) {
+                            items(pendingMissingFounds) { item ->
+                                PendingMissingFoundCard(
+                                    item = item,
+                                    isBengali = isBengali,
+                                    onItemClick = { selectedItemForDetail = item },
+                                    onApprove = {
+                                        coroutineScope.launch {
+                                            val res = missingFoundRepo.approveMissingFoundPost(item.id)
+                                            if (res.isSuccess) {
+                                                Toast.makeText(context, if (isBengali) "পোস্টটি অনুমোদিত হয়েছে!" else "Approved successfully!", Toast.LENGTH_SHORT).show()
+                                            } else {
+                                                Toast.makeText(context, "ত্রুটি: ${res.exceptionOrNull()?.message}", Toast.LENGTH_LONG).show()
+                                            }
+                                        }
+                                    },
+                                    onReject = {
+                                        coroutineScope.launch {
+                                            val res = missingFoundRepo.rejectMissingFoundPost(item.id)
+                                            if (res.isSuccess) {
+                                                Toast.makeText(context, if (isBengali) "পোস্টটি বাতিল করা হয়েছে" else "Rejected/Deleted", Toast.LENGTH_SHORT).show()
+                                            } else {
+                                                Toast.makeText(context, "ত্রুটি: ${res.exceptionOrNull()?.message}", Toast.LENGTH_LONG).show()
+                                            }
+                                        }
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
+                "admin_notice" -> {
+                    Column(
+                        modifier = Modifier.fillMaxSize(),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Button(
+                            onClick = {
+                                noticeTitleInput = ""
+                                noticeContentInput = ""
+                                noticeDateInput = ""
+                                isNoticeUrgent = false
+                                showNewNoticeDialog = true
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDC2626)),
+                            shape = RoundedCornerShape(10.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(46.dp)
+                        ) {
+                            Icon(Icons.Default.Campaign, contentDescription = null)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(if (isBengali) "+ নতুন নোটিশ প্রকাশ করুন" else "+ Publish New Notice", fontWeight = FontWeight.Bold)
+                        }
+
+                        if (allNotices.isEmpty()) {
+                            EmptyPendingBox(if (isBengali) "কোনো প্রকাশিত নোটিশ নেই" else "No published notices found")
+                        } else {
+                            LazyColumn(
+                                verticalArrangement = Arrangement.spacedBy(10.dp),
+                                modifier = Modifier.fillMaxSize()
+                            ) {
+                                items(allNotices, key = { it.id }) { notice ->
+                                    Card(
+                                        shape = RoundedCornerShape(12.dp),
+                                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        Column(modifier = Modifier.padding(14.dp)) {
+                                            Row(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                horizontalArrangement = Arrangement.SpaceBetween,
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                Surface(
+                                                    color = if (notice.priority == "urgent") Color(0xFFDC2626) else Color(0xFF0F766E),
+                                                    shape = RoundedCornerShape(4.dp)
+                                                ) {
+                                                    Text(
+                                                        text = if (notice.priority == "urgent") (if (isBengali) "জরুরী" else "URGENT") else (if (isBengali) "সাধারণ" else "NORMAL"),
+                                                        color = Color.White,
+                                                        fontSize = 11.sp,
+                                                        fontWeight = FontWeight.Bold,
+                                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                                    )
+                                                }
+                                                IconButton(
+                                                    onClick = {
+                                                        coroutineScope.launch {
+                                                            val res = noticeRepo.deleteNotice(notice.id)
+                                                            if (res.isSuccess) {
+                                                                Toast.makeText(context, if (isBengali) "নোটিশ মুছে ফেলা হয়েছে" else "Notice deleted", Toast.LENGTH_SHORT).show()
+                                                            }
+                                                        }
+                                                    }
+                                                ) {
+                                                    Icon(Icons.Default.Delete, contentDescription = "Delete", tint = Color(0xFFDC2626))
+                                                }
+                                            }
+                                            Text(text = notice.title, fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Color.Black)
+                                            Spacer(modifier = Modifier.height(4.dp))
+                                            Text(text = notice.content, fontSize = 13.sp, color = Color.DarkGray, maxLines = 3)
+                                            if (notice.date.isNotBlank()) {
+                                                Spacer(modifier = Modifier.height(6.dp))
+                                                Text(text = "${if (isBengali) "তারিখ:" else "Date:"} ${notice.date}", fontSize = 11.sp, color = Color.Gray)
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
     }
+}
+
+// Publish New Notice Dialog
+if (showNewNoticeDialog) {
+    AlertDialog(
+        onDismissRequest = { showNewNoticeDialog = false },
+        icon = { Icon(Icons.Default.Campaign, contentDescription = null, tint = Color(0xFFDC2626), modifier = Modifier.size(36.dp)) },
+        title = { Text(if (isBengali) "নতুন নোটিশ প্রকাশ করুন" else "Publish New Notice", fontWeight = FontWeight.Bold) },
+        text = {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                OutlinedTextField(
+                    value = noticeTitleInput,
+                    onValueChange = { noticeTitleInput = it },
+                    label = { Text(if (isBengali) "নোটিশের শিরোনাম *" else "Notice Title *") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+                OutlinedTextField(
+                    value = noticeDateInput,
+                    onValueChange = { noticeDateInput = it },
+                    label = { Text(if (isBengali) "তারিখ (যেমন: ১১ আগস্ট ২০২৬)" else "Date (e.g. 11 Aug 2026)") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+                OutlinedTextField(
+                    value = noticeContentInput,
+                    onValueChange = { noticeContentInput = it },
+                    label = { Text(if (isBengali) "নোটিশের বিস্তারিত বিবরণ *" else "Notice Description *") },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(110.dp),
+                    maxLines = 4
+                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Checkbox(
+                        checked = isNoticeUrgent,
+                        onCheckedChange = { isNoticeUrgent = it }
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(if (isBengali) "জরুরী নোটিশ হিসেবে চিহ্ণিত করুন" else "Mark as Urgent Notice", fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    if (noticeTitleInput.isBlank() || noticeContentInput.isBlank()) {
+                        Toast.makeText(context, if (isBengali) "শিরোনাম ও বিবরণ দিন" else "Title and content required", Toast.LENGTH_SHORT).show()
+                        return@Button
+                    }
+                    isSubmittingNotice = true
+                    coroutineScope.launch {
+                        val newNotice = NoticeDto(
+                            title = noticeTitleInput.trim(),
+                            content = noticeContentInput.trim(),
+                            date = noticeDateInput.trim(),
+                            priority = if (isNoticeUrgent) "urgent" else "normal",
+                            isPinned = isNoticeUrgent
+                        )
+                        val res = noticeRepo.saveNotice(newNotice)
+                        isSubmittingNotice = false
+                        if (res.isSuccess) {
+                            showNewNoticeDialog = false
+                            Toast.makeText(context, if (isBengali) "নোটিশ সফলভাবে প্রকাশিত হয়েছে!" else "Notice published successfully!", Toast.LENGTH_SHORT).show()
+                        } else {
+                            Toast.makeText(context, "ত্রুটি: ${res.exceptionOrNull()?.message}", Toast.LENGTH_LONG).show()
+                        }
+                    }
+                },
+                enabled = !isSubmittingNotice,
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDC2626))
+            ) {
+                if (isSubmittingNotice) {
+                    CircularProgressIndicator(color = Color.White, modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
+                } else {
+                    Text(if (isBengali) "প্রকাশ করুন" else "Publish")
+                }
+            }
+        },
+        dismissButton = {
+            OutlinedButton(onClick = { showNewNoticeDialog = false }) {
+                Text(if (isBengali) "বাতিল" else "Cancel")
+            }
+        }
+    )
+}
 }
 
 @Composable
@@ -1813,6 +2183,65 @@ fun AdminPostDetailModal(
                         }
                         if (item.description.isNotBlank()) DetailRow(if (isBengali) "বিবরণ" else "Description", item.description)
                     }
+
+                    is LegalServiceDto -> {
+                        Text(item.name, fontWeight = FontWeight.Bold, fontSize = 18.sp, color = Color.Black)
+                        DetailRow(if (isBengali) "পদবী / ডিগ্রি" else "Designation", item.designation)
+                        DetailRow(if (isBengali) "ক্যাটাগরি" else "Category", if (item.categoryKey == "legal") "আইনি সেবা" else "দলিল লেখক/আমিন")
+                        DetailRow(if (isBengali) "উপ-ক্যাটাগরি" else "Sub Category", item.subCategory)
+                        DetailRow(if (isBengali) "শিরোনাম" else "Title", item.title)
+                        if (item.chamberOrOffice.isNotBlank()) DetailRow(if (isBengali) "চেম্বার / অফিস" else "Chamber / Office", item.chamberOrOffice)
+                        if (item.experience.isNotBlank()) DetailRow(if (isBengali) "অভিজ্ঞতা" else "Experience", item.experience)
+                        if (item.feeInfo.isNotBlank()) DetailRow(if (isBengali) "ফি" else "Fee", item.feeInfo)
+                        DetailRow(if (isBengali) "অবস্থান / এলাকা" else "Location", item.location)
+                        DetailRow(if (isBengali) "মোবাইল" else "Contact", item.contact)
+                        if (item.whatsapp.isNotBlank()) DetailRow("WhatsApp", item.whatsapp)
+                        if (item.description.isNotBlank()) DetailRow(if (isBengali) "বিবরণ" else "Description", item.description)
+                    }
+
+                    is HajjTourDto -> {
+                        Text(item.title, fontWeight = FontWeight.Bold, fontSize = 18.sp, color = Color.Black)
+                        DetailRow(if (isBengali) "এজেন্সির নাম" else "Agency Name", item.agencyName)
+                        DetailRow(if (isBengali) "ক্যাটাগরি" else "Category", if (item.categoryKey == "hajj") "হজ ও উমরাহ সেবা" else "ট্যুর ও ট্রাভেলস")
+                        DetailRow(if (isBengali) "উপ-ক্যাটাগরি" else "Sub Category", item.subCategory)
+                        if (item.licenseNo.isNotBlank()) DetailRow(if (isBengali) "লাইসেন্স নং" else "License No", item.licenseNo)
+                        if (item.packagePrice.isNotBlank()) DetailRow(if (isBengali) "প্যাকেজ মূল্য" else "Price", item.packagePrice)
+                        if (item.duration.isNotBlank()) DetailRow(if (isBengali) "মেয়াদ" else "Duration", item.duration)
+                        if (item.proprietorOrManager.isNotBlank()) DetailRow(if (isBengali) "পরিচালক/প্রোপাইটর" else "Proprietor/Manager", item.proprietorOrManager)
+                        DetailRow(if (isBengali) "অফিসের স্থান" else "Office Location", item.location)
+                        DetailRow(if (isBengali) "মোবাইল" else "Contact Phone", item.contact)
+                        if (item.whatsapp.isNotBlank()) DetailRow("WhatsApp", item.whatsapp)
+                        if (item.description.isNotBlank()) DetailRow(if (isBengali) "বিবরণ" else "Description", item.description)
+                    }
+
+                    is MoneyExchangeDto -> {
+                        Text(item.agencyName, fontWeight = FontWeight.Bold, fontSize = 18.sp, color = Color.Black)
+                        DetailRow(if (isBengali) "উপ-ক্যাটাগরি" else "Sub Category", item.subCategory)
+                        if (item.availableCurrencies.isNotBlank()) DetailRow(if (isBengali) "মুদ্রা" else "Currencies", item.availableCurrencies)
+                        if (item.licenseNo.isNotBlank()) DetailRow(if (isBengali) "লাইসেন্স নং" else "License No", item.licenseNo)
+                        if (item.address.isNotBlank()) DetailRow(if (isBengali) "ঠিকানা" else "Address", item.address)
+                        DetailRow(if (isBengali) "অবস্থান" else "Location", item.location)
+                        DetailRow(if (isBengali) "মোবাইল" else "Contact Phone", item.contact)
+                        if (item.whatsapp.isNotBlank()) DetailRow("WhatsApp", item.whatsapp)
+                        if (item.description.isNotBlank()) DetailRow(if (isBengali) "বিবরণ" else "Description", item.description)
+                    }
+
+                    is MissingFoundDto -> {
+                        Text(
+                            text = if (item.noticeType == "missing") "নিখোঁজ: ${item.title}" else "পাওয়া গেছে: ${item.title}",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 18.sp,
+                            color = if (item.noticeType == "missing") Color(0xFFDC2626) else Color(0xFF16A34A)
+                        )
+                        DetailRow(if (isBengali) "উপ-ক্যাটাগরি" else "Sub Category", item.subCategory)
+                        if (item.nameOrItem.isNotBlank()) DetailRow(if (isBengali) "নাম/জিনিস" else "Name/Item", item.nameOrItem)
+                        if (item.ageOrDetails.isNotBlank()) DetailRow(if (isBengali) "বয়স/বর্ণনা" else "Age/Details", item.ageOrDetails)
+                        if (item.incidentDate.isNotBlank()) DetailRow(if (isBengali) "ঘটনার তারিখ" else "Date", item.incidentDate)
+                        DetailRow(if (isBengali) "স্থান" else "Location", item.location)
+                        DetailRow(if (isBengali) "মোবাইল" else "Contact Phone", item.contact)
+                        if (item.rewardOrNote.isNotBlank()) DetailRow(if (isBengali) "পুরস্কার/নোট" else "Reward/Note", item.rewardOrNote)
+                        if (item.description.isNotBlank()) DetailRow(if (isBengali) "বিবরণ" else "Description", item.description)
+                    }
                 }
             }
         },
@@ -2333,6 +2762,282 @@ fun PendingDomesticHelpCard(
             Text(text = "${if (isBengali) "প্রত্যাশিত বেতন:" else "Rate:"} ${help.expectedSalary}", fontSize = 12.sp, color = Color.Gray)
             Text(text = "${if (isBengali) "এলাকা:" else "Location:"} ${help.location}", fontSize = 12.sp, color = Color.Gray)
             Text(text = "${if (isBengali) "ফোন:" else "Contact:"} ${help.contact}", fontSize = 12.sp, color = Color.Gray)
+            Spacer(modifier = Modifier.height(10.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                Button(
+                    onClick = onApprove,
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF16A34A)),
+                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier.weight(1f).height(38.dp)
+                ) {
+                    Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(if (isBengali) "অনুমোদন করুন" else "Approve", fontSize = 12.sp)
+                }
+                OutlinedButton(
+                    onClick = onReject,
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFDC2626)),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFDC2626)),
+                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier.weight(1f).height(38.dp)
+                ) {
+                    Icon(Icons.Default.Close, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(if (isBengali) "বাতিল করুন" else "Reject", fontSize = 12.sp)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun PendingLegalCard(
+    service: LegalServiceDto,
+    isBengali: Boolean,
+    onItemClick: () -> Unit,
+    onApprove: () -> Unit,
+    onReject: () -> Unit
+) {
+    val isLegal = service.categoryKey == "legal"
+    val themeColor = if (isLegal) Color(0xFF1E293B) else Color(0xFFD97706)
+
+    Card(
+        onClick = onItemClick,
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(modifier = Modifier.padding(14.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = if (isLegal) Icons.Default.Gavel else Icons.Default.Assignment,
+                    contentDescription = null,
+                    tint = themeColor,
+                    modifier = Modifier.size(32.dp)
+                )
+                Spacer(modifier = Modifier.width(12.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(text = service.name, fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Color.Black)
+                    Text(
+                        text = "${service.designation} • ${service.subCategory}",
+                        fontSize = 13.sp,
+                        color = themeColor,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(text = "${if (isBengali) "শিরোনাম:" else "Title:"} ${service.title}", fontSize = 12.sp, color = Color.Gray)
+            Text(text = "${if (isBengali) "চেম্বার/অফিস:" else "Chamber:"} ${service.chamberOrOffice}", fontSize = 12.sp, color = Color.Gray)
+            Text(text = "${if (isBengali) "ফোন:" else "Contact:"} ${service.contact}", fontSize = 12.sp, color = Color.Gray)
+            Spacer(modifier = Modifier.height(10.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                Button(
+                    onClick = onApprove,
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF16A34A)),
+                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier.weight(1f).height(38.dp)
+                ) {
+                    Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(if (isBengali) "অনুমোদন করুন" else "Approve", fontSize = 12.sp)
+                }
+                OutlinedButton(
+                    onClick = onReject,
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFDC2626)),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFDC2626)),
+                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier.weight(1f).height(38.dp)
+                ) {
+                    Icon(Icons.Default.Close, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(if (isBengali) "বাতিল করুন" else "Reject", fontSize = 12.sp)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun PendingHajjTourCard(
+    item: HajjTourDto,
+    isBengali: Boolean,
+    onItemClick: () -> Unit,
+    onApprove: () -> Unit,
+    onReject: () -> Unit
+) {
+    val isHajj = item.categoryKey == "hajj"
+    val themeColor = if (isHajj) Color(0xFF047857) else Color(0xFF0284C7)
+
+    Card(
+        onClick = onItemClick,
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(modifier = Modifier.padding(14.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = if (isHajj) Icons.Default.Mosque else Icons.Default.FlightTakeoff,
+                    contentDescription = null,
+                    tint = themeColor,
+                    modifier = Modifier.size(32.dp)
+                )
+                Spacer(modifier = Modifier.width(12.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(text = item.title, fontWeight = FontWeight.Bold, fontSize = 15.sp, color = Color.Black)
+                    Text(
+                        text = "${item.agencyName} • ${item.subCategory}",
+                        fontSize = 13.sp,
+                        color = themeColor,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            if (item.packagePrice.isNotBlank()) Text(text = "${if (isBengali) "মূল্য:" else "Price:"} ${item.packagePrice}", fontSize = 12.sp, color = Color.Gray)
+            if (item.licenseNo.isNotBlank()) Text(text = "${if (isBengali) "লাইসেন্স নং:" else "License:"} ${item.licenseNo}", fontSize = 12.sp, color = Color.Gray)
+            Text(text = "${if (isBengali) "ফোন:" else "Contact:"} ${item.contact}", fontSize = 12.sp, color = Color.Gray)
+            Spacer(modifier = Modifier.height(10.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                Button(
+                    onClick = onApprove,
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF16A34A)),
+                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier.weight(1f).height(38.dp)
+                ) {
+                    Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(if (isBengali) "অনুমোদন করুন" else "Approve", fontSize = 12.sp)
+                }
+                OutlinedButton(
+                    onClick = onReject,
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFDC2626)),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFDC2626)),
+                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier.weight(1f).height(38.dp)
+                ) {
+                    Icon(Icons.Default.Close, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(if (isBengali) "বাতিল করুন" else "Reject", fontSize = 12.sp)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun PendingMoneyExchangeCard(
+    item: MoneyExchangeDto,
+    isBengali: Boolean,
+    onItemClick: () -> Unit,
+    onApprove: () -> Unit,
+    onReject: () -> Unit
+) {
+    val themeColor = Color(0xFF0F766E)
+
+    Card(
+        onClick = onItemClick,
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(modifier = Modifier.padding(14.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Default.CurrencyExchange,
+                    contentDescription = null,
+                    tint = themeColor,
+                    modifier = Modifier.size(32.dp)
+                )
+                Spacer(modifier = Modifier.width(12.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(text = item.agencyName, fontWeight = FontWeight.Bold, fontSize = 15.sp, color = Color.Black)
+                    Text(
+                        text = "${item.subCategory} • ${item.availableCurrencies}",
+                        fontSize = 12.sp,
+                        color = themeColor,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            if (item.address.isNotBlank()) Text(text = "${if (isBengali) "ঠিকানা:" else "Address:"} ${item.address}", fontSize = 12.sp, color = Color.Gray)
+            Text(text = "${if (isBengali) "ফোন:" else "Contact:"} ${item.contact}", fontSize = 12.sp, color = Color.Gray)
+            Spacer(modifier = Modifier.height(10.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                Button(
+                    onClick = onApprove,
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF16A34A)),
+                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier.weight(1f).height(38.dp)
+                ) {
+                    Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(if (isBengali) "অনুমোদন করুন" else "Approve", fontSize = 12.sp)
+                }
+                OutlinedButton(
+                    onClick = onReject,
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFDC2626)),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFDC2626)),
+                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier.weight(1f).height(38.dp)
+                ) {
+                    Icon(Icons.Default.Close, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(if (isBengali) "বাতিল করুন" else "Reject", fontSize = 12.sp)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun PendingMissingFoundCard(
+    item: MissingFoundDto,
+    isBengali: Boolean,
+    onItemClick: () -> Unit,
+    onApprove: () -> Unit,
+    onReject: () -> Unit
+) {
+    val isMissing = item.noticeType == "missing"
+    val typeColor = if (isMissing) Color(0xFFDC2626) else Color(0xFF16A34A)
+    val typeText = if (isMissing) (if (isBengali) "নিখোঁজ" else "MISSING") else (if (isBengali) "পাওয়া গেছে" else "FOUND")
+
+    Card(
+        onClick = onItemClick,
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(modifier = Modifier.padding(14.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = if (isMissing) Icons.Default.Warning else Icons.Default.CheckCircle,
+                    contentDescription = null,
+                    tint = typeColor,
+                    modifier = Modifier.size(32.dp)
+                )
+                Spacer(modifier = Modifier.width(12.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Surface(color = typeColor, shape = RoundedCornerShape(4.dp)) {
+                            Text(text = typeText, color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
+                        }
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(text = item.subCategory, fontSize = 11.sp, color = Color.Gray)
+                    }
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(text = item.title, fontWeight = FontWeight.Bold, fontSize = 15.sp, color = Color.Black)
+                }
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            if (item.nameOrItem.isNotBlank()) Text(text = "${if (isBengali) "নাম/জিনিস:" else "Name/Item:"} ${item.nameOrItem}", fontSize = 12.sp, color = Color.Gray)
+            Text(text = "${if (isBengali) "ফোন:" else "Contact:"} ${item.contact}", fontSize = 12.sp, color = Color.Gray)
             Spacer(modifier = Modifier.height(10.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
                 Button(

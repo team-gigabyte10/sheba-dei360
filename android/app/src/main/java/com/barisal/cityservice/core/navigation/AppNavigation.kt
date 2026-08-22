@@ -139,8 +139,7 @@ fun AppNavigation() {
                 isEmailMode = isEmailMode,
                 onVerifySuccess = {
                     navController.navigate("home") {
-                        popUpTo("otp") { inclusive = true }
-                        popUpTo("login") { inclusive = true }
+                        popUpTo(0) { inclusive = true }
                     }
                 },
                 onBack = { navController.popBackStack() }
@@ -201,6 +200,24 @@ fun AppNavigation() {
                 },
                 onNavigateToDomesticHelp = {
                     navController.navigate("domestic_help_screen")
+                },
+                onNavigateToLegalService = {
+                    navController.navigate("legal_service_screen")
+                },
+                onNavigateToDeedAmin = {
+                    navController.navigate("deed_amin_screen")
+                },
+                onNavigateToHajjUmrah = {
+                    navController.navigate("hajj_umrah_screen")
+                },
+                onNavigateToTourTravels = {
+                    navController.navigate("tour_travels_screen")
+                },
+                onNavigateToMoneyExchange = {
+                    navController.navigate("money_exchange_screen")
+                },
+                onNavigateToMissingFound = {
+                    navController.navigate("missing_found_screen")
                 },
                 onNavigateToCategoryMap = { categoryKey ->
                     navController.navigate("category_map/$categoryKey")
@@ -449,6 +466,104 @@ fun AppNavigation() {
             val helpId = backStackEntry.arguments?.getString("helpId") ?: ""
             com.barisal.cityservice.feature.domestichelp.DomesticHelpDetailScreen(
                 helpId = helpId,
+                onBack = { navController.popBackStack() }
+            )
+        }
+        composable("legal_service_screen") {
+            com.barisal.cityservice.feature.legal.LegalServiceScreen(
+                categoryKey = "legal",
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToPostLegalService = { navigateWithAuthCheck("post_legal_service/legal") },
+                onNavigateToDetail = { serviceId -> navController.navigate("legal_service_detail/$serviceId") }
+            )
+        }
+        composable("deed_amin_screen") {
+            com.barisal.cityservice.feature.legal.LegalServiceScreen(
+                categoryKey = "deed_amin",
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToPostLegalService = { navigateWithAuthCheck("post_legal_service/deed_amin") },
+                onNavigateToDetail = { serviceId -> navController.navigate("legal_service_detail/$serviceId") }
+            )
+        }
+        composable("post_legal_service/{categoryKey}") { backStackEntry ->
+            val catKey = backStackEntry.arguments?.getString("categoryKey") ?: "legal"
+            com.barisal.cityservice.feature.legal.PostLegalServiceScreen(
+                initialCategoryKey = catKey,
+                onBack = { navController.popBackStack() }
+            )
+        }
+        composable("legal_service_detail/{serviceId}") { backStackEntry ->
+            val serviceId = backStackEntry.arguments?.getString("serviceId") ?: ""
+            com.barisal.cityservice.feature.legal.LegalServiceDetailScreen(
+                serviceId = serviceId,
+                onBack = { navController.popBackStack() }
+            )
+        }
+        composable("hajj_umrah_screen") {
+            com.barisal.cityservice.feature.hajjtour.HajjTourScreen(
+                categoryKey = "hajj",
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToPostHajjTour = { navigateWithAuthCheck("post_hajj_tour/hajj") },
+                onNavigateToDetail = { postId -> navController.navigate("hajj_tour_detail/$postId") }
+            )
+        }
+        composable("tour_travels_screen") {
+            com.barisal.cityservice.feature.hajjtour.HajjTourScreen(
+                categoryKey = "tour",
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToPostHajjTour = { navigateWithAuthCheck("post_hajj_tour/tour") },
+                onNavigateToDetail = { postId -> navController.navigate("hajj_tour_detail/$postId") }
+            )
+        }
+        composable("post_hajj_tour/{categoryKey}") { backStackEntry ->
+            val catKey = backStackEntry.arguments?.getString("categoryKey") ?: "hajj"
+            com.barisal.cityservice.feature.hajjtour.PostHajjTourScreen(
+                initialCategoryKey = catKey,
+                onBack = { navController.popBackStack() }
+            )
+        }
+        composable("hajj_tour_detail/{postId}") { backStackEntry ->
+            val postId = backStackEntry.arguments?.getString("postId") ?: ""
+            com.barisal.cityservice.feature.hajjtour.HajjTourDetailScreen(
+                postId = postId,
+                onBack = { navController.popBackStack() }
+            )
+        }
+        composable("money_exchange_screen") {
+            com.barisal.cityservice.feature.moneyexchange.MoneyExchangeScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToPostMoneyExchange = { navigateWithAuthCheck("post_money_exchange") },
+                onNavigateToDetail = { id -> navController.navigate("money_exchange_detail/$id") }
+            )
+        }
+        composable("post_money_exchange") {
+            com.barisal.cityservice.feature.moneyexchange.PostMoneyExchangeScreen(
+                onBack = { navController.popBackStack() }
+            )
+        }
+        composable("money_exchange_detail/{id}") { backStackEntry ->
+            val id = backStackEntry.arguments?.getString("id") ?: ""
+            com.barisal.cityservice.feature.moneyexchange.MoneyExchangeDetailScreen(
+                id = id,
+                onBack = { navController.popBackStack() }
+            )
+        }
+        composable("missing_found_screen") {
+            com.barisal.cityservice.feature.missingfound.MissingFoundScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToPostMissingFound = { navigateWithAuthCheck("post_missing_found") },
+                onNavigateToDetail = { id -> navController.navigate("missing_found_detail/$id") }
+            )
+        }
+        composable("post_missing_found") {
+            com.barisal.cityservice.feature.missingfound.PostMissingFoundScreen(
+                onBack = { navController.popBackStack() }
+            )
+        }
+        composable("missing_found_detail/{id}") { backStackEntry ->
+            val id = backStackEntry.arguments?.getString("id") ?: ""
+            com.barisal.cityservice.feature.missingfound.MissingFoundDetailScreen(
+                id = id,
                 onBack = { navController.popBackStack() }
             )
         }

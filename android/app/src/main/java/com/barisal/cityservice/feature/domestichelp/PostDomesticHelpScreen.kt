@@ -27,7 +27,7 @@ import coil.compose.AsyncImage
 import com.barisal.cityservice.core.language.LocalAppLanguage
 import com.barisal.cityservice.data.model.DomesticHelpDto
 import com.barisal.cityservice.data.repository.DomesticHelpRepository
-import com.barisal.cityservice.feature.location.LocationPickerMapScreen
+import com.barisal.cityservice.ui.components.LocationPickerMapScreen
 import com.barisal.cityservice.ui.components.GlobalAppBar
 import com.barisal.cityservice.ui.components.SetStatusBarColor
 import kotlinx.coroutines.launch
@@ -85,10 +85,6 @@ fun PostDomesticHelpScreen(
     ) { uri: Uri? ->
         if (uri != null) {
             selectedImageUri = uri
-            val compResult = domesticHelpRepo.compressImageToBase64(context, uri)
-            if (compResult.isSuccess) {
-                base64Image = compResult.getOrDefault("")
-            }
         }
     }
 
@@ -300,6 +296,10 @@ fun PostDomesticHelpScreen(
                     }
                     isSubmitting = true
                     coroutineScope.launch {
+                        val coverUrl = if (selectedImageUri != null) {
+                            domesticHelpRepo.uploadImageToStorage(context, selectedImageUri!!, "domestic_helps/covers").getOrDefault("")
+                        } else ""
+
                         val help = DomesticHelpDto(
                             title = title,
                             subCategory = subCategory,
@@ -310,7 +310,7 @@ fun PostDomesticHelpScreen(
                             experience = experience,
                             location = location,
                             description = description,
-                            coverImage = base64Image,
+                            coverImage = coverUrl,
                             latitude = selectedLat,
                             longitude = selectedLng,
                             isApproved = false

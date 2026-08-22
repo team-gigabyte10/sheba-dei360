@@ -44,8 +44,8 @@ fun BookingsScreen(
     onTrackOrder: (String) -> Unit
 ) {
     val mockBookings = listOf(
-        BookingMock("1", "প্লাম্বিং সার্ভিস", "মারুফ হোসেন", "চলমান", "২৭ অক্টোবর ২০২৩, বিকাল ৩:০০", true, R.drawable.dummy_person),
-        BookingMock("2", "এসি সার্ভিসিং", "আব্দুর রহমান", "সম্পন্ন", "২৫ অক্টোবর ২০২৩, সকাল ১০:০০", false, R.drawable.dummy_person)
+        BookingMock("1", "প্লাম্বিং সার্ভিস", "মারুফ হোসেন", "চলমান", "২৭ অক্টোবর ২০২৩, বিকাল ৩:০০", true, R.drawable.logo),
+        BookingMock("2", "এসি সার্ভিসিং", "আব্দুর রহমান", "সম্পন্ন", "২৫ অক্টোবর ২০২৩, সকাল ১০:০০", false, R.drawable.logo)
     )
 
     SetStatusBarColor()

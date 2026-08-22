@@ -421,8 +421,8 @@ fun TutorPostDialog(
                         coroutineScope.launch {
                             var profileImageUrl = ""
                             if (postType == "tutor" && selectedImageUri != null) {
-                                val compressResult = tutorRepo.compressImageToBase64(context, selectedImageUri!!)
-                                profileImageUrl = compressResult.getOrDefault("")
+                                val uploadResult = tutorRepo.uploadImageToStorage(context, selectedImageUri!!, "tutors/profiles")
+                                profileImageUrl = uploadResult.getOrDefault("")
                             }
 
                             val newPost = TutorProfile(

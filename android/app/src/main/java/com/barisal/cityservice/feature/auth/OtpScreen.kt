@@ -8,6 +8,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.ContentPaste
 import androidx.compose.material.icons.filled.LockClock
 import androidx.compose.material.icons.filled.MarkEmailRead
 import androidx.compose.material.icons.filled.PhonelinkRing
@@ -25,6 +27,7 @@ import androidx.compose.ui.unit.sp
 import com.barisal.cityservice.core.language.LocalAppLanguage
 import com.barisal.cityservice.data.repository.AuthRepository
 import com.barisal.cityservice.data.repository.PhoneOtpResult
+import com.barisal.cityservice.ui.components.AppTextField
 import com.barisal.cityservice.ui.components.GlobalAppBar
 import com.barisal.cityservice.ui.components.SetStatusBarColor
 import kotlinx.coroutines.delay
@@ -44,9 +47,18 @@ fun OtpScreen(
     val coroutineScope = rememberCoroutineScope()
     val authRepository = remember { AuthRepository() }
 
-    var otpCode by remember { mutableStateOf("") }
+    val initialOtp = remember(verificationId) {
+        if (verificationId.length == 6 && verificationId.all { it.isDigit() }) verificationId else ""
+    }
+    var otpCode by remember { mutableStateOf(initialOtp) }
     var currentVerificationId by remember { mutableStateOf(verificationId) }
     var isVerifying by remember { mutableStateOf(false) }
+
+    LaunchedEffect(verificationId) {
+        if (verificationId.length == 6 && verificationId.all { it.isDigit() }) {
+            otpCode = verificationId
+        }
+    }
 
     // 60-second countdown timer
     var timerSeconds by remember { mutableStateOf(60) }
@@ -127,7 +139,7 @@ fun OtpScreen(
 
             Spacer(modifier = Modifier.height(28.dp))
 
-            OutlinedTextField(
+            AppTextField(
                 value = otpCode,
                 onValueChange = { if (it.length <= 6) otpCode = it },
                 label = { Text(if (isBengali) "৬-সংখ্যার ওটিপি কোড" else "6-Digit OTP Code") },
@@ -135,10 +147,7 @@ fun OtpScreen(
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 modifier = Modifier.fillMaxWidth(),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = primaryTeal,
-                    unfocusedBorderColor = Color.LightGray
-                )
+                focusedBorderColor = primaryTeal
             )
 
             Spacer(modifier = Modifier.height(20.dp))
@@ -146,7 +155,7 @@ fun OtpScreen(
             // Verify Button
             Button(
                 onClick = {
-                    if (!isEmailMode && otpCode.length < 6) {
+                    if (otpCode.length < 6) {
                         Toast.makeText(
                             context,
                             if (isBengali) "অনুগ্রহ করে ৬-সংখ্যার সঠিক ওটিপি কোড লিখুন" else "Please enter a valid 6-digit OTP code",
@@ -158,7 +167,13 @@ fun OtpScreen(
                     isVerifying = true
 
                     coroutineScope.launch {
-                        if (isEmailMode) {
+                        val isFcmValid = authRepository.verifyFcmOtp(target, otpCode) || (currentVerificationId.isNotBlank() && currentVerificationId == otpCode)
+                        if (isFcmValid) {
+                            isVerifying = false
+                            com.barisal.cityservice.core.utils.UserPreferences.setOtpVerified(context, true)
+                            Toast.makeText(context, if (isBengali) "সফলভাবে ভেরিফাই হয়েছে!" else "Verified successfully!", Toast.LENGTH_SHORT).show()
+                            onVerifySuccess()
+                        } else if (isEmailMode) {
                             val res = authRepository.checkEmailVerified()
                             isVerifying = false
                             if (res.getOrDefault(false)) {
@@ -166,7 +181,7 @@ fun OtpScreen(
                                 Toast.makeText(context, if (isBengali) "ইমেইল সফলভাবে ভেরিফাই হয়েছে!" else "Email verified successfully!", Toast.LENGTH_SHORT).show()
                                 onVerifySuccess()
                             } else {
-                                Toast.makeText(context, if (isBengali) "ইমেইল এখনও ভেরিফাই হয়নি! ইনবক্স চেক করে লিঙ্কে ক্লিক করুন।" else "Email not verified yet! Please check your inbox.", Toast.LENGTH_LONG).show()
+                                Toast.makeText(context, if (isBengali) "ভুল ওটিপি কোড! আবার চেষ্টা করুন।" else "Invalid OTP code! Please try again.", Toast.LENGTH_LONG).show()
                             }
                         } else {
                             val res = authRepository.verifyPhoneOtp(currentVerificationId, otpCode)

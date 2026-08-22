@@ -16,10 +16,19 @@ import java.io.ByteArrayOutputStream
 import java.io.InputStream
 import java.util.UUID
 
+import com.barisal.cityservice.core.utils.FirebaseStorageManager
+
 class DomesticHelpRepository {
     private val firestore = FirebaseFirestore.getInstance()
     private val auth = FirebaseAuth.getInstance()
     private val collection = firestore.collection("domestic_helps")
+
+    /**
+     * Uploads image Uri to Firebase Storage under 'domestic_helps' path.
+     */
+    suspend fun uploadImageToStorage(context: Context, uri: Uri, folder: String = "domestic_helps"): Result<String> {
+        return FirebaseStorageManager.uploadFile(context, uri, folder)
+    }
 
     /**
      * Compress Uri image to compressed Base64 string.

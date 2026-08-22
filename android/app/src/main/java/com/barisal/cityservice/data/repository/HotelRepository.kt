@@ -16,12 +16,30 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.tasks.await
+import com.barisal.cityservice.core.utils.FirebaseStorageManager
 import java.io.ByteArrayOutputStream
 import kotlin.coroutines.resume
 
 class HotelRepository {
 
     private val firestore by lazy { FirebaseFirestore.getInstance() }
+
+    /**
+     * Uploads a cover or room image Uri to Firebase Storage under the 'hotels' path,
+     * returning its HTTP download URL reference string.
+     */
+    suspend fun uploadImageToStorage(context: Context, uri: Uri, folder: String = "hotels"): Result<String> {
+        return FirebaseStorageManager.uploadFile(context, uri, folder)
+    }
+
+    /**
+     * Uploads multiple room image Uris to Firebase Storage under the 'hotels' path,
+     * returning a list of HTTP download URL reference strings.
+     */
+    suspend fun uploadMultipleImagesToStorage(context: Context, uris: List<Uri>, folder: String = "hotels"): Result<List<String>> {
+        return FirebaseStorageManager.uploadMultipleFiles(context, uris, folder)
+    }
 
     /**
      * Resizes, compresses, and encodes a selected image Uri into a Base64 data URI string.

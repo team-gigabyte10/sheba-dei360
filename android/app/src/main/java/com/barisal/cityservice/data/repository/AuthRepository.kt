@@ -5,6 +5,7 @@ import android.util.Log
 import com.google.firebase.FirebaseException
 import com.google.firebase.auth.*
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import java.util.concurrent.TimeUnit
@@ -171,5 +172,29 @@ class AuthRepository {
                     if (continuation.isActive) continuation.resume(Result.failure(task.exception ?: Exception("Failed to reload user")))
                 }
             }
+    }
+
+    /**
+     * Sends FCM OTP code for passwordless sign-in request.
+     */
+    suspend fun sendFcmOtp(context: android.content.Context, target: String): Result<String> {
+        return suspendCancellableCoroutine { continuation ->
+            kotlinx.coroutines.CoroutineScope(Dispatchers.IO).launch {
+                com.barisal.cityservice.core.utils.FcmAuthManager.sendLoginFcmOtp(context, target) { success, code, error ->
+                    if (success) {
+                        if (continuation.isActive) continuation.resume(Result.success(code))
+                    } else {
+                        if (continuation.isActive) continuation.resume(Result.failure(Exception(error ?: "Failed to send OTP")))
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Verifies FCM OTP code for passwordless sign-in request.
+     */
+    suspend fun verifyFcmOtp(target: String, code: String): Boolean {
+        return com.barisal.cityservice.core.utils.FcmAuthManager.verifyFcmOtp(target, code)
     }
 }

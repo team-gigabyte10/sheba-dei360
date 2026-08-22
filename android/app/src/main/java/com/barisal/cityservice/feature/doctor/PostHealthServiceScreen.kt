@@ -441,11 +441,11 @@ fun PostHealthServiceScreen(
 
                         isSubmitting = true
                         coroutineScope.launch {
-                            var base64Image = ""
+                            var imageUrl = ""
                             if (selectedImageUri != null) {
-                                val compressResult = repository.compressImageToBase64(context, selectedImageUri!!)
-                                if (compressResult.isSuccess) {
-                                    base64Image = compressResult.getOrDefault("")
+                                val uploadResult = repository.uploadImageToStorage(context, selectedImageUri!!, "health_services")
+                                if (uploadResult.isSuccess) {
+                                    imageUrl = uploadResult.getOrDefault("")
                                 }
                             }
 
@@ -457,7 +457,7 @@ fun PostHealthServiceScreen(
                                 zilla = selectedZilla,
                                 contactInfo = contactInfo.trim(),
                                 latLng = latLng.trim(),
-                                imageUrl = base64Image,
+                                imageUrl = imageUrl,
                                 details = details.trim()
                             )
 

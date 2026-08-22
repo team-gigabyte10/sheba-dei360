@@ -27,7 +27,7 @@ import coil.compose.AsyncImage
 import com.barisal.cityservice.core.language.LocalAppLanguage
 import com.barisal.cityservice.data.model.JobDto
 import com.barisal.cityservice.data.repository.JobRepository
-import com.barisal.cityservice.feature.location.LocationPickerMapScreen
+import com.barisal.cityservice.ui.components.LocationPickerMapScreen
 import com.barisal.cityservice.ui.components.GlobalAppBar
 import com.barisal.cityservice.ui.components.SetStatusBarColor
 import kotlinx.coroutines.launch
@@ -44,6 +44,7 @@ fun PostJobScreen(
 
     var title by remember { mutableStateOf("") }
     var subCategory by remember { mutableStateOf(if (isBengali) "প্রতিষ্ঠানে চাকরি" else "Protisthan") }
+    var subCategoryDropdownExpanded by remember { mutableStateOf(false) }
     var organizationName by remember { mutableStateOf("") }
     var jobType by remember { mutableStateOf(if (isBengali) "ফুল টাইম" else "Full Time") }
     var salary by remember { mutableStateOf("") }
@@ -87,10 +88,6 @@ fun PostJobScreen(
     ) { uri: Uri? ->
         if (uri != null) {
             selectedImageUri = uri
-            val compResult = jobRepo.compressImageToBase64(context, uri)
-            if (compResult.isSuccess) {
-                base64Image = compResult.getOrDefault("")
-            }
         }
     }
 
@@ -154,22 +151,33 @@ fun PostJobScreen(
                         singleLine = true
                     )
 
-                    // Sub Category Dropdown / Chips
-                    Text(text = if (isBengali) "ক্যাটাগরি *" else "Category *", fontWeight = FontWeight.SemiBold, fontSize = 13.sp, color = Color.Gray)
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    // Sub Category Dropdown
+                    ExposedDropdownMenuBox(
+                        expanded = subCategoryDropdownExpanded,
+                        onExpandedChange = { subCategoryDropdownExpanded = !subCategoryDropdownExpanded }
                     ) {
-                        subCategoryOptions.forEach { option ->
-                            FilterChip(
-                                selected = subCategory == option,
-                                onClick = { subCategory = option },
-                                label = { Text(option, fontSize = 11.sp) },
-                                colors = FilterChipDefaults.filterChipColors(
-                                    selectedContainerColor = primaryColor,
-                                    selectedLabelColor = Color.White
+                        OutlinedTextField(
+                            value = subCategory,
+                            onValueChange = {},
+                            readOnly = true,
+                            label = { Text(if (isBengali) "ক্যাটাগরি *" else "Category *") },
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = subCategoryDropdownExpanded) },
+                            modifier = Modifier.fillMaxWidth().menuAnchor(),
+                            colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = primaryColor, focusedLabelColor = primaryColor)
+                        )
+                        ExposedDropdownMenu(
+                            expanded = subCategoryDropdownExpanded,
+                            onDismissRequest = { subCategoryDropdownExpanded = false }
+                        ) {
+                            subCategoryOptions.forEach { option ->
+                                DropdownMenuItem(
+                                    text = { Text(text = option) },
+                                    onClick = {
+                                        subCategory = option
+                                        subCategoryDropdownExpanded = false
+                                    }
                                 )
-                            )
+                            }
                         }
                     }
 
@@ -315,6 +323,10 @@ fun PostJobScreen(
                     }
                     isSubmitting = true
                     coroutineScope.launch {
+                        val coverUrl = if (selectedImageUri != null) {
+                            jobRepo.uploadImageToStorage(context, selectedImageUri!!, "jobs/covers").getOrDefault("")
+                        } else ""
+
                         val job = JobDto(
                             title = title,
                             subCategory = subCategory,
@@ -327,7 +339,7 @@ fun PostJobScreen(
                             location = location,
                             description = description,
                             deadline = deadline,
-                            coverImage = base64Image,
+                            coverImage = coverUrl,
                             latitude = selectedLat,
                             longitude = selectedLng,
                             isApproved = false

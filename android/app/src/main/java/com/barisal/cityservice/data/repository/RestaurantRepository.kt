@@ -16,12 +16,30 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.tasks.await
+import com.barisal.cityservice.core.utils.FirebaseStorageManager
 import java.io.ByteArrayOutputStream
 import kotlin.coroutines.resume
 
 class RestaurantRepository {
 
     private val firestore by lazy { FirebaseFirestore.getInstance() }
+
+    /**
+     * Uploads an image Uri to Firebase Storage under the 'restaurants' path,
+     * returning its HTTP download URL reference string.
+     */
+    suspend fun uploadImageToStorage(context: Context, uri: Uri, folder: String = "restaurants"): Result<String> {
+        return FirebaseStorageManager.uploadFile(context, uri, folder)
+    }
+
+    /**
+     * Uploads multiple image Uris to Firebase Storage under the 'restaurants' path,
+     * returning a list of HTTP download URL reference strings.
+     */
+    suspend fun uploadMultipleImagesToStorage(context: Context, uris: List<Uri>, folder: String = "restaurants"): Result<List<String>> {
+        return FirebaseStorageManager.uploadMultipleFiles(context, uris, folder)
+    }
 
     /**
      * Resizes, compresses, and encodes a selected image Uri into a Base64 data URI string.

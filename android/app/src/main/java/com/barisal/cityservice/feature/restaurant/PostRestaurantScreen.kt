@@ -391,14 +391,14 @@ fun PostRestaurantScreen(
                         isSubmitting = true
                         coroutineScope.launch {
                             try {
-                                val coverBase64 = if (selectedCoverImage != null) {
-                                    repository.compressImageToBase64(context, selectedCoverImage!!).getOrDefault("")
+                                val coverUrl = if (selectedCoverImage != null) {
+                                    repository.uploadImageToStorage(context, selectedCoverImage!!, "restaurants/covers").getOrDefault("")
                                 } else ""
 
                                 val menuDtoList = mutableListOf<MenuItemDto>()
                                 for (m in menuInputs) {
-                                    val itemImageBase64 = if (m.itemImage != null) {
-                                        repository.compressImageToBase64(context, m.itemImage!!).getOrDefault("")
+                                    val itemImageUrl = if (m.itemImage != null) {
+                                        repository.uploadImageToStorage(context, m.itemImage!!, "restaurants/menu").getOrDefault("")
                                     } else ""
                                     menuDtoList.add(
                                         MenuItemDto(
@@ -407,7 +407,7 @@ fun PostRestaurantScreen(
                                             price = m.price,
                                             description = m.description,
                                             category = m.category,
-                                            imageUrl = itemImageBase64
+                                            imageUrl = itemImageUrl
                                         )
                                     )
                                 }
@@ -419,7 +419,7 @@ fun PostRestaurantScreen(
                                     thana = thana,
                                     contact = contact,
                                     deliveryAvailable = deliveryAvailable,
-                                    coverImage = coverBase64,
+                                    coverImage = coverUrl,
                                     menuItems = menuDtoList,
                                     latitude = selectedLocation.latitude,
                                     longitude = selectedLocation.longitude

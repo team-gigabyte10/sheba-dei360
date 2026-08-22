@@ -19,10 +19,28 @@ import kotlinx.coroutines.withContext
 import java.io.ByteArrayOutputStream
 import kotlin.coroutines.resume
 
+import com.barisal.cityservice.core.utils.FirebaseStorageManager
+
 class ShoppingRepository {
 
     private val firestore by lazy { FirebaseFirestore.getInstance() }
     private val collectionRef by lazy { firestore.collection("products") }
+
+    /**
+     * Uploads an image Uri to Firebase Storage under the 'products' path,
+     * returning its HTTP download URL reference string.
+     */
+    suspend fun uploadImageToStorage(context: Context, uri: Uri, folder: String = "products"): Result<String> {
+        return FirebaseStorageManager.uploadFile(context, uri, folder)
+    }
+
+    /**
+     * Uploads multiple image Uris to Firebase Storage under the 'products' path,
+     * returning a list of HTTP download URL reference strings.
+     */
+    suspend fun uploadMultipleImagesToStorage(context: Context, uris: List<Uri>, folder: String = "products"): Result<List<String>> {
+        return FirebaseStorageManager.uploadMultipleFiles(context, uris, folder)
+    }
 
     /**
      * Resizes, compresses, and encodes a selected image Uri into a Base64 data URI string.

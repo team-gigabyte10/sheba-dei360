@@ -406,15 +406,15 @@ fun PostHotelScreen(
                         isSubmitting = true
                         coroutineScope.launch {
                             try {
-                                val coverBase64 = if (selectedCoverImage != null) {
-                                    repository.compressImageToBase64(context, selectedCoverImage!!).getOrDefault("")
+                                val coverUrl = if (selectedCoverImage != null) {
+                                    repository.uploadImageToStorage(context, selectedCoverImage!!, "hotels/covers").getOrDefault("")
                                 } else ""
 
                                 val roomsDtoList = mutableListOf<HotelRoomDto>()
                                 for (r in roomInputs) {
-                                    val roomImagesBase64 = r.roomImages.mapNotNull { uri ->
-                                        repository.compressImageToBase64(context, uri).getOrNull()
-                                    }
+                                    val roomImageUrls = if (r.roomImages.isNotEmpty()) {
+                                        repository.uploadMultipleImagesToStorage(context, r.roomImages, "hotels/rooms").getOrDefault(emptyList())
+                                    } else emptyList()
                                     roomsDtoList.add(
                                         HotelRoomDto(
                                             id = r.id,
@@ -423,7 +423,7 @@ fun PostHotelScreen(
                                             bedType = r.bedType,
                                             capacity = r.capacity,
                                             amenities = r.amenities.toList(),
-                                            roomImages = roomImagesBase64
+                                            roomImages = roomImageUrls
                                         )
                                     )
                                 }
@@ -435,7 +435,7 @@ fun PostHotelScreen(
                                     thana = thana,
                                     contact = contact,
                                     pricePerNight = pricePerNight,
-                                    coverImage = coverBase64,
+                                    coverImage = coverUrl,
                                     rooms = roomsDtoList,
                                     latitude = selectedLocation.latitude,
                                     longitude = selectedLocation.longitude

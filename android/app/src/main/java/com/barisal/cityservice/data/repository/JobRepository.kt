@@ -17,10 +17,19 @@ import java.io.ByteArrayOutputStream
 import java.io.InputStream
 import java.util.UUID
 
+import com.barisal.cityservice.core.utils.FirebaseStorageManager
+
 class JobRepository {
     private val firestore = FirebaseFirestore.getInstance()
     private val auth = FirebaseAuth.getInstance()
     private val collection = firestore.collection("jobs")
+
+    /**
+     * Uploads image Uri to Firebase Storage under 'jobs' path.
+     */
+    suspend fun uploadImageToStorage(context: Context, uri: Uri, folder: String = "jobs"): Result<String> {
+        return FirebaseStorageManager.uploadFile(context, uri, folder)
+    }
 
     /**
      * Compress Uri image to compressed Base64 string.
