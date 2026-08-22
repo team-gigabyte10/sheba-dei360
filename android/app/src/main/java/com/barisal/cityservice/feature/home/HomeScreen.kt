@@ -38,6 +38,8 @@ import com.barisal.cityservice.R
 import com.barisal.cityservice.ui.components.ExitAppDialog
 import com.barisal.cityservice.core.utils.bangladeshZillas
 import com.barisal.cityservice.core.utils.toCoilModel
+import com.barisal.cityservice.data.repository.NoticeRepository
+import com.barisal.cityservice.data.model.NoticeDto
 import com.barisal.cityservice.core.language.LocalAppLanguage
 import com.barisal.cityservice.core.language.AppLanguage
 import kotlinx.coroutines.launch
@@ -63,6 +65,12 @@ fun HomeScreen(
     onNavigateToTrainingAcademy: () -> Unit = {},
     onNavigateToJob: () -> Unit = {},
     onNavigateToDomesticHelp: () -> Unit = {},
+    onNavigateToLegalService: () -> Unit = {},
+    onNavigateToDeedAmin: () -> Unit = {},
+    onNavigateToHajjUmrah: () -> Unit = {},
+    onNavigateToTourTravels: () -> Unit = {},
+    onNavigateToMoneyExchange: () -> Unit = {},
+    onNavigateToMissingFound: () -> Unit = {},
     onNavigateToCategoryMap: (String) -> Unit = {},
     onNavigateToAllServices: () -> Unit = {},
     onNavigateToHealthServices: () -> Unit = {},
@@ -89,6 +97,10 @@ fun HomeScreen(
     
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val coroutineScope = rememberCoroutineScope()
+
+    val noticeRepo = remember { NoticeRepository() }
+    val noticesList by noticeRepo.getAllNotices().collectAsState(initial = emptyList())
+    var selectedNoticeForModal by remember { mutableStateOf<NoticeDto?>(null) }
     
     val view = LocalView.current
     SetStatusBarColor()
@@ -450,6 +462,12 @@ fun HomeScreen(
                                                 "ট্রেনিং একাডেমি", "Training Academy", "training_academy" -> onNavigateToTrainingAcademy()
                                                 "চাকরি ও নিয়োগ", "Jobs Circular", "job_screen", "চাকরি" -> onNavigateToJob()
                                                 "গৃহকর্মী ও বুয়া", "Domestic Help / Maid", "domestic_help_screen", "গৃহকর্মী" -> onNavigateToDomesticHelp()
+                                                "আইনি সেবা", "Legal Services", "legal_service_screen" -> onNavigateToLegalService()
+                                                "দলিল লেখক/আমিন", "Deed Writer & Surveyor", "deed_amin_screen", "দলিল লেখক" -> onNavigateToDeedAmin()
+                                                "হজ ও উমরাহ সেবা", "Hajj & Umrah Services", "hajj_umrah_screen", "হজ ও উমরাহ" -> onNavigateToHajjUmrah()
+                                                "ট্যুর ও ট্রাভেলস", "Tour & Travels", "tour_travels_screen", "ট্যুর" -> onNavigateToTourTravels()
+                                                "মানি এক্সচেঞ্জ", "Money Exchange", "money_exchange_screen" -> onNavigateToMoneyExchange()
+                                                "নিখোজ বিজ্ঞপ্তি", "Missing & Found", "missing_found_screen", "নিখোঁজ" -> onNavigateToMissingFound()
                                                 else -> onNavigateToCategoryMap(category.name)
                                             }
                                         }
@@ -531,29 +549,95 @@ fun HomeScreen(
                     }
                 }
 
-                // 5. Popular Services Header
-                item {
-                    Text(if (isBengali) "জনপ্রিয় সেবা প্রোভাইডার" else "Popular Service Providers", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                // 5. Official Notice Board Header & List
+                if (noticesList.isNotEmpty()) {
+                    item {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 10.dp, bottom = 6.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Campaign,
+                                contentDescription = null,
+                                tint = Color(0xFFDC2626),
+                                modifier = Modifier.size(24.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = if (isBengali) "জরুরী নোটিশ বোর্ড" else "Official Notice Board",
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF0F172A)
+                            )
+                        }
+                    }
+
+                    items(noticesList, key = { it.id }) { notice ->
+                        NoticeCard(
+                            notice = notice,
+                            isBengali = isBengali,
+                            onClick = { selectedNoticeForModal = notice }
+                        )
+                    }
                 }
 
-                // 6. Provider List
-                items(providers) { provider ->
-                    ProviderCard(
-                        provider = provider,
-                        onCallClick = {
-                            val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:01712345678"))
-                            context.startActivity(intent)
-                        },
-                        onClick = {
-                            onNavigateToProviderDetails(provider.id)
-                        }
-                    )
-                }
-                
                 item {
                     Spacer(modifier = Modifier.height(24.dp))
                 }
             }
+        }
+
+        // Notice Detail Dialog
+        if (selectedNoticeForModal != null) {
+            val notice = selectedNoticeForModal!!
+            AlertDialog(
+                onDismissRequest = { selectedNoticeForModal = null },
+                icon = {
+                    Icon(
+                        imageVector = Icons.Default.Campaign,
+                        contentDescription = null,
+                        tint = if (notice.priority == "urgent") Color(0xFFDC2626) else Color(0xFF0F766E),
+                        modifier = Modifier.size(36.dp)
+                    )
+                },
+                title = {
+                    Text(
+                        text = notice.title,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 17.sp,
+                        color = Color(0xFF0F172A)
+                    )
+                },
+                text = {
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        if (notice.date.isNotBlank()) {
+                            Text(
+                                text = "${if (isBengali) "প্রকাশের তারিখ:" else "Date:"} ${notice.date}",
+                                fontSize = 12.sp,
+                                color = Color.Gray,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                        }
+                        Text(
+                            text = notice.content,
+                            fontSize = 14.sp,
+                            color = Color(0xFF334155),
+                            lineHeight = 20.sp
+                        )
+                    }
+                },
+                confirmButton = {
+                    Button(
+                        onClick = { selectedNoticeForModal = null },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0F766E))
+                    ) {
+                        Text(if (isBengali) "বন্ধ করুন" else "Close")
+                    }
+                }
+            )
         }
     }
 }
@@ -616,96 +700,90 @@ fun CategoryItem(category: Category, modifier: Modifier = Modifier, onClick: () 
 }
 
 @Composable
-fun ProviderCard(
-    provider: ProviderMock,
-    onCallClick: () -> Unit = {},
-    onClick: () -> Unit = {}
+fun NoticeCard(
+    notice: NoticeDto,
+    isBengali: Boolean,
+    onClick: () -> Unit
 ) {
+    val isUrgent = notice.priority == "urgent"
+    val accentColor = if (isUrgent) Color(0xFFDC2626) else Color(0xFF0F766E)
+
     Card(
+        onClick = onClick,
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onClick() },
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        shape = RoundedCornerShape(16.dp),
-        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE2E8F0))
+            .padding(vertical = 4.dp)
     ) {
-        Column(
-            modifier = Modifier.padding(16.dp)
-        ) {
+        Column(modifier = Modifier.padding(14.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.Top
-            ) {
-                // Avatar
-                Box(
-                    modifier = Modifier
-                        .size(60.dp)
-                        .clip(CircleShape)
-                        .background(Color.LightGray),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(Icons.Default.Person, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(36.dp))
-                }
-                
-                Spacer(modifier = Modifier.width(16.dp))
-                
-                // Details
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(text = provider.name, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0F172A))
-                    Spacer(modifier = Modifier.height(4.dp))
-                    
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(text = "Rating: ${provider.rating}", fontSize = 14.sp, color = Color(0xFF475569))
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Icon(Icons.Default.Star, contentDescription = "Rating", tint = Color(0xFFFFC107), modifier = Modifier.size(14.dp))
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(text = "(${provider.reviews} রেটিং)", fontSize = 14.sp, color = Color(0xFF475569))
-                    }
-                    Spacer(modifier = Modifier.height(2.dp))
-                    Text(text = "এলাকা: ${provider.area}", fontSize = 14.sp, color = Color(0xFF475569))
-                    Spacer(modifier = Modifier.height(2.dp))
-                    Text(text = "মূল্য: ${provider.price}", fontSize = 14.sp, color = Color(0xFF475569))
-                }
-            }
-            
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            // Buttons and Category
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(provider.icon, contentDescription = null, tint = Color(0xFF0F766E), modifier = Modifier.size(20.dp))
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(text = provider.categoryTextBan, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0F766E))
+                    Surface(
+                        color = accentColor,
+                        shape = RoundedCornerShape(4.dp)
+                    ) {
+                        Text(
+                            text = if (isUrgent) (if (isBengali) "জরুরী" else "URGENT") else (if (isBengali) "নোটিশ" else "NOTICE"),
+                            color = Color.White,
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                        )
+                    }
+                    if (notice.isPinned) {
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Icon(
+                            imageVector = Icons.Default.PushPin,
+                            contentDescription = "Pinned",
+                            tint = Color(0xFFD97706),
+                            modifier = Modifier.size(14.dp)
+                        )
+                    }
                 }
-                
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedButton(
-                        onClick = onCallClick,
-                        shape = RoundedCornerShape(20.dp),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF0F766E)),
-                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
-                    ) {
-                        Icon(Icons.Default.Call, contentDescription = "Call", tint = Color(0xFF0F766E), modifier = Modifier.size(16.dp))
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(text = "কল করুন", color = Color(0xFF0F766E), fontWeight = FontWeight.Bold, fontSize = 12.sp)
-                    }
-                    Button(
-                        onClick = onClick,
-                        shape = RoundedCornerShape(20.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0F766E)),
-                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
-                    ) {
-                        Icon(Icons.Default.CalendarMonth, contentDescription = "Book", tint = Color.White, modifier = Modifier.size(16.dp))
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(text = "বুকিং করুন", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp)
-                    }
+
+                if (notice.date.isNotBlank()) {
+                    Text(
+                        text = notice.date,
+                        fontSize = 11.sp,
+                        color = Color.Gray
+                    )
                 }
             }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = notice.title,
+                fontWeight = FontWeight.Bold,
+                fontSize = 15.sp,
+                color = Color(0xFF0F172A),
+                maxLines = 2
+            )
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            Text(
+                text = notice.content,
+                fontSize = 13.sp,
+                color = Color(0xFF475569),
+                maxLines = 2,
+                lineHeight = 18.sp
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = if (isBengali) "সম্পূর্ণ পড়তে ট্যাপ করুন →" else "Tap to read full notice →",
+                fontSize = 11.sp,
+                color = accentColor,
+                fontWeight = FontWeight.Bold
+            )
         }
     }
 }

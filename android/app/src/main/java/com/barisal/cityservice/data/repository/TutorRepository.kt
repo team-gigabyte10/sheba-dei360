@@ -19,10 +19,19 @@ import kotlinx.coroutines.withContext
 import java.io.ByteArrayOutputStream
 import kotlin.coroutines.resume
 
+import com.barisal.cityservice.core.utils.FirebaseStorageManager
+
 class TutorRepository {
 
     private val firestore by lazy { FirebaseFirestore.getInstance() }
     private val collectionRef by lazy { firestore.collection("tutor_posts") }
+
+    /**
+     * Uploads an image Uri to Firebase Storage under 'tutors' path.
+     */
+    suspend fun uploadImageToStorage(context: Context, uri: Uri, folder: String = "tutors"): Result<String> {
+        return FirebaseStorageManager.uploadFile(context, uri, folder)
+    }
 
     /**
      * Resizes, compresses, and encodes a selected image Uri into a Base64 data URI string.

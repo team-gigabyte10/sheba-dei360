@@ -641,10 +641,10 @@ fun PostMistriServiceScreen(
                     isSubmitting = true
                     coroutineScope.launch {
                         try {
-                            var profileBase64 = ""
+                            var profileImageUrl = ""
                             if (profileImageUri != null) {
-                                val res = mistriRepo.compressImageToBase64(context, profileImageUri!!)
-                                profileBase64 = res.getOrDefault("")
+                                val res = mistriRepo.uploadImageToStorage(context, profileImageUri!!, "mistri/profiles")
+                                profileImageUrl = res.getOrDefault("")
                             }
 
                             // Build category specific map
@@ -695,7 +695,7 @@ fun PostMistriServiceScreen(
                                 zilla = selectedZilla,
                                 latLng = latLngString,
                                 description = descriptionText,
-                                profileImageUrl = profileBase64,
+                                profileImageUrl = profileImageUrl,
                                 workSampleImages = emptyList(),
                                 categorySpecificFields = categoryMap,
                                 isApproved = false

@@ -69,6 +69,8 @@ dependencies {
     implementation(libs.firebase.firestore)
     implementation(libs.firebase.database)
     implementation(libs.firebase.functions)
+    implementation(libs.firebase.storage)
+    implementation(libs.firebase.messaging)
     // Google Auth & Google Drive API Credentials
     implementation("com.google.auth:google-auth-library-oauth2-http:1.23.0") {
         exclude(group = "org.apache.httpcomponents", module = "httpclient")

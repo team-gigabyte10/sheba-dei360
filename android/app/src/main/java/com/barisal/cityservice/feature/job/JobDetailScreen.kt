@@ -82,7 +82,7 @@ fun JobDetailScreen(
                         .clip(RoundedCornerShape(12.dp))
                 ) {
                     AsyncImage(
-                        model = job.coverImage.toCoilModel(context),
+                        model = job.coverImage.toCoilModel(),
                         contentDescription = "Job Banner",
                         modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Crop

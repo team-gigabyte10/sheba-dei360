@@ -479,11 +479,7 @@ fun PostPropertyScreen(
                                 isSubmitting = true
 
                                 coroutineScope.launch {
-                                    val imageBase64List = mutableListOf<String>()
-                                    selectedImages.forEach { uri ->
-                                        val res = propertyRepo.compressImageToBase64(context, uri)
-                                        res.getOrNull()?.let { imageBase64List.add(it) }
-                                    }
+                                    val imageUrlList = propertyRepo.uploadMultipleImagesToStorage(context, selectedImages, "properties").getOrDefault(emptyList())
 
                                     val dto = PropertyDto(
                                         propertyType = propertyType,
@@ -494,7 +490,7 @@ fun PostPropertyScreen(
                                         latLng = if (selectedLat != null && selectedLng != null) String.format("%.5f,%.5f", selectedLat, selectedLng) else "",
                                         price = formattedPrice,
                                         phone = phone,
-                                        images = imageBase64List,
+                                        images = imageUrlList,
                                         roomSize = roomSize,
                                         floor = floor,
                                         beds = beds.toIntOrNull() ?: 0,

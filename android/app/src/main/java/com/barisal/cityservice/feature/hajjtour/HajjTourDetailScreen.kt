@@ -1,0 +1,278 @@
+package com.barisal.cityservice.feature.hajjtour
+
+import android.content.Intent
+import android.net.Uri
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
+import com.barisal.cityservice.core.language.LocalAppLanguage
+import com.barisal.cityservice.core.utils.toCoilModel
+import com.barisal.cityservice.data.model.HajjTourDto
+import com.barisal.cityservice.data.repository.HajjTourRepository
+import com.barisal.cityservice.ui.components.GlobalAppBar
+import com.barisal.cityservice.ui.components.SetStatusBarColor
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun HajjTourDetailScreen(
+    postId: String,
+    onBack: () -> Unit = {}
+) {
+    val context = LocalContext.current
+    val isBengali = LocalAppLanguage.current.isBengali
+    val repo = remember { HajjTourRepository() }
+
+    var item by remember { mutableStateOf<HajjTourDto?>(null) }
+    var isLoading by remember { mutableStateOf(true) }
+
+    LaunchedEffect(postId) {
+        item = repo.getHajjTourPostById(postId)
+        isLoading = false
+    }
+
+    SetStatusBarColor()
+
+    Scaffold(
+        topBar = {
+            GlobalAppBar(
+                title = if (isBengali) "প্যাকেজের বিস্তারিত" else "Package Details",
+                onBackClick = onBack
+            )
+        },
+        containerColor = Color(0xFFF8FAFC)
+    ) { innerPadding ->
+        if (isLoading) {
+            Box(modifier = Modifier.fillMaxSize().padding(innerPadding), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator(color = Color(0xFF047857))
+            }
+        } else if (item == null) {
+            Box(modifier = Modifier.fillMaxSize().padding(innerPadding), contentAlignment = Alignment.Center) {
+                Text(if (isBengali) "প্যাকেজের তথ্য পাওয়া যায়নি" else "Package details not found", color = Color.Gray)
+            }
+        } else {
+            val post = item!!
+            val isHajj = post.categoryKey == "hajj"
+            val themeColor = if (isHajj) Color(0xFF047857) else Color(0xFF0284C7)
+
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .verticalScroll(rememberScrollState())
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                // Header Banner & Agency Card
+                Card(
+                    shape = RoundedCornerShape(14.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column {
+                        val coilModel = remember(post.bannerImage) { post.bannerImage.toCoilModel() }
+                        if (coilModel != null) {
+                            AsyncImage(
+                                model = coilModel,
+                                contentDescription = "Banner Image",
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(180.dp),
+                                contentScale = ContentScale.Crop
+                            )
+                        }
+
+                        Column(modifier = Modifier.padding(18.dp)) {
+                            Surface(
+                                color = themeColor.copy(alpha = 0.1f),
+                                shape = RoundedCornerShape(4.dp)
+                            ) {
+                                Text(
+                                    text = post.subCategory,
+                                    color = themeColor,
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            Text(
+                                text = post.title,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 18.sp,
+                                color = Color(0xFF0F172A)
+                            )
+
+                            Text(
+                                text = post.agencyName,
+                                fontSize = 15.sp,
+                                color = themeColor,
+                                fontWeight = FontWeight.SemiBold,
+                                modifier = Modifier.padding(top = 4.dp)
+                            )
+
+                            if (post.licenseNo.isNotBlank()) {
+                                Text(
+                                    text = "${if (isBengali) "লাইসেন্স নং:" else "License No:"} ${post.licenseNo}",
+                                    fontSize = 12.sp,
+                                    color = Color.Gray,
+                                    modifier = Modifier.padding(top = 2.dp)
+                                )
+                            }
+                        }
+                    }
+                }
+
+                // Package Key Info Card
+                Card(
+                    shape = RoundedCornerShape(14.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(
+                        modifier = Modifier.padding(18.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Text(
+                            text = if (isBengali) "প্যাকেজ সংক্রান্ত তথ্য" else "Package Information",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 16.sp,
+                            color = Color(0xFF0F172A)
+                        )
+
+                        HorizontalDivider(color = Color(0xFFF1F5F9))
+
+                        if (post.packagePrice.isNotBlank()) {
+                            DetailRow(label = if (isBengali) "প্যাকেজ মূল্য" else "Price", value = post.packagePrice)
+                        }
+
+                        if (post.duration.isNotBlank()) {
+                            DetailRow(label = if (isBengali) "মেয়াদ / সময়সীমা" else "Duration", value = post.duration)
+                        }
+
+                        if (post.departureLocation.isNotBlank()) {
+                            DetailRow(label = if (isBengali) "যাত্রার স্থান" else "Departure", value = post.departureLocation)
+                        }
+
+                        if (post.destination.isNotBlank()) {
+                            DetailRow(label = if (isBengali) "গন্তব্য" else "Destination", value = post.destination)
+                        }
+
+                        if (post.proprietorOrManager.isNotBlank()) {
+                            DetailRow(label = if (isBengali) "পরিচালক/প্রোপাইটর" else "Proprietor/Manager", value = post.proprietorOrManager)
+                        }
+
+                        if (post.location.isNotBlank()) {
+                            DetailRow(label = if (isBengali) "অফিসের এলাকা/জেলা" else "Office Location", value = post.location)
+                        }
+
+                        if (post.description.isNotBlank()) {
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = if (isBengali) "বিস্তারিত বিবরণ ও সুবিধাসমূহ:" else "Details & Facilities:",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 13.sp,
+                                color = Color.DarkGray
+                            )
+                            Text(
+                                text = post.description,
+                                fontSize = 13.sp,
+                                color = Color(0xFF334155),
+                                lineHeight = 18.sp
+                            )
+                        }
+                    }
+                }
+
+                // Contact Card
+                Card(
+                    shape = RoundedCornerShape(14.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(
+                        modifier = Modifier.padding(18.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Text(
+                            text = if (isBengali) "যোগাযোগ করুন" else "Contact Agency",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 16.sp,
+                            color = Color(0xFF0F172A)
+                        )
+
+                        if (post.contact.isNotBlank()) {
+                            Button(
+                                onClick = {
+                                    val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:${post.contact}"))
+                                    context.startActivity(intent)
+                                },
+                                colors = ButtonDefaults.buttonColors(containerColor = themeColor),
+                                shape = RoundedCornerShape(10.dp),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(46.dp)
+                            ) {
+                                Icon(Icons.Default.Phone, contentDescription = null)
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(if (isBengali) "কল করুন (${post.contact})" else "Call (${post.contact})", fontWeight = FontWeight.Bold)
+                            }
+                        }
+
+                        if (post.whatsapp.isNotBlank()) {
+                            OutlinedButton(
+                                onClick = {
+                                    val cleanNumber = post.whatsapp.replace("+", "").replace("-", "").replace(" ", "")
+                                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://api.whatsapp.com/send?phone=$cleanNumber"))
+                                    context.startActivity(intent)
+                                },
+                                colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF16A34A)),
+                                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF16A34A)),
+                                shape = RoundedCornerShape(10.dp),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(46.dp)
+                            ) {
+                                Text("WhatsApp (${post.whatsapp})", fontWeight = FontWeight.Bold)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun DetailRow(label: String, value: String) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 2.dp),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(text = "$label:", fontSize = 13.sp, color = Color.Gray, modifier = Modifier.weight(0.4f))
+        Text(text = value, fontSize = 13.sp, color = Color(0xFF0F172A), fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(0.6f))
+    }
+}

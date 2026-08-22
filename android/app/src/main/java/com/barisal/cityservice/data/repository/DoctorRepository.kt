@@ -18,9 +18,18 @@ import kotlinx.coroutines.withContext
 import java.io.ByteArrayOutputStream
 import kotlin.coroutines.resume
 
+import com.barisal.cityservice.core.utils.FirebaseStorageManager
+
 class DoctorRepository {
 
     private val firestore by lazy { FirebaseFirestore.getInstance() }
+
+    /**
+     * Uploads an image Uri to Firebase Storage under 'doctors' or specified folder path.
+     */
+    suspend fun uploadImageToStorage(context: Context, uri: Uri, folder: String = "doctors"): Result<String> {
+        return FirebaseStorageManager.uploadFile(context, uri, folder)
+    }
 
     /**
      * Resizes, compresses, and encodes a selected image Uri into a Base64 data URI string.

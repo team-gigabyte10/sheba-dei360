@@ -33,9 +33,17 @@ import androidx.compose.ui.unit.sp
 import com.barisal.cityservice.R
 import com.barisal.cityservice.core.language.LocalAppLanguage
 import com.barisal.cityservice.data.repository.AuthRepository
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.input.ImeAction
+import com.barisal.cityservice.ui.components.AppTextField
 import com.barisal.cityservice.ui.components.SetStatusBarColor
+import com.barisal.cityservice.ui.components.clearFocusOnTap
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.UserProfileChangeRequest
+import com.barisal.cityservice.core.utils.UserPreferences
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -47,14 +55,38 @@ fun RegisterScreen(
     val context = LocalContext.current
     val isBengali = LocalAppLanguage.current.isBengali
     val authRepository = remember { AuthRepository() }
+    val coroutineScope = rememberCoroutineScope()
 
     var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var phone by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    var passwordVisible by remember { mutableStateOf(false) }
 
-    var isLoading by remember { mutableStateOf(false) }
+    var isLoading by remember { mutableStateOf("") }
+    var isSubmitting by remember { mutableStateOf(false) }
+    var generatedOtpDialogData by remember { mutableStateOf<Triple<String, String, Boolean>?>(null) }
+
+    if (generatedOtpDialogData != null) {
+        val (target, otpCode, isEmail) = generatedOtpDialogData!!
+        OtpDisplayDialog(
+            target = target,
+            otpCode = otpCode,
+            isBengali = isBengali,
+            onDismiss = {
+                generatedOtpDialogData = null
+                onNavigateToOtp(target, otpCode, isEmail)
+            },
+            onProceed = {
+                generatedOtpDialogData = null
+                UserPreferences.setOtpVerified(context, true)
+                Toast.makeText(
+                    context,
+                    if (isBengali) "সফলভাবে রেজিস্ট্রেশন সম্পন্ন হয়েছে!" else "Successfully registered!",
+                    Toast.LENGTH_SHORT
+                ).show()
+                onNavigateToHome()
+            }
+        )
+    }
 
     SetStatusBarColor()
 
@@ -62,8 +94,14 @@ fun RegisterScreen(
     val textDark = Color(0xFF1E293B)
     val textMuted = Color(0xFF64748B)
 
+    val focusManager = LocalFocusManager.current
+    val emailFocusRequester = remember { FocusRequester() }
+    val phoneFocusRequester = remember { FocusRequester() }
+
     Box(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .clearFocusOnTap(),
         contentAlignment = Alignment.Center
     ) {
         // Background Image
@@ -111,7 +149,7 @@ fun RegisterScreen(
                         // App Logo
                         Box(
                             modifier = Modifier
-                                .size(64.dp)
+                                .size(110.dp)
                                 .clip(CircleShape)
                                 .background(primaryTeal.copy(alpha = 0.1f)),
                             contentAlignment = Alignment.Center
@@ -119,7 +157,7 @@ fun RegisterScreen(
                             Image(
                                 painter = painterResource(id = R.drawable.logo),
                                 contentDescription = "App Logo",
-                                modifier = Modifier.size(48.dp)
+                                modifier = Modifier.size(90.dp)
                             )
                         }
 
@@ -142,86 +180,57 @@ fun RegisterScreen(
                         Spacer(modifier = Modifier.height(20.dp))
 
                         // Full Name Field
-                        OutlinedTextField(
+                        AppTextField(
                             value = name,
                             onValueChange = { name = it },
                             label = { Text(if (isBengali) "পুরো নাম *" else "Full Name *") },
                             placeholder = { Text(if (isBengali) "আপনার নাম লিখুন" else "Enter your full name") },
                             leadingIcon = { Icon(Icons.Default.Person, contentDescription = null, tint = primaryTeal) },
                             singleLine = true,
+                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                            keyboardActions = KeyboardActions(onNext = { emailFocusRequester.requestFocus() }),
                             modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(12.dp),
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = primaryTeal,
-                                unfocusedBorderColor = Color(0xFFE2E8F0)
-                            )
+                            focusedBorderColor = primaryTeal
                         )
 
                         Spacer(modifier = Modifier.height(14.dp))
 
                         // Email Field
-                        OutlinedTextField(
+                        AppTextField(
                             value = email,
                             onValueChange = { email = it },
                             label = { Text(if (isBengali) "ইমেইল এড্রেস *" else "Email Address *") },
                             placeholder = { Text("user@example.com") },
                             leadingIcon = { Icon(Icons.Default.Email, contentDescription = null, tint = primaryTeal) },
                             singleLine = true,
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                            focusRequester = emailFocusRequester,
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.Email,
+                                imeAction = ImeAction.Next
+                            ),
+                            keyboardActions = KeyboardActions(onNext = { phoneFocusRequester.requestFocus() }),
                             modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(12.dp),
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = primaryTeal,
-                                unfocusedBorderColor = Color(0xFFE2E8F0)
-                            )
+                            focusedBorderColor = primaryTeal
                         )
 
                         Spacer(modifier = Modifier.height(14.dp))
 
-                        // Phone Field
-                        OutlinedTextField(
+                        // Phone Field (Mandatory)
+                        AppTextField(
                             value = phone,
                             onValueChange = { phone = it },
-                            label = { Text(if (isBengali) "ফোন নম্বর (ঐচ্ছিক)" else "Phone Number (Optional)") },
+                            label = { Text(if (isBengali) "ফোন নম্বর *" else "Phone Number *") },
                             placeholder = { Text("+88017XXXXXXXX") },
                             leadingIcon = { Icon(Icons.Default.Phone, contentDescription = null, tint = primaryTeal) },
                             singleLine = true,
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                            focusRequester = phoneFocusRequester,
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.Phone,
+                                imeAction = ImeAction.Done
+                            ),
+                            keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
                             modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(12.dp),
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = primaryTeal,
-                                unfocusedBorderColor = Color(0xFFE2E8F0)
-                            )
-                        )
-
-                        Spacer(modifier = Modifier.height(14.dp))
-
-                        // Password Field
-                        OutlinedTextField(
-                            value = password,
-                            onValueChange = { password = it },
-                            label = { Text(if (isBengali) "পাসওয়ার্ড *" else "Password *") },
-                            placeholder = { Text("••••••••") },
-                            leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null, tint = primaryTeal) },
-                            trailingIcon = {
-                                IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                                    Icon(
-                                        imageVector = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
-                                        contentDescription = "Toggle Password Visibility",
-                                        tint = Color.Gray
-                                    )
-                                }
-                            },
-                            singleLine = true,
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                            visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(12.dp),
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = primaryTeal,
-                                unfocusedBorderColor = Color(0xFFE2E8F0)
-                            )
+                            focusedBorderColor = primaryTeal
                         )
 
                         Spacer(modifier = Modifier.height(22.dp))
@@ -229,66 +238,52 @@ fun RegisterScreen(
                         // Register Button
                         Button(
                             onClick = {
-                                if (name.isBlank() || email.isBlank() || password.isBlank()) {
+                                if (name.isBlank() || email.isBlank() || phone.isBlank()) {
                                     Toast.makeText(
                                         context,
-                                        if (isBengali) "অনুগ্রহ করে নাম, ইমেইল ও পাসওয়ার্ড লিখুন" else "Please enter your name, email, and password",
+                                        if (isBengali) "অনুগ্রহ করে নাম, ইমেইল ও ফোন নম্বর দিন" else "Please enter your name, email, and phone number",
                                         Toast.LENGTH_SHORT
                                     ).show()
                                     return@Button
                                 }
 
-                                if (password.length < 6) {
-                                    Toast.makeText(
-                                        context,
-                                        if (isBengali) "পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে" else "Password must be at least 6 characters",
-                                        Toast.LENGTH_SHORT
-                                    ).show()
-                                    return@Button
-                                }
+                                isSubmitting = true
+                                focusManager.clearFocus()
 
-                                isLoading = true
-                                val firebaseAuth = FirebaseAuth.getInstance()
-
-                                firebaseAuth.createUserWithEmailAndPassword(email.trim(), password)
-                                    .addOnCompleteListener { task ->
-                                        isLoading = false
-                                        if (task.isSuccessful) {
-                                            val user = firebaseAuth.currentUser
-                                            val profileUpdates = UserProfileChangeRequest.Builder()
-                                                .setDisplayName(name.trim())
-                                                .build()
-                                            user?.updateProfile(profileUpdates)
-                                            com.barisal.cityservice.core.utils.UserPreferences.setOtpVerified(context, true)
-                                            Toast.makeText(
-                                                context,
-                                                if (isBengali) "অ্যাকাউন্ট সফলভাবে তৈরি হয়েছে!" else "Account created successfully!",
-                                                Toast.LENGTH_SHORT
-                                            ).show()
-                                            onNavigateToHome()
+                                coroutineScope.launch {
+                                    com.barisal.cityservice.core.utils.FcmAuthManager.registerUserWithFcm(
+                                        context = context,
+                                        name = name,
+                                        email = email,
+                                        phone = phone
+                                    ) { success, otpCode, errorMsg ->
+                                        isSubmitting = false
+                                        if (success) {
+                                            generatedOtpDialogData = Triple(phone.trim(), otpCode, false)
                                         } else {
                                             Toast.makeText(
                                                 context,
-                                                if (isBengali) "নিবন্ধন ব্যর্থ: ${task.exception?.message}" else "Registration failed: ${task.exception?.message}",
+                                                if (isBengali) "ত্রুটি: $errorMsg" else "Error: $errorMsg",
                                                 Toast.LENGTH_LONG
                                             ).show()
                                         }
                                     }
+                                }
                             },
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(50.dp),
                             shape = RoundedCornerShape(12.dp),
-                            enabled = !isLoading,
+                            enabled = !isSubmitting,
                             colors = ButtonDefaults.buttonColors(containerColor = primaryTeal)
                         ) {
-                            if (isLoading) {
+                            if (isSubmitting) {
                                 CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
                             } else {
                                 Icon(Icons.Default.PersonAdd, contentDescription = null)
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
-                                    text = if (isBengali) "অ্যাকাউন্ট তৈরি করুন" else "Create Account",
+                                    text = if (isBengali) "ওটিপি পেয়ে নিবন্ধন করুন" else "Get OTP & Register",
                                     fontSize = 16.sp,
                                     fontWeight = FontWeight.Bold
                                 )

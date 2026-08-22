@@ -82,7 +82,7 @@ fun DomesticHelpDetailScreen(
                         .clip(RoundedCornerShape(12.dp))
                 ) {
                     AsyncImage(
-                        model = help.coverImage.toCoilModel(context),
+                        model = help.coverImage.toCoilModel(),
                         contentDescription = "Maid Image",
                         modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Crop

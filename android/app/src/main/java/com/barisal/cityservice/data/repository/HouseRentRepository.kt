@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
+import com.barisal.cityservice.core.utils.FirebaseStorageManager
 import java.io.ByteArrayOutputStream
 import kotlin.coroutines.resume
 
@@ -22,6 +23,22 @@ class HouseRentRepository {
 
     private val firestore by lazy { FirebaseFirestore.getInstance() }
     private val collectionRef by lazy { firestore.collection("house_rents") }
+
+    /**
+     * Uploads an image Uri to Firebase Storage under the 'house_rents' path,
+     * returning its HTTP download URL reference string.
+     */
+    suspend fun uploadImageToStorage(context: Context, uri: Uri, folder: String = "house_rents"): Result<String> {
+        return FirebaseStorageManager.uploadFile(context, uri, folder)
+    }
+
+    /**
+     * Uploads multiple image Uris to Firebase Storage under the 'house_rents' path,
+     * returning a list of HTTP download URL reference strings.
+     */
+    suspend fun uploadMultipleImagesToStorage(context: Context, uris: List<Uri>, folder: String = "house_rents"): Result<List<String>> {
+        return FirebaseStorageManager.uploadMultipleFiles(context, uris, folder)
+    }
 
     /**
      * Resizes, compresses, and encodes a selected image Uri into a Base64 data URI string.

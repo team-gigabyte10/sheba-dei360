@@ -19,10 +19,26 @@ import kotlinx.coroutines.withContext
 import java.io.ByteArrayOutputStream
 import kotlin.coroutines.resume
 
+import com.barisal.cityservice.core.utils.FirebaseStorageManager
+
 class PropertyRepository {
 
     private val firestore by lazy { FirebaseFirestore.getInstance() }
     private val collectionRef by lazy { firestore.collection("property_posts") }
+
+    /**
+     * Uploads an image Uri to Firebase Storage under 'properties' path.
+     */
+    suspend fun uploadImageToStorage(context: Context, uri: Uri, folder: String = "properties"): Result<String> {
+        return FirebaseStorageManager.uploadFile(context, uri, folder)
+    }
+
+    /**
+     * Uploads multiple image Uris to Firebase Storage under 'properties' path.
+     */
+    suspend fun uploadMultipleImagesToStorage(context: Context, uris: List<Uri>, folder: String = "properties"): Result<List<String>> {
+        return FirebaseStorageManager.uploadMultipleFiles(context, uris, folder)
+    }
 
     /**
      * Resizes, compresses, and encodes a selected image Uri into a Base64 data URI string.

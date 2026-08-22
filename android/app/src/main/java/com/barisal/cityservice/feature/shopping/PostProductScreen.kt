@@ -455,7 +455,7 @@ fun PostProductScreen(
 
                     isSubmitting = true
                     coroutineScope.launch {
-                        val base64Images = shoppingRepo.compressMultipleImages(context, selectedImages)
+                        val imageUrls = shoppingRepo.uploadMultipleImagesToStorage(context, selectedImages, "products").getOrDefault(emptyList())
                         val product = ProductDto(
                             productName = productName.trim(),
                             category = selectedCategory,
@@ -465,7 +465,7 @@ fun PostProductScreen(
                             address = address.trim(),
                             contactInfo = contactInfo.trim(),
                             latLng = "${selectedLocation.latitude},${selectedLocation.longitude}",
-                            imageUrls = base64Images
+                            imageUrls = imageUrls
                         )
 
                         val result = shoppingRepo.saveProductToFirestore(product)

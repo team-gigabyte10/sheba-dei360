@@ -894,7 +894,7 @@ fun PostEventServiceScreen(
 
                         isSubmitting = true
                         coroutineScope.launch {
-                            val base64Images = repository.compressMultipleImages(context, selectedImageUris)
+                            val storageImageUrls = repository.uploadMultipleImagesToStorage(context, selectedImageUris, "events/photos").getOrDefault(emptyList())
                             val startingPackage = if (isNegotiablePrice) 0 else (startingPackageText.toIntOrNull() ?: 0)
                             val experienceYears = experienceYearsText.toIntOrNull() ?: 0
 
@@ -950,7 +950,7 @@ fun PostEventServiceScreen(
                                 startingPackage = startingPackage,
                                 priceUnit = selectedPriceUnit,
                                 experienceYears = experienceYears,
-                                imageUrls = base64Images,
+                                imageUrls = storageImageUrls,
                                 videoUrl = videoUrl.trim(),
                                 features = selectedFeatures.toList(),
                                 categoryDetails = categoryDetailsMap,

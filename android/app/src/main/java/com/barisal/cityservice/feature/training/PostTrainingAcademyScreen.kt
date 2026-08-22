@@ -322,8 +322,8 @@ fun PostTrainingAcademyScreen(
                         }
                         isSubmitting = true
                         coroutineScope.launch {
-                            val coverBase64 = selectedCoverImage?.let { uri ->
-                                repository.compressImageToBase64(context, uri).getOrNull() ?: ""
+                            val coverUrl = selectedCoverImage?.let { uri ->
+                                repository.uploadImageToStorage(context, uri, "training_academies/covers").getOrNull() ?: ""
                             } ?: ""
 
                             val dto = TrainingAcademyDto(
@@ -336,7 +336,7 @@ fun PostTrainingAcademyScreen(
                                 contact = contact,
                                 address = address,
                                 thana = thana,
-                                coverImage = coverBase64,
+                                coverImage = coverUrl,
                                 latitude = selectedLocation.latitude,
                                 longitude = selectedLocation.longitude
                             )

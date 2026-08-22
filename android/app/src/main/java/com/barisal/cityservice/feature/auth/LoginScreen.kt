@@ -35,10 +35,18 @@ import com.barisal.cityservice.core.language.LocalAppLanguage
 import com.barisal.cityservice.core.utils.UserPreferences
 import com.barisal.cityservice.data.repository.AuthRepository
 import com.barisal.cityservice.data.repository.PhoneOtpResult
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.input.ImeAction
+import com.barisal.cityservice.ui.components.AppTextField
 import com.barisal.cityservice.ui.components.CustomDialog
 import com.barisal.cityservice.ui.components.ExitAppDialog
 import com.barisal.cityservice.ui.components.SetStatusBarColor
+import androidx.compose.ui.graphics.Brush
+import com.barisal.cityservice.ui.components.clearFocusOnTap
 import com.google.firebase.auth.FirebaseAuth
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -54,17 +62,11 @@ fun LoginScreen(
     val activity = context as? Activity
     val isBengali = LocalAppLanguage.current.isBengali
     val authRepository = remember { AuthRepository() }
+    val coroutineScope = rememberCoroutineScope()
 
     var emailOrPhone by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    var passwordVisible by remember { mutableStateOf(false) }
-
     var isLoading by remember { mutableStateOf(false) }
-
-    // Forgot Password Dialog
-    var showForgotPasswordDialog by remember { mutableStateOf(false) }
-    var resetEmail by remember { mutableStateOf("") }
-    var isSendingReset by remember { mutableStateOf(false) }
+    var generatedOtpDialogData by remember { mutableStateOf<Triple<String, String, Boolean>?>(null) }
 
     var showExitDialog by remember { mutableStateOf(false) }
     var backPressedTime by remember { mutableStateOf(0L) }
@@ -90,68 +92,45 @@ fun LoginScreen(
         )
     }
 
+    if (generatedOtpDialogData != null) {
+        val (target, otpCode, isEmail) = generatedOtpDialogData!!
+        OtpDisplayDialog(
+            target = target,
+            otpCode = otpCode,
+            isBengali = isBengali,
+            onDismiss = {
+                generatedOtpDialogData = null
+                onNavigateToOtp(target, otpCode, isEmail)
+            },
+            onProceed = {
+                generatedOtpDialogData = null
+                UserPreferences.setOtpVerified(context, true)
+                Toast.makeText(
+                    context,
+                    if (isBengali) "সফলভাবে লগইন হয়েছে!" else "Successfully logged in!",
+                    Toast.LENGTH_SHORT
+                ).show()
+                if (!redirectRoute.isNullOrBlank()) {
+                    onNavigateToRedirectTarget(redirectRoute)
+                } else {
+                    onNavigateToHome()
+                }
+            }
+        )
+    }
+
     SetStatusBarColor()
 
     val primaryTeal = Color(0xFF0F766E)
     val secondaryTeal = Color(0xFF00897B)
     val textMuted = Color(0xFF64748B)
 
-    // Forgot Password Dialog
-    if (showForgotPasswordDialog) {
-        CustomDialog(
-            onDismissRequest = { showForgotPasswordDialog = false },
-            title = if (isBengali) "পাসওয়ার্ড রিসেট করুন" else "Reset Password",
-            confirmButtonText = if (isBengali) "লিঙ্ক পাঠান" else "Send Reset Link",
-            onConfirm = {
-                if (resetEmail.isBlank()) {
-                    Toast.makeText(context, if (isBengali) "অনুগ্রহ করে আপনার ইমেইল দিন" else "Please enter your email", Toast.LENGTH_SHORT).show()
-                    return@CustomDialog
-                }
-                isSendingReset = true
-                FirebaseAuth.getInstance().sendPasswordResetEmail(resetEmail.trim())
-                    .addOnCompleteListener { task ->
-                        isSendingReset = false
-                        showForgotPasswordDialog = false
-                        if (task.isSuccessful) {
-                            Toast.makeText(
-                                context,
-                                if (isBengali) "আপনার ইমেইলে পাসওয়ার্ড রিসেট লিঙ্ক পাঠানো হয়েছে।" else "Password reset link sent to your email.",
-                                Toast.LENGTH_LONG
-                            ).show()
-                        } else {
-                            Toast.makeText(
-                                context,
-                                "ত্রুটি: ${task.exception?.message}",
-                                Toast.LENGTH_LONG
-                            ).show()
-                        }
-                    }
-            }
-        ) {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(
-                    text = if (isBengali) "আপনার নিবন্ধিত ইমেইল এড্রেস লিখুন। আমরা একটি রিসেট লিঙ্ক পাঠাবো।" else "Enter your registered email address to receive a password reset link.",
-                    fontSize = 13.sp,
-                    color = textMuted
-                )
-                OutlinedTextField(
-                    value = resetEmail,
-                    onValueChange = { resetEmail = it },
-                    label = { Text(if (isBengali) "ইমেইল এড্রেস" else "Email Address") },
-                    placeholder = { Text("user@example.com") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = primaryTeal,
-                        unfocusedBorderColor = Color.LightGray
-                    )
-                )
-            }
-        }
-    }
+    val focusManager = LocalFocusManager.current
 
     Box(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .clearFocusOnTap(),
         contentAlignment = Alignment.Center
     ) {
         // Background Image
@@ -199,7 +178,7 @@ fun LoginScreen(
                         // App Logo
                         Box(
                             modifier = Modifier
-                                .size(72.dp)
+                                .size(110.dp)
                                 .clip(CircleShape)
                                 .background(primaryTeal.copy(alpha = 0.1f)),
                             contentAlignment = Alignment.Center
@@ -207,7 +186,7 @@ fun LoginScreen(
                             Image(
                                 painter = painterResource(id = R.drawable.logo),
                                 contentDescription = "App Logo",
-                                modifier = Modifier.size(54.dp)
+                                modifier = Modifier.size(90.dp)
                             )
                         }
 
@@ -230,121 +209,60 @@ fun LoginScreen(
                         Spacer(modifier = Modifier.height(24.dp))
 
                         // Email or Phone Field
-                        OutlinedTextField(
+                        AppTextField(
                             value = emailOrPhone,
                             onValueChange = { emailOrPhone = it },
                             label = { Text(if (isBengali) "ইমেইল বা ফোন নম্বর *" else "Email or Phone Number *") },
                             placeholder = { Text(if (isBengali) "ইমেইল বা ফোন নম্বর লিখুন" else "Enter email or phone") },
                             leadingIcon = { Icon(Icons.Default.Person, contentDescription = null, tint = primaryTeal) },
                             singleLine = true,
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.Email,
+                                imeAction = ImeAction.Done
+                            ),
+                            keyboardActions = KeyboardActions(
+                                onDone = { focusManager.clearFocus() }
+                            ),
                             modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(12.dp),
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = primaryTeal,
-                                unfocusedBorderColor = Color(0xFFE2E8F0)
-                            )
-                        )
-
-                        Spacer(modifier = Modifier.height(14.dp))
-
-                        // Password Field
-                        OutlinedTextField(
-                            value = password,
-                            onValueChange = { password = it },
-                            label = { Text(if (isBengali) "পাসওয়ার্ড *" else "Password *") },
-                            placeholder = { Text("••••••••") },
-                            leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null, tint = primaryTeal) },
-                            trailingIcon = {
-                                IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                                    Icon(
-                                        imageVector = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
-                                        contentDescription = "Toggle Password Visibility",
-                                        tint = Color.Gray
-                                    )
-                                }
-                            },
-                            singleLine = true,
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                            visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(12.dp),
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = primaryTeal,
-                                unfocusedBorderColor = Color(0xFFE2E8F0)
-                            )
-                        )
-
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        // Forgot Password Link
-                        Text(
-                            text = if (isBengali) "পাসওয়ার্ড ভুলে গেছেন?" else "Forgot Password?",
-                            color = primaryTeal,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 13.sp,
-                            modifier = Modifier
-                                .align(Alignment.End)
-                                .clickable {
-                                    resetEmail = if (emailOrPhone.contains("@")) emailOrPhone.trim() else ""
-                                    showForgotPasswordDialog = true
-                                }
+                            focusedBorderColor = primaryTeal
                         )
 
                         Spacer(modifier = Modifier.height(22.dp))
 
-                        // Standard Login Button
+                        // Send OTP Button
                         Button(
                             onClick = {
                                 val input = emailOrPhone.trim()
-                                if (input.isBlank() || password.isBlank()) {
+                                if (input.isBlank()) {
                                     Toast.makeText(
                                         context,
-                                        if (isBengali) "অনুগ্রহ করে ইমেইল/ফোন নম্বর এবং পাসওয়ার্ড দিন" else "Please enter email/phone and password",
+                                        if (isBengali) "অনুগ্রহ করে ইমেইল বা ফোন নম্বর দিন" else "Please enter email or phone number",
                                         Toast.LENGTH_SHORT
                                     ).show()
                                     return@Button
                                 }
 
                                 isLoading = true
-                                var loginEmail = input
-                                if (!loginEmail.contains("@")) {
-                                    loginEmail = "$input@cityservice.com"
-                                }
+                                focusManager.clearFocus()
 
-                                FirebaseAuth.getInstance().signInWithEmailAndPassword(loginEmail, password)
-                                    .addOnCompleteListener { task ->
+                                coroutineScope.launch {
+                                    com.barisal.cityservice.core.utils.FcmAuthManager.sendLoginFcmOtp(
+                                        context = context,
+                                        target = input
+                                    ) { success, otpCode, errorMsg ->
                                         isLoading = false
-                                        if (task.isSuccessful) {
-                                            UserPreferences.setOtpVerified(context, true)
-                                            Toast.makeText(context, if (isBengali) "সফলভাবে লগ-ইন হয়েছে!" else "Login successful!", Toast.LENGTH_SHORT).show()
-                                            if (!redirectRoute.isNullOrBlank()) {
-                                                onNavigateToRedirectTarget(redirectRoute)
-                                            } else {
-                                                onNavigateToHome()
-                                            }
+                                        if (success) {
+                                            val isEmail = input.contains("@")
+                                            generatedOtpDialogData = Triple(input, otpCode, isEmail)
                                         } else {
-                                            // Fallback create account if user logging in with phone for first time
-                                            FirebaseAuth.getInstance().createUserWithEmailAndPassword(loginEmail, password)
-                                                .addOnCompleteListener { createTask ->
-                                                    if (createTask.isSuccessful) {
-                                                        UserPreferences.setOtpVerified(context, true)
-                                                        Toast.makeText(context, if (isBengali) "লগ-ইন সফল হয়েছে!" else "Login successful!", Toast.LENGTH_SHORT).show()
-                                                        if (!redirectRoute.isNullOrBlank()) {
-                                                            onNavigateToRedirectTarget(redirectRoute)
-                                                        } else {
-                                                            onNavigateToHome()
-                                                        }
-                                                    } else {
-                                                        Toast.makeText(
-                                                            context,
-                                                            if (isBengali) "লগ-ইন ব্যর্থ হয়েছে: ${task.exception?.message}" else "Login failed: ${task.exception?.message}",
-                                                            Toast.LENGTH_LONG
-                                                        ).show()
-                                                    }
-                                                }
+                                            Toast.makeText(
+                                                context,
+                                                if (isBengali) "ত্রুটি: $errorMsg" else "Error: $errorMsg",
+                                                Toast.LENGTH_LONG
+                                            ).show()
                                         }
                                     }
+                                }
                             },
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -356,10 +274,10 @@ fun LoginScreen(
                             if (isLoading) {
                                 CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
                             } else {
-                                Icon(Icons.Default.Login, contentDescription = null)
+                                Icon(Icons.Default.Send, contentDescription = null)
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
-                                    text = if (isBengali) "লগ-ইন করুন" else "Sign In",
+                                    text = if (isBengali) "ওটিপি কোড পাঠান" else "Get OTP Code",
                                     fontSize = 16.sp,
                                     fontWeight = FontWeight.Bold
                                 )
@@ -402,6 +320,126 @@ fun LoginScreen(
                             modifier = Modifier.clickable { onNavigateToVendorDashboard() }
                         )
                     }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun OtpDisplayDialog(
+    target: String,
+    otpCode: String,
+    isBengali: Boolean,
+    onDismiss: () -> Unit,
+    onProceed: () -> Unit
+) {
+    androidx.compose.ui.window.Dialog(onDismissRequest = onDismiss) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp),
+            shape = RoundedCornerShape(24.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.White),
+            elevation = CardDefaults.cardElevation(defaultElevation = 12.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                // Top Colorful Icon Badge with Gradient Effect
+                Box(
+                    modifier = Modifier
+                        .size(72.dp)
+                        .clip(CircleShape)
+                        .background(
+                            Brush.linearGradient(
+                                colors = listOf(Color(0xFF0F766E), Color(0xFF00BFA5))
+                            )
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.VpnKey,
+                        contentDescription = "OTP Security Icon",
+                        tint = Color.White,
+                        modifier = Modifier.size(36.dp)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Text(
+                    text = if (isBengali) "বরিশাল সিটি সার্ভিস ওটিপি কোড" else "Barisal City Service Verification Code",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = Color(0xFF1E293B),
+                    textAlign = TextAlign.Center
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    text = if (isBengali) "$target এর জন্য আপনার ৬-সংখ্যার লগইন ওটিপি কোড:" else "Your 6-digit login OTP code for $target:",
+                    fontSize = 13.sp,
+                    color = Color(0xFF64748B),
+                    textAlign = TextAlign.Center
+                )
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                // 6-Digit Stylized OTP Display Box
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    otpCode.forEach { char ->
+                        Card(
+                            modifier = Modifier.size(40.dp, 50.dp),
+                            shape = RoundedCornerShape(10.dp),
+                            colors = CardDefaults.cardColors(containerColor = Color(0xFFE0F2F1)),
+                            border = androidx.compose.foundation.BorderStroke(1.5.dp, Color(0xFF0F766E))
+                        ) {
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = char.toString(),
+                                    fontSize = 22.sp,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = Color(0xFF0F766E)
+                                )
+                            }
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // Proceed Button
+                Button(
+                    onClick = onProceed,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0F766E))
+                ) {
+                    Text(
+                        text = if (isBengali) "কোড দিয়ে ভেরিফাই করুন" else "Proceed to Verify",
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Icon(
+                        imageVector = Icons.Default.ArrowForward,
+                        contentDescription = null,
+                        tint = Color.White
+                    )
                 }
             }
         }

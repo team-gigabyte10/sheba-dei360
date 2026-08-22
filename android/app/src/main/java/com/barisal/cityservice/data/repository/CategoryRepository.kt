@@ -151,6 +151,12 @@ class CategoryRepository {
             "training_academy" -> Icons.Default.School
             "job_screen" -> Icons.Default.Work
             "domestic_help_screen" -> Icons.Default.CleaningServices
+            "legal_service_screen" -> Icons.Default.Gavel
+            "deed_amin_screen" -> Icons.Default.Assignment
+            "hajj_umrah_screen" -> Icons.Default.Mosque
+            "tour_travels_screen" -> Icons.Default.FlightTakeoff
+            "money_exchange_screen" -> Icons.Default.CurrencyExchange
+            "missing_found_screen" -> Icons.Default.Search
             else -> Icons.Default.Category
         }
     }
@@ -177,7 +183,13 @@ class CategoryRepository {
             CategoryItem(15, "Restaurant", "রেস্টুরেন্ট", fallbackIcon = Icons.Default.Restaurant, route = "restaurant"),
             CategoryItem(16, "Training Academy", "ট্রেনিং একাডেমি", fallbackIcon = Icons.Default.School, route = "training_academy"),
             CategoryItem(17, "Jobs Circular", "চাকরি ও নিয়োগ", fallbackIcon = Icons.Default.Work, route = "job_screen"),
-            CategoryItem(18, "Domestic Help / Maid", "গৃহকর্মী ও বুয়া", fallbackIcon = Icons.Default.CleaningServices, route = "domestic_help_screen")
+            CategoryItem(18, "Domestic Help / Maid", "গৃহকর্মী ও বুয়া", fallbackIcon = Icons.Default.CleaningServices, route = "domestic_help_screen"),
+            CategoryItem(19, "Legal Services", "আইনি সেবা", fallbackIcon = Icons.Default.Gavel, route = "legal_service_screen"),
+            CategoryItem(20, "Deed Writer & Surveyor", "দলিল লেখক/আমিন", fallbackIcon = Icons.Default.Assignment, route = "deed_amin_screen"),
+            CategoryItem(21, "Hajj & Umrah Services", "হজ ও উমরাহ সেবা", fallbackIcon = Icons.Default.Mosque, route = "hajj_umrah_screen"),
+            CategoryItem(22, "Tour & Travels", "ট্যুর ও ট্রাভেলস", fallbackIcon = Icons.Default.FlightTakeoff, route = "tour_travels_screen"),
+            CategoryItem(23, "Money Exchange", "মানি এক্সচেঞ্জ", fallbackIcon = Icons.Default.CurrencyExchange, route = "money_exchange_screen"),
+            CategoryItem(24, "Missing & Found", "নিখোজ বিজ্ঞপ্তি", fallbackIcon = Icons.Default.Search, route = "missing_found_screen")
         )
     }
 
@@ -304,7 +316,48 @@ class CategoryRepository {
             SubCategoryItem(1804, 18, "Baby Sitter", "শিশু দেখাশোনা", fallbackIcon = Icons.Default.ChildCare, route = "baby_sitter"),
             SubCategoryItem(1805, 18, "Elderly Care", "বয়স্ক সেবা", fallbackIcon = Icons.Default.Elderly, route = "elderly_care"),
             SubCategoryItem(1806, 18, "House Cleaner", "বাসা পরিষ্কার", fallbackIcon = Icons.Default.CleaningServices, route = "house_cleaner"),
-            SubCategoryItem(1807, 18, "Others", "অন্যান্য", fallbackIcon = Icons.Default.MoreHoriz, route = "help_others")
+            SubCategoryItem(1807, 18, "Others", "অন্যান্য", fallbackIcon = Icons.Default.MoreHoriz, route = "help_others"),
+
+            // Category 19: Legal Services
+            SubCategoryItem(1901, 19, "Advocate & Lawyer", "অ্যাডভোকেট ও আইনজীবী", fallbackIcon = Icons.Default.Gavel, route = "lawyer"),
+            SubCategoryItem(1902, 19, "Civil Cases", "দেওয়ানী মামলা", fallbackIcon = Icons.Default.Gavel, route = "civil_lawyer"),
+            SubCategoryItem(1903, 19, "Criminal Cases", "ফৌজদারী মামলা", fallbackIcon = Icons.Default.Gavel, route = "criminal_lawyer"),
+            SubCategoryItem(1904, 19, "Tax & VAT", "ইনকাম ট্যাক্স ও ভ্যাট", fallbackIcon = Icons.Default.Calculate, route = "tax_lawyer"),
+            SubCategoryItem(1905, 19, "Notary Public", "নোটারী পাবলিক", fallbackIcon = Icons.Default.Verified, route = "notary"),
+
+            // Category 20: Deed Writer & Land Surveyor (Dolil Lekhok / Amin)
+            SubCategoryItem(2001, 20, "Deed Writer", "দলিল লেখক", fallbackIcon = Icons.Default.Description, route = "deed_writer"),
+            SubCategoryItem(2002, 20, "Land Surveyor (Amin)", "আমিন / জমি পরিমাপক", fallbackIcon = Icons.Default.SquareFoot, route = "land_surveyor"),
+            SubCategoryItem(2003, 20, "Land Registry Consultant", "জমি রেজিস্ট্রেশন কনসালট্যান্ট", fallbackIcon = Icons.Default.Assignment, route = "registry_consultant"),
+
+            // Category 21: Hajj & Umrah Services
+            SubCategoryItem(2101, 21, "Hajj Package", "হজ প্যাকেজ", fallbackIcon = Icons.Default.Mosque, route = "hajj_package"),
+            SubCategoryItem(2102, 21, "Umrah Package", "উমরাহ প্যাকেজ", fallbackIcon = Icons.Default.Mosque, route = "umrah_package"),
+            SubCategoryItem(2103, 21, "Saudi Visa & Medical", "সৌদি ভিসা ও মেডিকেল", fallbackIcon = Icons.Default.CardTravel, route = "saudi_visa"),
+            SubCategoryItem(2104, 21, "Hotel & Transport", "মাক্কাহ-মদিনা হোটেল ও পরিবহন", fallbackIcon = Icons.Default.Hotel, route = "hajj_hotel"),
+            SubCategoryItem(2105, 21, "Others", "অন্যান্য", fallbackIcon = Icons.Default.MoreHoriz, route = "hajj_others"),
+
+            // Category 22: Tour & Travels
+            SubCategoryItem(2201, 22, "Air Ticket", "বিমান টিকিট", fallbackIcon = Icons.Default.Flight, route = "air_ticket"),
+            SubCategoryItem(2202, 22, "Domestic Tour", "দেশীয় ট্যুর প্যাকেজ", fallbackIcon = Icons.Default.Explore, route = "domestic_tour"),
+            SubCategoryItem(2203, 22, "International Tour", "আন্তর্জাতিক ট্যুর", fallbackIcon = Icons.Default.FlightTakeoff, route = "intl_tour"),
+            SubCategoryItem(2204, 22, "Visa Processing", "ভিসা প্রসেসিং", fallbackIcon = Icons.Default.AssignmentInd, route = "visa_processing"),
+            SubCategoryItem(2205, 22, "Others", "অন্যান্য", fallbackIcon = Icons.Default.MoreHoriz, route = "tour_others"),
+
+            // Category 23: Money Exchange
+            SubCategoryItem(2301, 23, "Currency Exchange Counter", "কারেন্সি এক্সচেঞ্জ কাউন্টার", fallbackIcon = Icons.Default.CurrencyExchange, route = "exchange_counter"),
+            SubCategoryItem(2302, 23, "Western Union & MoneyGram", "ওয়েস্টার্ন ইউনিয়ন ও মানিগ্রাম", fallbackIcon = Icons.Default.AttachMoney, route = "moneygram"),
+            SubCategoryItem(2303, 23, "Remittance Bank Service", "রেমিট্যান্স ব্যাংক সেবা", fallbackIcon = Icons.Default.AccountBalance, route = "remittance_bank"),
+            SubCategoryItem(2304, 23, "Others", "অন্যান্য", fallbackIcon = Icons.Default.MoreHoriz, route = "exchange_others"),
+
+            // Category 24: Missing & Found
+            SubCategoryItem(2401, 24, "Missing Person", "নিখোঁজ ব্যক্তি", fallbackIcon = Icons.Default.PersonSearch, route = "missing_person"),
+            SubCategoryItem(2402, 24, "Missing Child", "নিখোঁজ শিশু", fallbackIcon = Icons.Default.ChildCare, route = "missing_child"),
+            SubCategoryItem(2403, 24, "Missing Elderly", "নিখোঁজ বয়স্ক", fallbackIcon = Icons.Default.Elderly, route = "missing_elderly"),
+            SubCategoryItem(2404, 24, "Lost Documents / ID", "হারানো কাগজপত্র / আইডি", fallbackIcon = Icons.Default.Description, route = "lost_docs"),
+            SubCategoryItem(2405, 24, "Lost Wallet / Cash", "হারানো মানিব্যাগ / টাকা", fallbackIcon = Icons.Default.AccountBalanceWallet, route = "lost_wallet"),
+            SubCategoryItem(2406, 24, "Lost Electronics", "হারানো মোবাইল / ডিভাইস", fallbackIcon = Icons.Default.PhoneAndroid, route = "lost_electronics"),
+            SubCategoryItem(2407, 24, "Found Item / Person", "পাওয়া গেছে (ব্যক্তি/জিনিস)", fallbackIcon = Icons.Default.CheckCircle, route = "found_item")
         )
     }
 }

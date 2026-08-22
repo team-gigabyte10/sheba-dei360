@@ -102,7 +102,7 @@ fun BookingScreen(
                             .background(Color.LightGray)
                     ) {
                         Image(
-                            painter = painterResource(id = R.drawable.dummy_cover),
+                            painter = painterResource(id = R.drawable.background),
                             contentDescription = "Cover Image",
                             modifier = Modifier.fillMaxSize(),
                             contentScale = ContentScale.Crop
@@ -135,7 +135,7 @@ fun BookingScreen(
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Image(
-                                        painter = painterResource(id = R.drawable.dummy_person),
+                                        painter = painterResource(id = R.drawable.logo),
                                         contentDescription = "Profile",
                                         modifier = Modifier.size(72.dp).clip(CircleShape),
                                         contentScale = ContentScale.Crop
@@ -244,10 +244,10 @@ fun BookingScreen(
                     Spacer(modifier = Modifier.height(16.dp))
                     
                     // Mock Review 1
-                    ReviewItem(name = "রজত সেন", role = "Professional Plumber", imageRes = R.drawable.dummy_person)
+                    ReviewItem(name = "রজত সেন", role = "Professional Plumber", imageRes = R.drawable.logo)
                     Spacer(modifier = Modifier.height(12.dp))
                     // Mock Review 2
-                    ReviewItem(name = "অহিদুজ্জামান ঢাকা", role = "Professional Plumber", imageRes = R.drawable.dummy_person)
+                    ReviewItem(name = "অহিদুজ্জামান ঢাকা", role = "Professional Plumber", imageRes = R.drawable.logo)
                 }
             }
             

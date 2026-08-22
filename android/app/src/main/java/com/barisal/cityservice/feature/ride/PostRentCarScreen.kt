@@ -358,8 +358,8 @@ fun PostRentCarScreen(
                         }
                         isSubmitting = true
                         coroutineScope.launch {
-                            val coverBase64 = selectedCoverImage?.let { uri ->
-                                repository.compressImageToBase64(context, uri).getOrNull() ?: ""
+                            val coverUrl = selectedCoverImage?.let { uri ->
+                                repository.uploadImageToStorage(context, uri, "rent_cars/covers").getOrNull() ?: ""
                             } ?: ""
 
                             val carDto = RentCarDto(
@@ -374,7 +374,7 @@ fun PostRentCarScreen(
                                 contact = contact,
                                 address = address,
                                 thana = thana,
-                                coverImage = coverBase64,
+                                coverImage = coverUrl,
                                 latitude = selectedLocation.latitude,
                                 longitude = selectedLocation.longitude
                             )

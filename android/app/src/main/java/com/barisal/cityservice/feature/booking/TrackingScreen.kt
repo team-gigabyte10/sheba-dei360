@@ -244,7 +244,7 @@ fun TrackingScreen(
                     // Provider Info
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Image(
-                            painter = painterResource(id = R.drawable.dummy_person),
+                            painter = painterResource(id = R.drawable.logo),
                             contentDescription = "Driver Avatar",
                             modifier = Modifier
                                 .size(64.dp)

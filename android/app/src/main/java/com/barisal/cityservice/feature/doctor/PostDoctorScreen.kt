@@ -553,11 +553,11 @@ fun PostDoctorScreen(
 
                         isSubmitting = true
                         coroutineScope.launch {
-                            var base64Image = ""
+                            var imageUrl = ""
                             if (selectedImageUri != null) {
-                                val compressResult = doctorRepository.compressImageToBase64(context, selectedImageUri!!)
-                                if (compressResult.isSuccess) {
-                                    base64Image = compressResult.getOrDefault("")
+                                val uploadResult = doctorRepository.uploadImageToStorage(context, selectedImageUri!!, "doctors/profiles")
+                                if (uploadResult.isSuccess) {
+                                    imageUrl = uploadResult.getOrDefault("")
                                 }
                             }
 
@@ -571,7 +571,7 @@ fun PostDoctorScreen(
                                 latLng = latLng.trim(),
                                 contactInfo = contactInfo.trim(),
                                 zilla = selectedZilla,
-                                imageUrl = base64Image
+                                imageUrl = imageUrl
                             )
 
                             val result = doctorRepository.saveDoctorToFirestore(doctorDto)

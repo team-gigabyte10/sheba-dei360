@@ -593,8 +593,8 @@ fun PostHouseRentScreen(
                         isSubmitting = true
 
                         coroutineScope.launch {
-                            val base64Images = if (selectedImageUris.isNotEmpty()) {
-                                repository.compressMultipleImages(context, selectedImageUris)
+                            val storageImageUrls = if (selectedImageUris.isNotEmpty()) {
+                                repository.uploadMultipleImagesToStorage(context, selectedImageUris, "house_rents/photos").getOrDefault(emptyList())
                             } else emptyList()
 
                             val expiresAtMillis = System.currentTimeMillis() + (selectedValidityDays * 24L * 60L * 60L * 1000L)
@@ -617,7 +617,7 @@ fun PostHouseRentScreen(
                                 thana = thana.trim(),
                                 contactInfo = contactInfo.trim(),
                                 latLng = latLng.trim(),
-                                imageUrls = base64Images,
+                                imageUrls = storageImageUrls,
                                 flatDetails = flatDetailsDto,
                                 validityDays = selectedValidityDays,
                                 expiresAt = expiresAtMillis,
