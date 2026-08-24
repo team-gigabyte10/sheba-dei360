@@ -40,6 +40,8 @@ fun ProfileScreen(
     onNavigateToUpdateProfile: () -> Unit = {},
     onNavigateToChangePassword: () -> Unit = {}
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val currentUser = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser
     val languageState = LocalAppLanguage.current
     val isBengali = languageState.isBengali
 
@@ -51,48 +53,51 @@ fun ProfileScreen(
             )
         },
         bottomBar = {
-            NavigationBar(
-                containerColor = Color.White
-            ) {
-                NavigationBarItem(
-                    icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
-                    label = { Text(if (isBengali) "হোম" else "Home") },
-                    selected = false,
-                    onClick = { onNavigateToHome() },
-                    colors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = Color(0xFF0F766E),
-                        selectedTextColor = Color(0xFF0F766E),
-                        indicatorColor = Color.Transparent,
-                        unselectedIconColor = Color.Gray,
-                        unselectedTextColor = Color.Gray
+            val isAdmin = currentUser != null && com.barisal.cityservice.core.utils.UserPreferences.isAdmin(context)
+            if (currentUser != null && !isAdmin) {
+                NavigationBar(
+                    containerColor = Color.White
+                ) {
+                    NavigationBarItem(
+                        icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
+                        label = { Text(if (isBengali) "হোম" else "Home") },
+                        selected = false,
+                        onClick = { onNavigateToHome() },
+                        colors = NavigationBarItemDefaults.colors(
+                            selectedIconColor = Color(0xFF0F766E),
+                            selectedTextColor = Color(0xFF0F766E),
+                            indicatorColor = Color.Transparent,
+                            unselectedIconColor = Color.Gray,
+                            unselectedTextColor = Color.Gray
+                        )
                     )
-                )
-                NavigationBarItem(
-                    icon = { Icon(Icons.Default.Assignment, contentDescription = "Bookings") },
-                    label = { Text(if (isBengali) "বুকিংস" else "Bookings") },
-                    selected = false,
-                    onClick = { onNavigateToBookings() },
-                    colors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = Color(0xFF0F766E),
-                        selectedTextColor = Color(0xFF0F766E),
-                        indicatorColor = Color.Transparent,
-                        unselectedIconColor = Color.Gray,
-                        unselectedTextColor = Color.Gray
+                    NavigationBarItem(
+                        icon = { Icon(Icons.Default.Assignment, contentDescription = "Bookings") },
+                        label = { Text(if (isBengali) "বুকিংস" else "Bookings") },
+                        selected = false,
+                        onClick = { onNavigateToBookings() },
+                        colors = NavigationBarItemDefaults.colors(
+                            selectedIconColor = Color(0xFF0F766E),
+                            selectedTextColor = Color(0xFF0F766E),
+                            indicatorColor = Color.Transparent,
+                            unselectedIconColor = Color.Gray,
+                            unselectedTextColor = Color.Gray
+                        )
                     )
-                )
-                NavigationBarItem(
-                    icon = { Icon(Icons.Default.Person, contentDescription = "Profile") },
-                    label = { Text(if (isBengali) "প্রোফাইল" else "Profile") },
-                    selected = true,
-                    onClick = { },
-                    colors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = Color(0xFF0F766E),
-                        selectedTextColor = Color(0xFF0F766E),
-                        indicatorColor = Color.Transparent,
-                        unselectedIconColor = Color.Gray,
-                        unselectedTextColor = Color.Gray
+                    NavigationBarItem(
+                        icon = { Icon(Icons.Default.Person, contentDescription = "Profile") },
+                        label = { Text(if (isBengali) "প্রোফাইল" else "Profile") },
+                        selected = true,
+                        onClick = { },
+                        colors = NavigationBarItemDefaults.colors(
+                            selectedIconColor = Color(0xFF0F766E),
+                            selectedTextColor = Color(0xFF0F766E),
+                            indicatorColor = Color.Transparent,
+                            unselectedIconColor = Color.Gray,
+                            unselectedTextColor = Color.Gray
+                        )
                     )
-                )
+                }
             }
         }
     ) { innerPadding ->
@@ -138,8 +143,22 @@ fun ProfileScreen(
 
                         Spacer(modifier = Modifier.height(12.dp))
 
+                        val isAdminUser = currentUser != null && com.barisal.cityservice.core.utils.UserPreferences.isAdmin(context)
+
+                        val displayName = if (currentUser != null) {
+                            currentUser.displayName ?: currentUser.email?.substringBefore("@") ?: (if (isBengali) "ব্যবহারকারী" else "User")
+                        } else {
+                            if (isBengali) "অতিথি ব্যবহারকারী" else "Guest User"
+                        }
+
+                        val contactText = if (currentUser != null) {
+                            currentUser.email ?: currentUser.phoneNumber ?: ""
+                        } else {
+                            if (isBengali) "লগইন করা নেই" else "Not logged in"
+                        }
+
                         Text(
-                            text = if (isBengali) "রিয়া চৌধুরী" else "Riya Chowdhury",
+                            text = displayName,
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color.White
@@ -148,7 +167,7 @@ fun ProfileScreen(
                         Spacer(modifier = Modifier.height(2.dp))
 
                         Text(
-                            text = "riya.chowdhury91@gmail.com | +880 1712-345678",
+                            text = contactText,
                             fontSize = 12.sp,
                             color = Color.White.copy(alpha = 0.85f)
                         )
@@ -158,20 +177,20 @@ fun ProfileScreen(
                         Row(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(16.dp))
-                                .background(Color(0xFFFFC107))
+                                .background(if (isAdminUser) Color(0xFFDC2626) else Color(0xFFFFC107))
                                 .padding(horizontal = 14.dp, vertical = 5.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Icon(
-                                imageVector = Icons.Default.Star,
-                                contentDescription = "Gold Member",
-                                tint = Color(0xFF78350F),
+                                imageVector = if (isAdminUser) Icons.Default.AdminPanelSettings else Icons.Default.Star,
+                                contentDescription = if (isAdminUser) "Admin" else "Member",
+                                tint = if (isAdminUser) Color.White else Color(0xFF78350F),
                                 modifier = Modifier.size(16.dp)
                             )
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
-                                text = if (isBengali) "গোল্ড মেম্বার" else "Gold Member",
-                                color = Color(0xFF78350F),
+                                text = if (isAdminUser) (if (isBengali) "অ্যাডমিন" else "Admin") else (if (isBengali) "গোল্ড মেম্বার" else "Gold Member"),
+                                color = if (isAdminUser) Color.White else Color(0xFF78350F),
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold
                             )

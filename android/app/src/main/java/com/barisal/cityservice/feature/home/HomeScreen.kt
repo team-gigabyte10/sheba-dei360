@@ -93,6 +93,7 @@ fun HomeScreen(
     val languageState = LocalAppLanguage.current
     val isBengali = languageState.isBengali
     val context = LocalContext.current
+    val currentUser = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser
     var backPressedTime by remember { mutableStateOf(0L) }
     
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
@@ -161,8 +162,13 @@ fun HomeScreen(
         }
     }
     
+    val isLoggedIn = com.barisal.cityservice.core.utils.UserPreferences.isLoggedIn(context)
+    val isAdmin = com.barisal.cityservice.core.utils.UserPreferences.isAdmin(context)
+    val userIdentity = com.barisal.cityservice.core.utils.UserPreferences.getUserIdentity(context)
+
     ModalNavigationDrawer(
         drawerState = drawerState,
+        gesturesEnabled = isAdmin,
         drawerContent = {
             ModalDrawerSheet(
                 drawerContainerColor = Color(0xCC0F172A), // Dark soft transparent
@@ -194,41 +200,61 @@ fun HomeScreen(
                     
                     Spacer(modifier = Modifier.height(16.dp))
                     
-                    Text(
-                        text = if (isBengali) "রিয়া চৌধুরী" else "Riya Chowdhury",
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    )
-                    
-                    Text(
-                        text = "riya.chowdhury91@gmail.com",
-                        fontSize = 12.sp,
-                        color = Color.LightGray
-                    )
-                    
-                    Spacer(modifier = Modifier.height(12.dp))
-                    
-                    // Gold Member Badge
-                    Row(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(Color(0xFFD4AF37)) // Gold
-                            .padding(horizontal = 12.dp, vertical = 6.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Star,
-                            contentDescription = "Gold Member",
-                            tint = Color.White,
-                            modifier = Modifier.size(14.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
+                    if (isLoggedIn) {
+                        val displayName = if (currentUser?.displayName.isNullOrBlank()) {
+                            userIdentity.substringBefore("@").ifBlank { if (isBengali) "ব্যবহারকারী" else "User" }
+                        } else {
+                            currentUser!!.displayName!!
+                        }
                         Text(
-                            text = if (isBengali) "গোল্ড মেম্বার" else "Gold Member",
-                            color = Color.White,
+                            text = displayName,
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                        
+                        Text(
+                            text = userIdentity,
                             fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold
+                            color = Color.LightGray
+                        )
+                        
+                        Spacer(modifier = Modifier.height(12.dp))
+                        
+                        // Member / Admin Badge
+                        Row(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(if (isAdmin) Color(0xFFDC2626) else Color(0xFFD4AF37))
+                                .padding(horizontal = 12.dp, vertical = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = if (isAdmin) Icons.Default.AdminPanelSettings else Icons.Default.Star,
+                                contentDescription = if (isAdmin) "Admin" else "Member",
+                                tint = Color.White,
+                                modifier = Modifier.size(14.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = if (isAdmin) (if (isBengali) "অ্যাডমিন" else "Admin") else (if (isBengali) "মেম্বার" else "Member"),
+                                color = Color.White,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    } else {
+                        Text(
+                            text = if (isBengali) "অতিথি ব্যবহারকারী" else "Guest User",
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = if (isBengali) "সেবা পেতে লগইন করুন" else "Log in to access services",
+                            fontSize = 12.sp,
+                            color = Color.LightGray
                         )
                     }
                 }
@@ -243,131 +269,191 @@ fun HomeScreen(
                     isSelected = true,
                     onClick = { coroutineScope.launch { drawerState.close() } }
                 )
-                DrawerMenuItem(
-                    icon = Icons.Default.DateRange,
-                    text = if (isBengali) "আমার বুকিং" else "My Bookings",
-                    isSelected = false,
-                    onClick = { coroutineScope.launch { drawerState.close() } }
-                )
-                DrawerMenuItem(
-                    icon = Icons.Default.AdminPanelSettings,
-                    text = if (isBengali) "পোস্ট অনুমোদন প্যানেল" else "Post Approval Panel",
-                    isSelected = false,
-                    onClick = {
-                        coroutineScope.launch { drawerState.close() }
-                        onNavigateToAdminApproval()
-                    }
-                )
-                DrawerMenuItem(
-                    icon = Icons.Default.Settings,
-                    text = if (isBengali) "সেটিংস" else "Settings",
-                    isSelected = false,
-                    onClick = { 
-                        coroutineScope.launch { drawerState.close() }
-                        onNavigateToSettings()
-                    }
-                )
-                DrawerMenuItem(
-                    icon = Icons.Default.HelpOutline,
-                    text = if (isBengali) "সাহায্য কেন্দ্র" else "Help Center",
-                    isSelected = false,
-                    onClick = { coroutineScope.launch { drawerState.close() } }
-                )
+                if (isAdmin) {
+                    DrawerMenuItem(
+                        icon = Icons.Default.AdminPanelSettings,
+                        text = if (isBengali) "পোস্ট অনুমোদন প্যানেল" else "Post Approval Panel",
+                        isSelected = false,
+                        onClick = {
+                            coroutineScope.launch { drawerState.close() }
+                            onNavigateToAdminApproval()
+                        }
+                    )
+                }
             }
         }
     ) {
         Scaffold(
             topBar = {
                 GlobalAppBar(
-                    title = if (isBengali) "সেবা দেই ৩৬০" else "Sheba Dei 360",
-                    navigationIcon = {
-                        IconButton(onClick = { coroutineScope.launch { drawerState.open() } }) {
-                            Icon(Icons.Default.Menu, contentDescription = "Menu")
+                    title = if (isBengali) "বরিশাল সিটি সার্ভিস" else "Barisal City Service",
+                    navigationIcon = if (isAdmin) {
+                        {
+                            IconButton(onClick = { coroutineScope.launch { drawerState.open() } }) {
+                                Icon(Icons.Default.Menu, contentDescription = "Menu")
+                            }
                         }
-                    },
+                    } else null,
                     actions = {
                         Box {
                             IconButton(onClick = { showMenu = true }) {
                                 Icon(
                                     imageVector = Icons.Default.MoreVert,
                                     contentDescription = "Options",
-                                    tint = Color.Black
+                                    tint = Color.White
                                 )
                             }
                             DropdownMenu(
                                 expanded = showMenu,
-                                onDismissRequest = { showMenu = false }
+                                onDismissRequest = { showMenu = false },
+                                modifier = Modifier.width(220.dp)
                             ) {
-                                DropdownMenuItem(
-                                    text = { Text(if (isBengali) "সেটিংস" else "Settings") },
-                                    leadingIcon = {
-                                        Icon(Icons.Default.Settings, contentDescription = null, tint = Color(0xFF0F766E))
-                                    },
-                                    onClick = {
-                                        showMenu = false
-                                        onNavigateToSettings()
+                                if (isLoggedIn) {
+                                    val displayName = if (currentUser?.displayName.isNullOrBlank()) {
+                                        userIdentity.substringBefore("@").ifBlank { if (isBengali) "ব্যবহারকারী" else "User" }
+                                    } else {
+                                        currentUser!!.displayName!!
                                     }
-                                )
-                                DropdownMenuItem(
-                                    text = { Text(if (isBengali) "লগআউট" else "Logout") },
-                                    leadingIcon = {
-                                        Icon(Icons.Default.ExitToApp, contentDescription = null, tint = Color.Red)
-                                    },
-                                    onClick = {
-                                        showMenu = false
-                                        com.google.firebase.auth.FirebaseAuth.getInstance().signOut()
-                                        com.barisal.cityservice.core.utils.UserPreferences.setOtpVerified(context, false)
-                                        onLogout()
+
+                                    Column(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(horizontal = 16.dp, vertical = 8.dp)
+                                    ) {
+                                        Text(
+                                            text = displayName,
+                                            fontSize = 15.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = Color(0xFF1E293B)
+                                        )
+                                        if (userIdentity.isNotBlank()) {
+                                            Text(
+                                                text = userIdentity,
+                                                fontSize = 11.sp,
+                                                color = Color(0xFF64748B)
+                                            )
+                                        }
+                                        Spacer(modifier = Modifier.height(4.dp))
+                                        Box(
+                                            modifier = Modifier
+                                                .clip(RoundedCornerShape(4.dp))
+                                                .background(if (isAdmin) Color(0xFFDC2626) else Color(0xFF0F766E))
+                                                .padding(horizontal = 8.dp, vertical = 2.dp)
+                                        ) {
+                                            Text(
+                                                text = if (isAdmin) (if (isBengali) "অ্যাডমিন" else "Admin") else (if (isBengali) "মেম্বার" else "Member"),
+                                                color = Color.White,
+                                                fontSize = 10.sp,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                        }
                                     }
-                                )
+
+                                    HorizontalDivider(color = Color(0xFFE2E8F0))
+
+                                    DropdownMenuItem(
+                                        text = { Text(if (isBengali) "প্রোফাইল" else "Profile") },
+                                        leadingIcon = {
+                                            Icon(Icons.Default.Person, contentDescription = null, tint = Color(0xFF0F766E))
+                                        },
+                                        onClick = {
+                                            showMenu = false
+                                            onNavigateToProfile()
+                                        }
+                                    )
+                                    DropdownMenuItem(
+                                        text = { Text(if (isBengali) "সেটিংস" else "Settings") },
+                                        leadingIcon = {
+                                            Icon(Icons.Default.Settings, contentDescription = null, tint = Color(0xFF0F766E))
+                                        },
+                                        onClick = {
+                                            showMenu = false
+                                            onNavigateToSettings()
+                                        }
+                                    )
+                                    DropdownMenuItem(
+                                        text = { Text(if (isBengali) "লগআউট" else "Logout") },
+                                        leadingIcon = {
+                                            Icon(Icons.Default.ExitToApp, contentDescription = null, tint = Color.Red)
+                                        },
+                                        onClick = {
+                                            showMenu = false
+                                            com.barisal.cityservice.core.utils.UserPreferences.clearSession(context)
+                                            onLogout()
+                                        }
+                                    )
+                                } else {
+                                    DropdownMenuItem(
+                                        text = { Text(if (isBengali) "সেটিংস" else "Settings") },
+                                        leadingIcon = {
+                                            Icon(Icons.Default.Settings, contentDescription = null, tint = Color(0xFF0F766E))
+                                        },
+                                        onClick = {
+                                            showMenu = false
+                                            onNavigateToSettings()
+                                        }
+                                    )
+                                    DropdownMenuItem(
+                                        text = { Text(if (isBengali) "লগইন / সাইন আপ" else "Login / Sign Up") },
+                                        leadingIcon = {
+                                            Icon(Icons.Default.Login, contentDescription = null, tint = Color(0xFF2563EB))
+                                        },
+                                        onClick = {
+                                            showMenu = false
+                                            onLogout()
+                                        }
+                                    )
+                                }
                             }
                         }
                     }
                 )
             },
             bottomBar = {
-                NavigationBar(
-                    containerColor = Color.White
-                ) {
-                    NavigationBarItem(
-                        icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
-                        label = { Text(if (isBengali) "হোম" else "Home") },
-                        selected = true,
-                        onClick = { },
-                        colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = Color(0xFF1E3A8A),
-                            selectedTextColor = Color(0xFF1E3A8A),
-                            indicatorColor = Color.Transparent,
-                            unselectedIconColor = Color.Gray,
-                            unselectedTextColor = Color.Gray
+                if (isLoggedIn && !isAdmin) {
+                    NavigationBar(
+                        containerColor = Color.White
+                    ) {
+                        NavigationBarItem(
+                            icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
+                            label = { Text(if (isBengali) "হোম" else "Home") },
+                            selected = true,
+                            onClick = { },
+                            colors = NavigationBarItemDefaults.colors(
+                                selectedIconColor = Color(0xFF1E3A8A),
+                                selectedTextColor = Color(0xFF1E3A8A),
+                                indicatorColor = Color.Transparent,
+                                unselectedIconColor = Color.Gray,
+                                unselectedTextColor = Color.Gray
+                            )
                         )
-                    )
-                    NavigationBarItem(
-                        icon = { Icon(Icons.Default.Assignment, contentDescription = "Order") },
-                        label = { Text(if (isBengali) "বুকিংস" else "Bookings") },
-                        selected = false,
-                        onClick = { onNavigateToBookings() },
-                        colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = Color(0xFF1E3A8A),
-                            selectedTextColor = Color(0xFF1E3A8A),
-                            indicatorColor = Color.Transparent,
-                            unselectedIconColor = Color.Gray,
-                            unselectedTextColor = Color.Gray
+                        NavigationBarItem(
+                            icon = { Icon(Icons.Default.Assignment, contentDescription = "Order") },
+                            label = { Text(if (isBengali) "বুকিংস" else "Bookings") },
+                            selected = false,
+                            onClick = { onNavigateToBookings() },
+                            colors = NavigationBarItemDefaults.colors(
+                                selectedIconColor = Color(0xFF1E3A8A),
+                                selectedTextColor = Color(0xFF1E3A8A),
+                                indicatorColor = Color.Transparent,
+                                unselectedIconColor = Color.Gray,
+                                unselectedTextColor = Color.Gray
+                            )
                         )
-                    )
-                    NavigationBarItem(
-                        icon = { Icon(Icons.Default.Person, contentDescription = "Profile") },
-                        label = { Text(if (isBengali) "প্রোফাইল" else "Profile") },
-                        selected = false,
-                        onClick = { onNavigateToProfile() },
-                        colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = Color(0xFF1E3A8A),
-                            selectedTextColor = Color(0xFF1E3A8A),
-                            indicatorColor = Color.Transparent,
-                            unselectedIconColor = Color.Gray,
-                            unselectedTextColor = Color.Gray
+                        NavigationBarItem(
+                            icon = { Icon(Icons.Default.Person, contentDescription = "Profile") },
+                            label = { Text(if (isBengali) "প্রোফাইল" else "Profile") },
+                            selected = false,
+                            onClick = { onNavigateToProfile() },
+                            colors = NavigationBarItemDefaults.colors(
+                                selectedIconColor = Color(0xFF1E3A8A),
+                                selectedTextColor = Color(0xFF1E3A8A),
+                                indicatorColor = Color.Transparent,
+                                unselectedIconColor = Color.Gray,
+                                unselectedTextColor = Color.Gray
+                            )
                         )
-                    )
+                    }
                 }
             }
         ) { innerPadding ->
@@ -874,7 +960,7 @@ fun AutoSliderBanner() {
                 Image(
                     painter = painterResource(id = banners[page]),
                     contentDescription = "Banner ${page + 1}",
-                    contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                    contentScale = androidx.compose.ui.layout.ContentScale.FillBounds,
                     modifier = Modifier.fillMaxSize()
                 )
             }

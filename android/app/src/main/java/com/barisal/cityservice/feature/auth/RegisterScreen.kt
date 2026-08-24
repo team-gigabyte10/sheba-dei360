@@ -42,6 +42,9 @@ import com.barisal.cityservice.ui.components.SetStatusBarColor
 import com.barisal.cityservice.ui.components.clearFocusOnTap
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.UserProfileChangeRequest
+import androidx.compose.foundation.border
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import com.barisal.cityservice.core.utils.UserPreferences
 import kotlinx.coroutines.launch
 
@@ -60,10 +63,12 @@ fun RegisterScreen(
     var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var phone by remember { mutableStateOf("") }
-
-    var isLoading by remember { mutableStateOf("") }
     var isSubmitting by remember { mutableStateOf(false) }
     var generatedOtpDialogData by remember { mutableStateOf<Triple<String, String, Boolean>?>(null) }
+
+    BackHandler {
+        onNavigateToHome()
+    }
 
     if (generatedOtpDialogData != null) {
         val (target, otpCode, isEmail) = generatedOtpDialogData!!
@@ -119,6 +124,8 @@ fun RegisterScreen(
                 .background(Color.Black.copy(alpha = 0.35f))
         )
 
+
+
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -136,9 +143,10 @@ fun RegisterScreen(
                 // Card Container
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(24.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.95f)),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+                    shape = RoundedCornerShape(28.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.96f)),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 12.dp),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE2E8F0))
                 ) {
                     Column(
                         modifier = Modifier
@@ -146,29 +154,34 @@ fun RegisterScreen(
                             .padding(24.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        // App Logo
+                        // App Logo with Gradient Ring
                         Box(
                             modifier = Modifier
                                 .size(110.dp)
                                 .clip(CircleShape)
-                                .background(primaryTeal.copy(alpha = 0.1f)),
+                                .border(3.dp, Brush.linearGradient(listOf(Color(0xFF1E3A8A), Color(0xFF0F766E))), CircleShape)
+                                .background(Color(0xFFF1F5F9)),
                             contentAlignment = Alignment.Center
                         ) {
                             Image(
                                 painter = painterResource(id = R.drawable.logo),
                                 contentDescription = "App Logo",
-                                modifier = Modifier.size(90.dp)
+                                modifier = Modifier
+                                    .size(92.dp)
+                                    .clip(CircleShape)
                             )
                         }
 
-                        Spacer(modifier = Modifier.height(12.dp))
+                        Spacer(modifier = Modifier.height(14.dp))
 
                         Text(
                             text = if (isBengali) "নতুন অ্যাকাউন্ট তৈরি করুন" else "Create New Account",
                             fontSize = 22.sp,
                             fontWeight = FontWeight.ExtraBold,
-                            color = primaryTeal
+                            color = Color(0xFF1E3A8A)
                         )
+
+                        Spacer(modifier = Modifier.height(4.dp))
 
                         Text(
                             text = if (isBengali) "সকল সেবা পেতে নিবন্ধন সম্পন্ন করুন" else "Register to access all local services",
@@ -272,21 +285,36 @@ fun RegisterScreen(
                             },
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(50.dp),
-                            shape = RoundedCornerShape(12.dp),
+                                .height(52.dp)
+                                .clip(RoundedCornerShape(26.dp)),
                             enabled = !isSubmitting,
-                            colors = ButtonDefaults.buttonColors(containerColor = primaryTeal)
+                            colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                            contentPadding = PaddingValues()
                         ) {
-                            if (isSubmitting) {
-                                CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
-                            } else {
-                                Icon(Icons.Default.PersonAdd, contentDescription = null)
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(
-                                    text = if (isBengali) "ওটিপি পেয়ে নিবন্ধন করুন" else "Get OTP & Register",
-                                    fontSize = 16.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .background(
+                                        brush = Brush.linearGradient(
+                                            colors = listOf(Color(0xFF1E3A8A), Color(0xFF0F766E))
+                                        )
+                                    ),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                if (isSubmitting) {
+                                    CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
+                                } else {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(Icons.Default.PersonAdd, contentDescription = null, tint = Color.White)
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text(
+                                            text = if (isBengali) "ওটিপি পেয়ে নিবন্ধন করুন" else "Get OTP & Register",
+                                            fontSize = 16.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = Color.White
+                                        )
+                                    }
+                                }
                             }
                         }
 
@@ -309,8 +337,8 @@ fun RegisterScreen(
                             Text(
                                 text = if (isBengali) "লগ-ইন করুন" else "Log In",
                                 fontSize = 13.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = primaryTeal,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = Color(0xFF1E3A8A),
                                 modifier = Modifier.clickable { onNavigateToLogin() }
                             )
                         }

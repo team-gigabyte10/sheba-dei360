@@ -85,28 +85,18 @@ fun MatrimonyHomeScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("পাত্র-পাত্রী", fontWeight = FontWeight.Bold) },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
-                    }
-                },
+            com.barisal.cityservice.ui.components.GlobalAppBar(
+                title = "পাত্র-পাত্রী",
+                onBackClick = onNavigateBack,
                 actions = {
                     IconButton(onClick = { showNotificationsDialog = true }) {
                         BadgedBox(
                             badge = { Badge { Text("৩") } }
                         ) {
-                            Icon(Icons.Default.Notifications, contentDescription = "Notifications")
+                            Icon(Icons.Default.Notifications, contentDescription = "Notifications", tint = Color.White)
                         }
                     }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.White,
-                    titleContentColor = Color.Black,
-                    navigationIconContentColor = Color.Black,
-                    actionIconContentColor = Color.Black
-                )
+                }
             )
         },
         floatingActionButton = {

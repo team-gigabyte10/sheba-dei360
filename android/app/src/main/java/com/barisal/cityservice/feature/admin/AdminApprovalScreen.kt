@@ -196,11 +196,7 @@ fun AdminApprovalScreen(
 
     Scaffold(
         topBar = {
-            Column(
-                modifier = Modifier
-                    .background(Color.White)
-                    .statusBarsPadding()
-            ) {
+            Column {
                 GlobalAppBar(
                     title = if (selectedCategoryKey == null) {
                         if (isBengali) "ক্যাটাগরি ভিত্তিক পোস্ট অনুমোদন" else "Category Admin Approval"
@@ -208,21 +204,11 @@ fun AdminApprovalScreen(
                         val titleText = if (isBengali) currentCategoryItem?.titleBn ?: "" else currentCategoryItem?.titleEn ?: ""
                         if (isBengali) "$titleText অনুমোদন" else "$titleText Approval"
                     },
-                    navigationIcon = {
-                        IconButton(
-                            onClick = {
-                                if (selectedCategoryKey != null && initialCategoryKey == null) {
-                                    selectedCategoryKey = null
-                                } else {
-                                    onBack()
-                                }
-                            }
-                        ) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Back",
-                                tint = Color.Black
-                            )
+                    onBackClick = {
+                        if (selectedCategoryKey != null && initialCategoryKey == null) {
+                            selectedCategoryKey = null
+                        } else {
+                            onBack()
                         }
                     }
                 )

@@ -33,21 +33,14 @@ fun MatrimonySearchScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("পাত্র খুঁজুন", fontWeight = FontWeight.Bold) },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
-                    }
-                },
+            com.barisal.cityservice.ui.components.GlobalAppBar(
+                title = "পাত্র খুঁজুন",
+                onBackClick = onNavigateBack,
                 actions = {
                     IconButton(onClick = { /* TODO Navigate to Filter Screen */ }) {
-                        Icon(Icons.Default.FilterList, contentDescription = "Filter")
+                        Icon(Icons.Default.FilterList, contentDescription = "Filter", tint = Color.White)
                     }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.White
-                )
+                }
             )
         },
         containerColor = Color(0xFFF8FAFC)

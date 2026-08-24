@@ -129,7 +129,7 @@ fun RentCarScreen(
                 onBackClick = onNavigateBack,
                 actions = {
                     IconButton(onClick = { showZillaFilterDialog = true }) {
-                        Icon(Icons.Default.MoreVert, contentDescription = "Filter", tint = Color.Black)
+                        Icon(Icons.Default.MoreVert, contentDescription = "Filter", tint = Color.White)
                     }
                 }
             )

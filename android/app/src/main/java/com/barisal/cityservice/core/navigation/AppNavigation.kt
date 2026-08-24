@@ -74,8 +74,10 @@ fun AppNavigation() {
             LoginScreen(
                 redirectRoute = redirectRoute,
                 onNavigateToHome = {
-                    navController.navigate("home") {
-                        popUpTo("login") { inclusive = true }
+                    if (!navController.popBackStack()) {
+                        navController.navigate("home") {
+                            popUpTo("login") { inclusive = true }
+                        }
                     }
                 },
                 onNavigateToRedirectTarget = { target ->
@@ -89,11 +91,6 @@ fun AppNavigation() {
                 },
                 onNavigateToOtp = { target, verificationId, isEmailMode ->
                     navController.navigate("otp?target=$target&verificationId=$verificationId&isEmailMode=$isEmailMode")
-                },
-                onNavigateToVendorDashboard = {
-                    navController.navigate("vendor_dashboard") {
-                        popUpTo("login") { inclusive = true }
-                    }
                 }
             )
         }
@@ -241,7 +238,7 @@ fun AppNavigation() {
                     navController.navigate("emergency_service")
                 },
                 onNavigateToProfile = {
-                    navController.navigate("profile")
+                    navController.navigate("update_profile")
                 },
                 onNavigateToAddCategory = {
                     navController.navigate("add_category")
@@ -836,18 +833,7 @@ fun AppNavigation() {
         }
         composable("settings") {
             com.barisal.cityservice.feature.settings.SettingsScreen(
-                onBack = { navController.popBackStack() },
-                onLogout = {
-                    navController.navigate("login") {
-                        popUpTo("home") { inclusive = true }
-                    }
-                },
-                onNavigateToUpdateProfile = {
-                    navController.navigate("update_profile")
-                },
-                onNavigateToChangePassword = {
-                    navController.navigate("change_password")
-                }
+                onBack = { navController.popBackStack() }
             )
         }
         composable("update_profile") {
@@ -858,46 +844,6 @@ fun AppNavigation() {
         composable("change_password") {
             com.barisal.cityservice.feature.profile.ChangePasswordScreen(
                 onBack = { navController.popBackStack() }
-            )
-        }
-        // Vendor Panel Routes
-        composable("vendor_dashboard") {
-            com.barisal.cityservice.feature.vendor.dashboard.VendorDashboardScreen(
-                onNavigateToProducts = { navController.navigate("vendor_products") },
-                onNavigateToOrders = { navController.navigate("vendor_orders") },
-                onNavigateToReports = { navController.navigate("vendor_reports") }
-            )
-        }
-        composable("vendor_products") {
-            com.barisal.cityservice.feature.vendor.products.ProductListScreen(
-                onNavigateBack = { navController.popBackStack() },
-                onAddProduct = { navController.navigate("vendor_product_add_edit") },
-                onEditProduct = { productId -> navController.navigate("vendor_product_add_edit?productId=$productId") }
-            )
-        }
-        composable("vendor_product_add_edit?productId={productId}") { backStackEntry ->
-            val productId = backStackEntry.arguments?.getString("productId")
-            com.barisal.cityservice.feature.vendor.products.AddEditProductScreen(
-                productId = productId,
-                onNavigateBack = { navController.popBackStack() }
-            )
-        }
-        composable("vendor_orders") {
-            com.barisal.cityservice.feature.vendor.orders.OrderListScreen(
-                onNavigateBack = { navController.popBackStack() },
-                onOrderClick = { orderId -> navController.navigate("vendor_order_detail/$orderId") }
-            )
-        }
-        composable("vendor_order_detail/{orderId}") { backStackEntry ->
-            val orderId = backStackEntry.arguments?.getString("orderId") ?: ""
-            com.barisal.cityservice.feature.vendor.orders.OrderDetailScreen(
-                orderId = orderId,
-                onNavigateBack = { navController.popBackStack() }
-            )
-        }
-        composable("vendor_reports") {
-            com.barisal.cityservice.feature.vendor.reports.VendorReportsScreen(
-                onNavigateBack = { navController.popBackStack() }
             )
         }
     }

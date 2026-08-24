@@ -6,13 +6,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Language
-import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PrivacyTip
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -33,7 +30,7 @@ import com.barisal.cityservice.ui.components.SetStatusBarColor
 @Composable
 fun SettingsScreen(
     onBack: () -> Unit,
-    onLogout: () -> Unit,
+    onLogout: () -> Unit = {},
     onNavigateToUpdateProfile: () -> Unit = {},
     onNavigateToChangePassword: () -> Unit = {}
 ) {
@@ -60,27 +57,6 @@ fun SettingsScreen(
                 .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            item { Spacer(modifier = Modifier.height(16.dp)) }
-
-            // Account Section
-            item {
-                SectionTitle(if (isBengali) "অ্যাকাউন্ট" else "Account")
-            }
-            item {
-                SettingsItem(
-                    icon = Icons.Default.Person,
-                    title = if (isBengali) "প্রোফাইল সম্পাদনা করুন" else "Edit Profile",
-                    onClick = onNavigateToUpdateProfile
-                )
-            }
-            item {
-                SettingsItem(
-                    icon = Icons.Default.Lock,
-                    title = if (isBengali) "পাসওয়ার্ড পরিবর্তন করুন" else "Change Password",
-                    onClick = onNavigateToChangePassword
-                )
-            }
-
             item { Spacer(modifier = Modifier.height(16.dp)) }
 
             // App Settings Section
@@ -125,24 +101,6 @@ fun SettingsScreen(
                     title = if (isBengali) "গোপনীয়তা নীতি" else "Privacy Policy",
                     onClick = { /* TODO */ }
                 )
-            }
-
-            item { Spacer(modifier = Modifier.height(24.dp)) }
-
-            // Logout Button
-            item {
-                Button(
-                    onClick = onLogout,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEF4444)), // Red
-                    shape = RoundedCornerShape(16.dp)
-                ) {
-                    Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = null, tint = Color.White)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(if (isBengali) "লগ আউট" else "Log Out", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                }
             }
 
             item { Spacer(modifier = Modifier.height(32.dp)) }
@@ -202,5 +160,3 @@ fun SettingsSwitchItem(icon: ImageVector, title: String, checked: Boolean, onChe
         )
     }
 }
-
-
