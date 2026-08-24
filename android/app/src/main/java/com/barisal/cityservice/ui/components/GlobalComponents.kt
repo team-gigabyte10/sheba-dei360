@@ -26,10 +26,13 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.core.view.WindowCompat
 import com.barisal.cityservice.core.theme.LocalAppTheme
 
+val PrimaryAppBarColor = Color(0xFF1E3A8A)   // Navy Blue for AppBar
+val PrimaryStatusBarColor = Color(0xFF0F172A) // Dark Navy Blue for StatusBar
+
 @Composable
 fun SetStatusBarColor(
-    color: Color = MaterialTheme.colorScheme.background,
-    isDarkTheme: Boolean = false
+    color: Color = PrimaryStatusBarColor,
+    isDarkTheme: Boolean = true
 ) {
     val view = LocalView.current
     if (!view.isInEditMode) {
@@ -49,11 +52,11 @@ fun SetStatusBarColor(
 }
 
 @Composable
-fun SetStatusBarColor(colorString: String, isLightIcons: Boolean = false) {
+fun SetStatusBarColor(colorString: String, isLightIcons: Boolean = true) {
     val parsedColor = try {
         Color(android.graphics.Color.parseColor(colorString))
     } catch (e: Exception) {
-        MaterialTheme.colorScheme.background
+        PrimaryStatusBarColor
     }
     val view = LocalView.current
     if (!view.isInEditMode) {
@@ -79,17 +82,18 @@ fun GlobalAppBar(
     onBackClick: (() -> Unit)? = null,
     navigationIcon: (@Composable () -> Unit)? = null,
     actions: @Composable RowScope.() -> Unit = {},
-    containerColor: Color = MaterialTheme.colorScheme.surface,
-    contentColor: Color = MaterialTheme.colorScheme.onSurface
+    containerColor: Color = PrimaryAppBarColor,
+    contentColor: Color = Color.White
 ) {
+    SetStatusBarColor(color = PrimaryStatusBarColor, isDarkTheme = true)
     TopAppBar(
-        title = { Text(title) },
+        title = { Text(title, fontWeight = FontWeight.SemiBold) },
         navigationIcon = {
             if (navigationIcon != null) {
                 navigationIcon()
             } else if (onBackClick != null) {
                 IconButton(onClick = onBackClick) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = contentColor)
                 }
             }
         },

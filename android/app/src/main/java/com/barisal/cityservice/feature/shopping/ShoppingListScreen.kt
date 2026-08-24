@@ -130,7 +130,7 @@ fun ShoppingListScreen(
     val languageState = LocalAppLanguage.current
     val isBengali = languageState.isBengali
 
-    SetStatusBarColor(colorString = "#FFFFFF", isLightIcons = false)
+    SetStatusBarColor()
 
     var searchQuery by remember { mutableStateOf("") }
     var showZillaFilterDialog by remember { mutableStateOf(false) }
@@ -178,20 +178,17 @@ fun ShoppingListScreen(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(Color.White)
                     .padding(bottom = 10.dp)
             ) {
                 GlobalAppBar(
                     title = if (isBengali) "বেচা-কেনা" else "Shopping",
                     onBackClick = onBack,
-                    containerColor = Color.White,
-                    contentColor = Color.Black,
                     actions = {
                         IconButton(onClick = { showWishlistOnly = !showWishlistOnly }) {
                             Icon(
                                 imageVector = if (showWishlistOnly) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
                                 contentDescription = "Wishlist",
-                                tint = if (showWishlistOnly) Color(0xFFE11D48) else Color.DarkGray
+                                tint = if (showWishlistOnly) Color(0xFFFB7185) else Color.White
                             )
                         }
 
@@ -202,13 +199,13 @@ fun ShoppingListScreen(
                             BadgedBox(
                                 badge = {
                                     if (totalCartCount > 0) {
-                                        Badge(containerColor = primaryColor, contentColor = Color.White) {
+                                        Badge(containerColor = Color(0xFFEF4444), contentColor = Color.White) {
                                             Text("$totalCartCount")
                                         }
                                     }
                                 }
                             ) {
-                                Icon(Icons.Default.ShoppingCart, contentDescription = "Cart", tint = primaryColor)
+                                Icon(Icons.Default.ShoppingCart, contentDescription = "Cart", tint = Color.White)
                             }
                         }
                     }

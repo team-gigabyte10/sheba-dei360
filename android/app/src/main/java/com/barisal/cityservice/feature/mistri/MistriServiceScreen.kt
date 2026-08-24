@@ -90,7 +90,7 @@ fun MistriServiceScreen(
                     onBackClick = onNavigateBack,
                     actions = {
                         IconButton(onClick = { showZillaFilterDialog = true }) {
-                            Icon(Icons.Default.MoreVert, contentDescription = "More", tint = Color.Black)
+                            Icon(Icons.Default.MoreVert, contentDescription = "More", tint = Color.White)
                         }
                     }
                 )

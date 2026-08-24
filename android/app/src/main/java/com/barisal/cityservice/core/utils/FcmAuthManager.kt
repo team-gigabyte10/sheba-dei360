@@ -8,6 +8,9 @@ import android.provider.Settings
 import androidx.core.app.NotificationCompat
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.messaging.FirebaseMessaging
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import java.util.Random
 
@@ -33,7 +36,7 @@ object FcmAuthManager {
     }
 
     /**
-     * Stores/updates user info with device ID and FCM token, then sends an OTP via notification.
+     * Stores/updates user info with device ID and FCM token, then sends an OTP via notification instantly.
      */
     suspend fun registerUserWithFcm(
         context: Context,
@@ -43,45 +46,55 @@ object FcmAuthManager {
         onResult: (Boolean, String, String?) -> Unit
     ) {
         try {
-            val deviceId = getDeviceId(context)
-            val fcmToken = try {
-                FirebaseMessaging.getInstance().token.await()
-            } catch (e: Exception) {
-                "FCM_TOKEN_UNAVAILABLE"
-            }
-
             val otpCode = generateOtpCode()
             val cleanPhone = phone.trim()
             val cleanEmail = email.trim()
 
-            val userData = hashMapOf(
-                "name" to name.trim(),
-                "email" to cleanEmail,
-                "phone" to cleanPhone,
-                "deviceId" to deviceId,
-                "fcmToken" to fcmToken,
-                "lastOtp" to otpCode,
-                "updatedAt" to System.currentTimeMillis()
-            )
+            // 1. Immediately cache in memory for instant local verification
+            if (cleanPhone.isNotBlank()) activeOtpCache[cleanPhone] = otpCode
+            if (cleanEmail.isNotBlank()) activeOtpCache[cleanEmail] = otpCode
 
-            // Save in Firestore under users collection (keyed by phone)
-            val docKey = cleanPhone.ifBlank { cleanEmail }
-            firestore.collection("users").document(docKey).set(userData).await()
-
-            // Store in cache
-            activeOtpCache[cleanPhone] = otpCode
-            activeOtpCache[cleanEmail] = otpCode
-
-            // Send notification with OTP code
+            // 2. Instantly post local system Notification + Toast banner + Clipboard copy
             sendFcmNotification(context, otpCode)
+
+            // 3. Instantly notify UI callback
             onResult(true, otpCode, null)
+
+            // 4. Save to Firestore asynchronously in background coroutine scope
+            CoroutineScope(Dispatchers.IO).launch {
+                try {
+                    val deviceId = getDeviceId(context)
+                    val fcmToken = try {
+                        FirebaseMessaging.getInstance().token.await()
+                    } catch (e: Exception) {
+                        "FCM_TOKEN_UNAVAILABLE"
+                    }
+
+                    val userData = hashMapOf(
+                        "name" to name.trim(),
+                        "email" to cleanEmail,
+                        "phone" to cleanPhone,
+                        "deviceId" to deviceId,
+                        "fcmToken" to fcmToken,
+                        "lastOtp" to otpCode,
+                        "updatedAt" to System.currentTimeMillis()
+                    )
+
+                    val docKey = cleanPhone.ifBlank { cleanEmail }
+                    if (docKey.isNotBlank()) {
+                        firestore.collection("users").document(docKey).set(userData).await()
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }
         } catch (e: Exception) {
             onResult(false, "", e.message ?: "Failed to process registration")
         }
     }
 
     /**
-     * Sends an OTP notification for login request and updates user's last OTP code.
+     * Sends an OTP notification for login request after checking if the user exists in Firestore users collection.
      */
     suspend fun sendLoginFcmOtp(
         context: Context,
@@ -90,43 +103,78 @@ object FcmAuthManager {
     ) {
         try {
             val cleanTarget = target.trim()
-            val deviceId = getDeviceId(context)
-            val fcmToken = try {
-                FirebaseMessaging.getInstance().token.await()
-            } catch (e: Exception) {
-                "FCM_TOKEN_UNAVAILABLE"
+            if (cleanTarget.isBlank()) {
+                onResult(false, "", "Please enter email or phone number.")
+                return
             }
 
-            val otpCode = generateOtpCode()
-
-            val updateData = hashMapOf(
-                "deviceId" to deviceId,
-                "fcmToken" to fcmToken,
-                "lastOtp" to otpCode,
-                "updatedAt" to System.currentTimeMillis()
-            )
-
-            // Update user's latest FCM token & OTP in Firestore
+            // 1. Check if user document or matching record exists in Firestore users collection
             val userDocRef = firestore.collection("users").document(cleanTarget)
-            val docSnap = userDocRef.get().await()
-
-            if (docSnap.exists()) {
-                userDocRef.update(updateData as Map<String, Any>).await()
-            } else {
-                // If doc doesn't exist yet, create basic record
-                val newData = hashMapOf(
-                    "emailOrPhone" to cleanTarget,
-                    "deviceId" to deviceId,
-                    "fcmToken" to fcmToken,
-                    "lastOtp" to otpCode,
-                    "updatedAt" to System.currentTimeMillis()
-                )
-                userDocRef.set(newData).await()
+            val docSnap = try {
+                userDocRef.get().await()
+            } catch (e: Exception) {
+                null
             }
 
+            var userExists = docSnap?.exists() == true
+
+            if (!userExists) {
+                val emailQuery = try {
+                    firestore.collection("users").whereEqualTo("email", cleanTarget).get().await()
+                } catch (e: Exception) { null }
+
+                val phoneQuery = try {
+                    firestore.collection("users").whereEqualTo("phone", cleanTarget).get().await()
+                } catch (e: Exception) { null }
+
+                val altQuery = try {
+                    firestore.collection("users").whereEqualTo("emailOrPhone", cleanTarget).get().await()
+                } catch (e: Exception) { null }
+
+                userExists = (emailQuery?.isEmpty == false) ||
+                             (phoneQuery?.isEmpty == false) ||
+                             (altQuery?.isEmpty == false)
+            }
+
+            // 2. If user does NOT exist in Firestore, return INVALID_USER error and DO NOT send OTP
+            if (!userExists) {
+                onResult(false, "", "INVALID_USER")
+                return
+            }
+
+            // 3. User exists: Generate OTP code, cache locally, and post notification instantly
+            val otpCode = generateOtpCode()
             activeOtpCache[cleanTarget] = otpCode
+
             sendFcmNotification(context, otpCode)
             onResult(true, otpCode, null)
+
+            // 4. Save/update user's latest FCM token & OTP in Firestore asynchronously
+            CoroutineScope(Dispatchers.IO).launch {
+                try {
+                    val deviceId = getDeviceId(context)
+                    val fcmToken = try {
+                        FirebaseMessaging.getInstance().token.await()
+                    } catch (e: Exception) {
+                        "FCM_TOKEN_UNAVAILABLE"
+                    }
+
+                    val updateData = hashMapOf(
+                        "deviceId" to deviceId,
+                        "fcmToken" to fcmToken,
+                        "lastOtp" to otpCode,
+                        "updatedAt" to System.currentTimeMillis()
+                    )
+
+                    if (docSnap?.exists() == true) {
+                        userDocRef.update(updateData as Map<String, Any>).await()
+                    } else {
+                        userDocRef.set(updateData as Map<String, Any>, com.google.firebase.firestore.SetOptions.merge()).await()
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }
         } catch (e: Exception) {
             onResult(false, "", e.message ?: "Failed to send OTP code")
         }

@@ -5,13 +5,7 @@ This architecture is modular, making it easier to add new service categories wit
  flutter build apk --target-platform android-arm64 --release
 
 
-Customer:	john.doe@email.com
-
-Service Provider: provider@email.com or ahmed.rahman@email.com	
-
-Business Owner: owner@email.com or tanveer.sultans@email.com
-
-Super Admin	admin@servenear.com	Any text
+Admin Accounts: teamgigabyte10@gmail.com, eeerakib24@gmail.com, 01798771927
 
 
 

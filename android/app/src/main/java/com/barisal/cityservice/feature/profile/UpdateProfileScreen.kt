@@ -41,10 +41,21 @@ fun UpdateProfileScreen(
     val isBengali = languageState.isBengali
     val context = LocalContext.current
 
-    var name by remember { mutableStateOf("John Doe") }
-    var email by remember { mutableStateOf("john.doe@example.com") }
-    var phone by remember { mutableStateOf("+880 1712 345678") }
-    var address by remember { mutableStateOf("Banani, Dhaka") }
+    val currentUser = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser
+    val userIdentity = com.barisal.cityservice.core.utils.UserPreferences.getUserIdentity(context)
+    val isEmail = userIdentity.contains("@")
+
+    var name by remember {
+        mutableStateOf(
+            currentUser?.displayName
+                ?: if (isEmail) userIdentity.substringBefore("@").replaceFirstChar { it.uppercase() }
+                else if (userIdentity.isNotBlank()) "User ($userIdentity)"
+                else ""
+        )
+    }
+    var email by remember { mutableStateOf(currentUser?.email ?: if (isEmail) userIdentity else "") }
+    var phone by remember { mutableStateOf(currentUser?.phoneNumber ?: if (!isEmail) userIdentity else "") }
+    var address by remember { mutableStateOf("Barisal, Bangladesh") }
 
     SetStatusBarColor()
     Scaffold(

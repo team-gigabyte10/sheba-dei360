@@ -49,7 +49,7 @@ fun PostMistriServiceScreen(
     val coroutineScope = rememberCoroutineScope()
     val mistriRepo = remember { MistriRepository() }
 
-    SetStatusBarColor(colorString = "#2563EB", isLightIcons = true)
+    SetStatusBarColor()
 
     // Form Basic State
     var providerName by remember { mutableStateOf("") }

@@ -137,7 +137,7 @@ fun HospitalListScreen(
                 onBackClick = onBack,
                 actions = {
                     IconButton(onClick = { showZillaFilterDialog = true }) {
-                        Icon(Icons.Default.MoreVert, contentDescription = "Filter by Zilla", tint = Color.Black)
+                        Icon(Icons.Default.MoreVert, contentDescription = "Filter by Zilla", tint = Color.White)
                     }
                 }
             )
